@@ -1,0 +1,316 @@
+<!-- =========================================================
+PURESTAY • Careers Landing • GHL Custom HTML Block (top+lead section, v4)
+Note: Replace HEADSHOT_URL with Rosel's headshot URL.
+========================================================= -->
+<div id="ps-careers"></div>
+
+<style>
+  #ps-careers, #ps-careers * { box-sizing: border-box; }
+  #ps-careers { all: initial; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial; display:block; }
+  #ps-careers a, #ps-careers button { all: unset; cursor:pointer; }
+  #ps-careers img { display:block; max-width:100%; height:auto; }
+
+  :root{ --ps-gold:#CEA43C; --ps-maroon:#73261F; --ps-ghost:#ffffff; }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    position:relative; min-height:100vh; overflow:hidden; color:var(--ps-ghost);
+    background:
+      radial-gradient(1200px 600px at 10% -10%, rgba(206,164,60,0.35), transparent 60%),
+      radial-gradient(900px 700px at 110% 20%, rgba(115,38,31,0.55), transparent 60%),
+      linear-gradient(180deg, #1a0d0b, #0c0706 60%);
+  }
+  .orbs{ position:absolute; inset:0; pointer-events:none; filter:blur(30px) saturate(115%); }
+  .orb{ position:absolute; width:260px; height:260px; border-radius:50%;
+        background:radial-gradient(circle at 35% 35%, rgba(255,255,255,0.85), rgba(255,255,255,0.05) 60%), linear-gradient(135deg, var(--ps-gold), rgba(206,164,60,0.25));
+        opacity:.1; mix-blend-mode:screen; animation:drift 18s ease-in-out infinite alternate; }
+  .orb--2{ width:340px; height:340px; background:radial-gradient(circle at 60% 40%, rgba(255,255,255,0.8), rgba(255,255,255,0.05) 60%), linear-gradient(135deg, #ffb178, var(--ps-gold)); animation-duration:22s; left:65%; top:10%; opacity:.12; }
+  .orb--3{ width:280px; height:280px; background:radial-gradient(circle at 40% 60%, rgba(255,255,255,0.9), rgba(255,255,255,0.05) 60%), linear-gradient(135deg, #e27b62, var(--ps-maroon)); animation-duration:26s; left:15%; bottom:-6%; opacity:.1; }
+  @keyframes drift{0%{transform:translate(-10%,-10%) scale(1);}100%{transform:translate(6%,12%) scale(1.2);}}
+
+  .heroTop{
+    position:absolute; inset:0 0 auto 0; display:flex; align-items:flex-start; justify-content:space-between;
+    padding:18px clamp(16px,4vw,48px); z-index:5;
+    background:linear-gradient(to bottom, rgba(0,0,0,0.38), rgba(0,0,0,0));
+  }
+  .brand{ display:flex; gap:12px; }
+  .logo{ height:185px; width:auto; filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5)); }
+  @media (max-width:720px){ .logo{ height:132px; } }
+
+  .applyNow{
+    color:#111; background:#fff; font-size:14px; padding:11px 16px; border-radius:999px;
+    border:1px solid rgba(0,0,0,0.22);
+    box-shadow:0 6px 18px rgba(0,0,0,0.22), 0 0 0 3px rgba(255,255,255,0.35) inset;
+    transition:transform .15s, box-shadow .15s; margin-top:8px;
+  }
+  .applyNow:hover,.applyNow:focus{ transform:translateY(-1px); box-shadow:0 10px 26px rgba(0,0,0,0.28), 0 0 0 3px rgba(255,255,255,0.55) inset; }
+
+  .stage{
+    position:relative; z-index:4; display:grid; place-items:center; text-align:center;
+    padding: clamp(220px, 27vh, 300px) 20px 120px; max-width:1200px; margin:0 auto;
+  }
+  .kicker{
+    display:inline-grid; place-items:center; font-size:clamp(12px,1.3vw,14px); letter-spacing:.08em; text-transform:uppercase;
+    padding:9px 14px; border-radius:999px; color:#111;
+    background:linear-gradient(90deg, var(--ps-gold), #ffd98c);
+    box-shadow:inset 0 0 0 1px rgba(17,17,17,0.12), 0 8px 30px rgba(206,164,60,0.25);
+    opacity:0; transform:translateY(8px); animation:riseIn .8s .2s forwards;
+  }
+  @keyframes riseIn{to{opacity:1; transform:none;}}
+
+  .h1{
+    margin-top:18px; font-weight:800; font-size:clamp(34px,6.6vw,72px); line-height:1.03; letter-spacing:-0.01em;
+    background:linear-gradient(180deg, #fff, #eaeaea); -webkit-background-clip:text; background-clip:text; color:transparent;
+    text-wrap:balance; opacity:0; transform:translateY(12px); animation:riseIn 1s .6s forwards;
+    text-shadow:0 2px 36px rgba(0,0,0,0.55);
+  }
+
+  /* Flipper (dynamic width per word) */
+  .swap{ display:inline-block; position:relative; vertical-align:baseline; transition:width .24s ease; }
+  .swap-text{ display:inline-block; color:#ffffff; text-shadow:0 2px 36px rgba(0,0,0,0.55); will-change:transform,opacity; }
+  .swap-text.enter{ opacity:0; transform:translateY(8px); transition:opacity .24s ease, transform .24s ease; }
+  .swap-text.show{ opacity:1; transform:none; transition:opacity .24s ease, transform .24s ease; }
+
+  .sub{ margin-top:14px; font-size:clamp(16px,2.2vw,22px); color:#f2eee8; opacity:.96; text-wrap:pretty; opacity:0; transform:translateY(12px); animation:riseIn .9s 1.1s forwards; }
+
+  .proof{ display:flex; flex-wrap:wrap; gap:14px; justify-content:center; margin-top:22px; opacity:0; transform:translateY(10px); animation:riseIn .8s 1.6s forwards; }
+  .chip{ display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:12px; background:rgba(255,255,255,0.10); border:1px solid rgba(255,255,255,0.18); font-size:14px; color:#fff; }
+  .chip svg{ width:16px; height:16px; opacity:.95; }
+
+  .cta-row{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+  .cta{ margin-top:28px; display:inline-flex; align-items:center; gap:10px; padding:14px 22px; border-radius:14px; background:linear-gradient(180deg, #fff, #efefef); color:#121212; font-weight:700; font-size:clamp(14px,2.2vw,16px); box-shadow:0 10px 30px rgba(255,255,255,0.15), 0 16px 60px rgba(206,164,60,0.25); transform:translateY(6px) scale(0.98); opacity:0; animation:ctaIn .9s 2s forwards; }
+  .ghost{ margin-top:28px; display:inline-flex; align-items:center; gap:10px; padding:13px 21px; border-radius:14px; border:1px solid rgba(255,255,255,0.35); color:#fff; font-weight:700; font-size:clamp(14px,2.2vw,16px); background:rgba(255,255,255,0.06); backdrop-filter:saturate(120%) blur(2px); transform:translateY(6px) scale(0.98); opacity:0; animation:ctaIn .9s 2.1s forwards; }
+  @keyframes ctaIn{to{opacity:1; transform:none;}}
+
+  /* Footer */
+  .footer{ background:linear-gradient(180deg, #0c0706, #120a08); color:#e8e0d6; padding:26px 0; }
+  .foot-shell{ max-width:1160px; margin:0 auto; padding:0 clamp(16px,4vw,24px); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .footer a{ color:#fff; text-decoration:underline; }
+
+  /* Lead of Hiring section */
+  .lead-wrap{
+    position:relative; background:linear-gradient(180deg,#120a08,#0e0907 60%);
+    color:#f5efe6; overflow:hidden;
+  }
+  .lead-shell{
+    max-width:1160px; margin:0 auto; padding:80px clamp(16px,4vw,24px);
+    display:grid; grid-template-columns: 360px 1fr; gap:40px; align-items:center;
+  }
+  @media (max-width:900px){ .lead-shell{ grid-template-columns:1fr; padding:64px 16px; } }
+
+  .lead-badge{
+    display:inline-grid; place-items:center; padding:8px 12px; border-radius:999px;
+    font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:#111;
+    background:linear-gradient(90deg, var(--ps-gold), #ffd98c);
+    box-shadow:inset 0 0 0 1px rgba(17,17,17,0.12), 0 8px 30px rgba(206,164,60,0.25);
+  }
+  .lead-title{ margin-top:10px; font-weight:800; font-size:clamp(28px,5vw,40px); line-height:1.08; color:#fff; }
+  .lead-sub{ margin-top:6px; font-size:16px; color:#e7dac8; }
+
+  .lead-card{
+    position:relative; padding:18px; border-radius:18px;
+    background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.10);
+    box-shadow:0 10px 40px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.04);
+    transform:translateY(24px); opacity:0; will-change:transform,opacity;
+  }
+  .lead-photo{
+    width:100%; aspect-ratio:1/1; border-radius:16px; overflow:hidden;
+    background:linear-gradient(135deg, rgba(206,164,60,0.25), rgba(115,38,31,0.25));
+  }
+  .lead-photo img{ width:100%; height:100%; object-fit:cover; }
+
+  .lead-name{ margin-top:14px; font-weight:800; font-size:22px; color:#fff; }
+  .lead-role{ margin-top:4px; font-size:14px; color:#f0e4d2; }
+
+  .lead-bio{
+    font-size:18px; line-height:1.55; color:#f5efe6; margin-top:16px;
+  }
+
+  /* Reveal animations */
+  .reveal{ opacity:0; transform:translateY(24px); transition:transform .6s ease, opacity .6s ease; }
+  .reveal.in{ opacity:1; transform:none; }
+  .stagger > *{ opacity:0; transform:translateY(18px); }
+  .stagger.in > *{ animation:st-in .65s ease forwards; }
+  .stagger.in > *:nth-child(1){ animation-delay:.05s; }
+  .stagger.in > *:nth-child(2){ animation-delay:.15s; }
+  .stagger.in > *:nth-child(3){ animation-delay:.25s; }
+  .stagger.in > *:nth-child(4){ animation-delay:.35s; }
+  @keyframes st-in{ to{ opacity:1; transform:none; } }
+
+  /* Edge-to-edge utility, applied by JS */
+  .js-bleed{}
+</style>
+
+<section class="hero js-bleed" aria-label="Careers at PureStay">
+  <div class="orbs" aria-hidden="true">
+    <span class="orb" style="left:-6%; top:8%"></span>
+    <span class="orb orb--2"></span>
+    <span class="orb orb--3"></span>
+  </div>
+
+  <div class="heroTop">
+    <div class="brand">
+      <a href="https://www.purestaync.com/home" aria-label="PureStay Home">
+        <img class="logo" src="https://storage.googleapis.com/msgsndr/TPwxGisIBKbxlbrOoolh/media/68b27005e7747007c0dd1464.svg" alt="PureStay" />
+      </a>
+    </div>
+    <a class="applyNow" href="https://apply.purestaync.com/careers">Apply now</a>
+  </div>
+
+  <div class="stage">
+    <span class="kicker">Now hiring across North Carolina</span>
+
+    <h1 class="h1">
+      Build your career in
+      <span class="swap" aria-live="polite" aria-atomic="true">
+        <span id="swap-text" class="swap-text show">sales</span>
+      </span>.
+    </h1>
+
+    <p class="sub">
+      We help apartment communities keep residents longer with on-site experiences and a clean system. Hiring for in-person and WFH roles.
+    </p>
+
+    <div class="proof" role="list" aria-label="Why join PureStay">
+      <div class="chip" role="listitem">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Training included
+      </div>
+      <div class="chip" role="listitem">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="#fff" stroke-width="2"/><path d="M8 12h8" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+        In-person & WFH roles
+      </div>
+      <div class="chip" role="listitem">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 8v8m4-4H8" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Statewide hiring in NC
+      </div>
+    </div>
+
+    <div class="cta-row">
+      <a class="cta" href="https://apply.purestaync.com/careers">See open roles</a>
+      <button class="ghost to-lead" aria-controls="lead-of-hiring">Meet the lead of hiring</button>
+    </div>
+  </div>
+</section>
+
+<!-- Lead of Hiring -->
+<section id="lead-of-hiring" class="lead-wrap js-bleed" aria-labelledby="lead-heading">
+  <div class="lead-shell">
+    <div class="lead-card reveal" data-reveal>
+      <div class="lead-photo">
+        <img src="https://storage.googleapis.com/msgsndr/TPwxGisIBKbxlbrOoolh/media/68cb5d924561e12510e8360a.webp" alt="Rosel Cabrera" />
+      </div>
+      <div class="lead-name">Rosel Cabrera</div>
+      <div class="lead-role">Head of Hiring</div>
+    </div>
+
+    <div class="lead-copy">
+      <span class="lead-badge">Team Lead</span>
+      <h2 id="lead-heading" class="lead-title">Meet our Head of Hiring</h2>
+      <p class="lead-sub">Your point of contact from application to offer.</p>
+
+      <div class="lead-bio stagger" data-stagger>
+        <p>Rosel runs the hiring pipeline with a steady hand. She screens applicants, schedules interviews, and keeps everything moving so qualified people do not get stuck.</p>
+        <p>She coordinates with managers, shares clear next steps, and makes sure questions get answered. Her goal is simple. A smooth transition into fully trained employees.</p>
+        <p>If you hear from Rosel, expect quick replies and direct guidance on what to do next.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer js-bleed">
+  <div class="foot-shell">
+    <div>Questions? <a href="mailto:contact@purestaync.com">contact@purestaync.com</a></div>
+    <div><a href="tel:+19803507381">Call/Text 980-350-7381</a></div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  /* Edge-to-edge bleed inside GHL */
+  function applyBleed(){
+    const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+    document.querySelectorAll('.js-bleed').forEach(el=>{
+      el.style.marginLeft = el.style.marginRight = el.style.width = '';
+      const r = el.getBoundingClientRect();
+      el.style.marginLeft  = (-r.left) + 'px';
+      el.style.marginRight = (-(vw - r.right)) + 'px';
+      el.style.width       = vw + 'px';
+    });
+  }
+  applyBleed();
+  window.addEventListener('resize', applyBleed);
+
+  /* Word flipper: dynamic width per word */
+  const target = document.getElementById('swap-text');
+  const container = target && target.parentElement;
+  const words = ["sales","hosting","closing","marketing","coordination","strategy","media","setting","management","scaling"];
+  let i = 0, widths = {};
+
+  function cacheWidths(){
+    if(!target || !container) return;
+    const cs = getComputedStyle(target);
+    const probe = document.createElement('span');
+    probe.style.cssText = `
+      position:absolute; visibility:hidden; white-space:nowrap;
+      font-weight:${cs.fontWeight}; font-size:${cs.fontSize};
+      line-height:${cs.lineHeight}; letter-spacing:-0.01em;
+      font-family:${cs.fontFamily}; color:transparent;
+    `;
+    document.body.appendChild(probe);
+    words.forEach(w => { probe.textContent = w; widths[w] = probe.getBoundingClientRect().width; });
+    document.body.removeChild(probe);
+    container.style.width = Math.ceil(widths[words[0]] || target.getBoundingClientRect().width) + 'px';
+  }
+
+  function nextWord(){
+    i = (i + 1) % words.length;
+    const next = words[i];
+    if(widths[next]) container.style.width = Math.ceil(widths[next]) + 'px';
+    target.classList.remove('show'); target.classList.add('enter');
+    setTimeout(()=>{ target.textContent = next; target.classList.remove('enter'); target.classList.add('show'); }, 220);
+  }
+
+  const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if('fonts' in document){ document.fonts.ready.then(cacheWidths); } else { setTimeout(cacheWidths, 300); }
+  window.addEventListener('resize', cacheWidths);
+
+  if(!prefersReduced){
+    setTimeout(()=>{ setInterval(nextWord, 1100); }, 900);
+  }
+
+  /* Smooth scroll to Lead of Hiring */
+  const toLead = document.querySelector('.to-lead');
+  const leadSection = document.getElementById('lead-of-hiring');
+
+  if(toLead && leadSection){
+    toLead.addEventListener('click', () => {
+      leadSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+  /* Entry automation for Lead section */
+  const revealEls = document.querySelectorAll('[data-reveal]');
+  const staggerWraps = document.querySelectorAll('[data-stagger]');
+
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        entry.target.classList.add('in');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { root: null, rootMargin: '0px 0px -10% 0px', threshold: 0.15 });
+
+  revealEls.forEach(el => {
+    el.classList.add('reveal');
+    io.observe(el);
+  });
+
+  staggerWraps.forEach(el => {
+    el.classList.add('stagger');
+    io.observe(el);
+  });
+})();
+</script>

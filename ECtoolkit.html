@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>PureStay | Event Coordinator Command Center</title>
+<style>
+  :root{
+    --brand:#73261F;
+    --gold:#CEA43C;
+    --ink:#1a1a1a;
+    --muted:#6a6f76;
+    --bg:#f6f7f9;
+    --card:#ffffff;
+    --line:#e9eaee;
+    --radius:16px;
+    --radius-sm:12px;
+    --shadow:0 8px 28px rgba(0,0,0,.08);
+    --shadow-sm:0 4px 14px rgba(0,0,0,.06);
+    --focus:0 0 0 3px rgba(206,164,60,.35);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0f1115;
+      --card:#16181f;
+      --ink:#e8eaef;
+      --muted:#9aa0a6;
+      --line:#252a33;
+      --shadow:0 12px 30px rgba(0,0,0,.45);
+      --shadow-sm:0 8px 20px rgba(0,0,0,.35);
+    }
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 600px at 20% -10%, rgba(206,164,60,.10), transparent 60%),
+      radial-gradient(1200px 600px at 120% 10%, rgba(115,38,31,.10), transparent 60%),
+      var(--bg);
+  }
+
+  /* Shell */
+  .wrap{
+    max-width:1100px;
+    margin:32px auto;
+    padding:20px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+
+  /* Header */
+  .header{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    padding:22px 22px 18px;
+    border-bottom:1px solid var(--line);
+  }
+  .logo{
+    width:42px;height:42px;flex:0 0 auto;
+    border-radius:12px;
+    display:grid;place-items:center;
+    background:linear-gradient(135deg, rgba(115,38,31,.12), rgba(206,164,60,.12));
+    border:1px solid var(--line);
+  }
+  .logo img{width:28px;height:28px;object-fit:contain;display:block}
+  .hgroup h1{
+    margin:0;
+    font-size:22px;
+    letter-spacing:.2px;
+  }
+  .hgroup p{
+    margin:4px 0 0;
+    color:var(--muted);
+    font-size:14px;
+  }
+
+  /* Toolbar */
+  .toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    padding:14px 18px;
+    background:linear-gradient(to right, rgba(206,164,60,.08), transparent);
+    border-bottom:1px solid var(--line);
+  }
+  .tag{
+    font-size:12px;
+    padding:8px 10px;
+    border:1px solid var(--line);
+    border-radius:999px;
+    background:var(--card);
+  }
+  .cta{
+    margin-left:auto;
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 14px;
+    border-radius:12px;
+    border:1px solid rgba(206,164,60,.45);
+    background:linear-gradient(180deg, rgba(206,164,60,.18), rgba(206,164,60,.10));
+    color:#3b2b0d;
+    text-decoration:none;
+    font-weight:600;
+    transition:transform .08s ease;
+  }
+  .cta:focus{outline:none;box-shadow:var(--focus)}
+  .cta:active{transform:translateY(1px)}
+  @media (prefers-color-scheme:dark){
+    .cta{color:#f6e7c1;border-color:rgba(206,164,60,.55)}
+  }
+
+  /* Content grid */
+  .content{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:20px;
+    padding:22px;
+  }
+  @media (min-width:900px){
+    .content{
+      grid-template-columns:320px 1fr;
+      gap:24px;
+      padding:24px;
+    }
+  }
+
+  /* Sidebar checklist */
+  .checklist{
+    position:sticky; top:12px;
+    align-self:start;
+    border:1px solid var(--line);
+    border-radius:var(--radius-sm);
+    padding:14px;
+    box-shadow:var(--shadow-sm);
+    background:linear-gradient(180deg, var(--card), rgba(206,164,60,.05));
+  }
+  .checklist h3{
+    margin:4px 6px 10px;
+    font-size:14px;
+    letter-spacing:.3px;
+    text-transform:uppercase;
+    color:var(--muted);
+  }
+  .check{
+    display:flex; align-items:flex-start; gap:10px;
+    padding:10px 8px;
+    border-radius:10px;
+    transition:background .12s ease,border-color .12s ease;
+    border:1px dashed transparent;
+  }
+  .check:hover{background:rgba(206,164,60,.06);border-color:rgba(206,164,60,.25)}
+  .check input{margin-top:2px;transform:scale(1.05)}
+  .check label{font-size:14px;line-height:1.4;cursor:pointer}
+
+  /* Steps timeline */
+  .steps{
+    border:1px solid var(--line);
+    border-radius:var(--radius-sm);
+    overflow:hidden;
+  }
+  .steps-header{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:14px 16px;border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg, rgba(115,38,31,.06), transparent);
+  }
+  .steps-header h2{
+    margin:0;font-size:16px;letter-spacing:.2px;
+  }
+  .progress{
+    width:180px;height:8px;border-radius:999px;background:#eaeaea;overflow:hidden;border:1px solid var(--line);
+  }
+  .bar{height:100%;width:0;background:linear-gradient(90deg, var(--gold), #e7cc77);transition:width .25s ease}
+
+  .step{
+    display:grid;
+    grid-template-columns:28px 1fr auto;
+    gap:14px;
+    padding:16px 16px;
+    background:var(--card);
+    border-bottom:1px solid var(--line);
+  }
+  .step:last-child{border-bottom:0}
+  .num{
+    width:28px;height:28px;border-radius:9px;
+    display:grid;place-items:center;
+    font-weight:700;font-size:13px;
+    color:#3b2b0d;
+    background:linear-gradient(180deg, rgba(206,164,60,.28), rgba(206,164,60,.18));
+    border:1px solid rgba(206,164,60,.45);
+  }
+  .meta strong{display:block;font-size:15px;margin-bottom:4px}
+  .meta p{margin:0;color:var(--muted);font-size:14px}
+  .action{
+    display:flex;align-items:center;gap:8px;
+  }
+  .action a.btn{
+    text-decoration:none;
+    font-size:13px;
+    padding:8px 10px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--card);
+  }
+  .action a.btn.primary{
+    border-color:rgba(206,164,60,.45);
+    background:linear-gradient(180deg, rgba(206,164,60,.16), rgba(206,164,60,.08));
+    font-weight:600;
+  }
+  .step:focus-within{outline:none;box-shadow:var(--focus) inset}
+
+  /* Footer CTA (mobile sticky) */
+  .footer-cta{
+    position:sticky; bottom:-1px;
+    display:flex; justify-content:center;
+    background:linear-gradient(180deg, transparent, rgba(0,0,0,.03));
+    padding:12px;
+    border-top:1px solid var(--line);
+  }
+  .footer-cta a{
+    min-width:240px; text-align:center;
+  }
+
+  /* Helpers */
+  .sr-only{
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <!-- Header -->
+      <header class="header">
+        <div class="logo" aria-hidden="true">
+          <img src="https://storage.googleapis.com/msgsndr/TPwxGisIBKbxlbrOoolh/media/684b78c9869388f61b129f51.png" alt="">
+        </div>
+        <div class="hgroup">
+          <h1>Event Coordinator Command Center</h1>
+          <p>Step by step control for planning and execution</p>
+        </div>
+      </header>
+
+      <!-- Toolbar -->
+      <div class="toolbar" role="region" aria-label="Quick tools">
+        <span class="tag">Internal</span>
+        <span class="tag">Resident Experience</span>
+        <span class="tag">Checklist Ready</span>
+        <a class="cta" href="https://submit.purestaync.com/ectoolkit">
+          <span aria-hidden="true">↗</span> EC Toolkit
+        </a>
+      </div>
+
+      <!-- Body -->
+      <div class="content">
+        <!-- Sidebar checklist mirrors the 10 steps -->
+        <aside class="checklist" aria-label="Completion checklist">
+          <h3>Mark Progress</h3>
+          <div class="check"><input id="c1" type="checkbox" /><label for="c1">Property closes and is assigned</label></div>
+          <div class="check"><input id="c2" type="checkbox" /><label for="c2">Intake complete and budget calculated</label></div>
+          <div class="check"><input id="c3" type="checkbox" /><label for="c3">Open the Event Tracker</label></div>
+          <div class="check"><input id="c4" type="checkbox" /><label for="c4">Create Event Flow and Execution Doc</label></div>
+          <div class="check"><input id="c5" type="checkbox" /><label for="c5">Add to GHL calendar with correct tags</label></div>
+          <div class="check"><input id="c6" type="checkbox" /><label for="c6">Submit Host and Media Assignment form</label></div>
+          <div class="check"><input id="c7" type="checkbox" /><label for="c7">Auto-emails verified sent</label></div>
+          <div class="check"><input id="c8" type="checkbox" /><label for="c8">On-site execution completed</label></div>
+          <div class="check"><input id="c9" type="checkbox" /><label for="c9">Post-event recap and media feedback</label></div>
+          <div class="check"><input id="c10" type="checkbox" /><label for="c10">Plan and schedule next round</label></div>
+        </aside>
+
+        <!-- Steps timeline -->
+        <section class="steps" aria-label="Coordinators flow">
+          <div class="steps-header">
+            <h2>Coordinator Flow</h2>
+            <div class="progress" aria-hidden="true"><div class="bar" id="bar"></div></div>
+          </div>
+
+          <!-- Step 1 -->
+          <article class="step" tabindex="0">
+            <div class="num">1</div>
+            <div class="meta">
+              <strong>Property closes and is assigned to you</strong>
+              <p>Kickoff received from Accounts. Review notes and tags.</p>
+            </div>
+          </article>
+
+          <!-- Step 2 -->
+          <article class="step" tabindex="0">
+            <div class="num">2</div>
+            <div class="meta">
+              <strong>Account Manager completes intake and calculates event budget</strong>
+              <p>Budget is your guardrail. Confirm constraints before planning.</p>
+            </div>
+          </article>
+
+          <!-- Step 3 -->
+          <article class="step" tabindex="0">
+            <div class="num">3</div>
+            <div class="meta">
+              <strong>You begin planning and open the Event Tracker</strong>
+              <p>Set date window, draft vendors, outline logistics.</p>
+            </div>
+            <div class="action">
+              <a class="btn" href="https://submit.purestaync.com/ectoolkit">Open Tracker</a>
+            </div>
+          </article>
+
+          <!-- Step 4 -->
+          <article class="step" tabindex="0">
+            <div class="num">4</div>
+            <div class="meta">
+              <strong>Create Event Flow &amp; Execution Document</strong>
+              <p>Minute-by-minute run of show with owner, roles, and contingencies.</p>
+            </div>
+          </article>
+
+          <!-- Step 5 -->
+          <article class="step" tabindex="0">
+            <div class="num">5</div>
+            <div class="meta">
+              <strong>Add event to the GHL calendar with the correct tags</strong>
+              <p>Territory, property, host, media. Verify notifications.</p>
+            </div>
+          </article>
+
+          <!-- Step 6 -->
+          <article class="step" tabindex="0">
+            <div class="num">6</div>
+            <div class="meta">
+              <strong>Submit Host &amp; Media Assignment Form</strong>
+              <p>Lock coverage, availability, and arrival times.</p>
+            </div>
+          </article>
+
+          <!-- Step 7 -->
+          <article class="step" tabindex="0">
+            <div class="num">7</div>
+            <div class="meta">
+              <strong>Auto-emails go out with all required documents attached</strong>
+              <p>Double-check attachments and recipients.</p>
+            </div>
+          </article>
+
+          <!-- Step 8 -->
+          <article class="step" tabindex="0">
+            <div class="num">8</div>
+            <div class="meta">
+              <strong>Event executes on-site</strong>
+              <p>Arrive early, confirm vendors, follow the flow document.</p>
+            </div>
+          </article>
+
+          <!-- Step 9 -->
+          <article class="step" tabindex="0">
+            <div class="num">9</div>
+            <div class="meta">
+              <strong>Submit post-event recap and media feedback</strong>
+              <p>What worked, what missed, media status, next actions.</p>
+            </div>
+          </article>
+
+          <!-- Step 10 -->
+          <article class="step" tabindex="0">
+            <div class="num">10</div>
+            <div class="meta">
+              <strong>Plan and schedule the next round of events for this property</strong>
+              <p>Use learnings to tighten the next cycle.</p>
+            </div>
+          </article>
+
+          <!-- Sticky footer for mobile -->
+          <div class="footer-cta">
+            <a class="cta" href="https://submit.purestaync.com/ectoolkit"><span aria-hidden="true">↗</span> Go to EC Toolkit</a>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Simple local progress: counts checked boxes and updates progress bar width
+  (function(){
+    const checks=[...document.querySelectorAll('.check input')];
+    const bar=document.getElementById('bar');
+
+    function sync(){
+      const done=checks.filter(c=>c.checked).length;
+      const pct=Math.round((done/10)*100);
+      bar.style.width=pct+"%";
+      // persist
+      localStorage.setItem('ec_progress', JSON.stringify(checks.map(c=>c.checked)));
+    }
+
+    // restore
+    try{
+      const saved=JSON.parse(localStorage.getItem('ec_progress')||'[]');
+      checks.forEach((c,i)=>{ if(saved[i]) c.checked=true; });
+    }catch(e){}
+
+    checks.forEach(c=>c.addEventListener('change',sync));
+    sync();
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,478 @@
+<!-- BEGIN: PureStay Event Budget Calculator (Responsive, GHL-ready, single file) -->
+<div id="ps-budget-app">
+  <style>
+    :root{
+      --brand:#73261F;
+      --gold:#CEA43C;
+      --ink:#1a1a1a;
+      --muted:#6a6f76;
+      --bg:#f6f6f7;
+      --card:#ffffff;
+      --border:#e8e8ea;
+      --radius:14px;
+      --shadow:0 6px 24px rgba(17,19,24,.08);
+      --shadow-sm:0 2px 10px rgba(17,19,24,.06);
+      --focus: 0 0 0 3px rgba(206,164,60,.35);
+    }
+
+    /* Layout shell */
+    #ps-budget-app{
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--ink);
+      background:var(--bg);
+      padding: clamp(16px, 2vw, 28px);
+    }
+
+    .wrap{
+      max-width: 980px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+    @media (min-width: 960px){
+      .wrap{
+        grid-template-columns: 1.1fr .9fr;
+        gap: 22px;
+      }
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+
+    .header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:18px 18px 0 18px;
+    }
+    .title{
+      font-size: clamp(18px, 2.4vw, 22px);
+      font-weight:700;
+      letter-spacing:.2px;
+    }
+    .sub{
+      font-size: 13px;
+      color:var(--muted);
+      margin-top:4px;
+    }
+
+    .body{
+      padding:18px;
+    }
+
+    /* Inputs */
+    .grid{
+      display:grid;
+      gap:12px;
+      grid-template-columns:1fr;
+    }
+    @media (min-width: 680px){
+      .grid.two{ grid-template-columns: 1fr 1fr; }
+    }
+
+    label{
+      font-size:13px;
+      font-weight:600;
+      color:#2a2d33;
+      display:block;
+      margin-bottom:6px;
+    }
+    .field{
+      position:relative;
+    }
+    input[type=number], select{
+      appearance:none;
+      width:100%;
+      padding:12px 12px;
+      border:1px solid var(--border);
+      border-radius:10px;
+      font-size:15px;
+      background:#fff;
+      outline:none;
+      transition: box-shadow .15s ease, border-color .15s ease, transform .04s ease;
+    }
+    input[type=number]:focus, select:focus{
+      border-color:var(--gold);
+      box-shadow:var(--focus);
+    }
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button{ -webkit-appearance: none; margin: 0; }
+    input[type=number]{ -moz-appearance: textfield; }
+
+    .hint{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:6px;
+    }
+
+    /* Buttons */
+    .actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .btn{
+      cursor:pointer;
+      border:none;
+      border-radius:10px;
+      padding:12px 14px;
+      font-weight:700;
+      font-size:14px;
+      line-height:1;
+      box-shadow:var(--shadow-sm);
+      transition: transform .06s ease, box-shadow .2s ease, opacity .2s ease;
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{
+      background:#111318;
+      color:#fff;
+    }
+    .btn.alt{
+      background:#f0f1f3;
+      color:#111318;
+    }
+    .btn.ghost{
+      background:transparent;
+      border:1px solid var(--border);
+      color:#111318;
+    }
+
+    /* Result card */
+    .result-head{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:12px;
+      border-bottom:1px dashed var(--border);
+      padding-bottom:12px;
+      margin-bottom:12px;
+    }
+    .big{
+      font-size: clamp(22px, 3.2vw, 28px);
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+    .pill{
+      font-size:12px;
+      background:#fff7e0;
+      color:#5a4417;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid #f1e3b9;
+      white-space:nowrap;
+    }
+    .row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:10px 0;
+      border-bottom:1px solid var(--border);
+      gap:12px;
+      font-size:14px;
+    }
+    .row:last-child{ border-bottom:0; }
+    .row .k{ color:var(--muted); }
+    .row .v{ font-weight:600; }
+
+    .alloc{
+      margin-top:10px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      overflow:hidden;
+    }
+    .alloc h4{
+      margin:0;
+      padding:12px 14px;
+      background:#fafafa;
+      border-bottom:1px solid var(--border);
+      font-size:13px;
+      letter-spacing:.2px;
+      color:#2a2d33;
+    }
+    .alloc ul{
+      list-style:none;
+      margin:0;
+      padding:6px 10px 10px 10px;
+    }
+    .alloc li{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:10px 6px;
+      border-bottom:1px dashed var(--border);
+      font-size:14px;
+    }
+    .alloc li:last-child{ border-bottom:0; }
+
+    .muted{ color:var(--muted); }
+    .ok{ color:#1c7c3a; font-weight:700; }
+    .warn{ color:#8a3b12; font-weight:700; }
+
+    /* Helpers */
+    .hidden{ display:none !important; }
+    .right{ text-align:right; }
+  </style>
+
+  <div class="wrap">
+    <!-- INPUTS -->
+    <section class="card" aria-labelledby="calc-title">
+      <div class="header">
+        <div>
+          <div id="calc-title" class="title">Event Budget Calculator</div>
+          <div class="sub">Internal use for account managers</div>
+        </div>
+      </div>
+      <div class="body">
+        <div class="grid two">
+          <div class="field">
+            <label for="ps-monthly">Monthly price ($)</label>
+            <input id="ps-monthly" type="number" inputmode="decimal" min="1" step="1" placeholder="2000" aria-describedby="monthly-hint">
+            <div id="monthly-hint" class="hint">Auto formats as you type</div>
+          </div>
+
+          <div class="field">
+            <label for="ps-events">Events per month</label>
+            <input id="ps-events" type="number" inputmode="numeric" min="1" step="1" placeholder="3">
+            <div class="hint">Must be at least 1</div>
+          </div>
+
+          <div class="field">
+            <label for="ps-media">Include media</label>
+            <select id="ps-media">
+              <option value="none">No</option>
+              <option value="photo">Photographer only</option>
+              <option value="video">Videographer only</option>
+              <option value="both">Photo + Video</option>
+            </select>
+            <div class="hint">Adds a fixed amount per event</div>
+          </div>
+
+          <div class="field">
+            <label for="ps-autocalc" class="muted">Calculation mode</label>
+            <select id="ps-autocalc" aria-label="Calculation mode">
+              <option value="auto" selected>Auto update</option>
+              <option value="manual">Manual, click Calculate</option>
+            </select>
+            <div class="hint">Choose auto or manual updates</div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="ps-calc">Calculate</button>
+          <button class="btn alt" id="ps-reset" type="button">Reset</button>
+          <button class="btn ghost" id="ps-copy" type="button" title="Copy breakdown" disabled>Copy breakdown</button>
+        </div>
+
+        <div id="ps-error" class="hint warn hidden" role="alert" style="margin-top:10px;"></div>
+      </div>
+    </section>
+
+    <!-- RESULT -->
+    <section id="ps-result-card" class="card hidden" aria-live="polite">
+      <div class="body">
+        <div class="result-head">
+          <div>
+            <div class="muted" style="font-size:12px;">Recommended budget per event</div>
+            <div id="ps-total" class="big">$0.00</div>
+          </div>
+          <div id="ps-tier" class="pill">Tier</div>
+        </div>
+
+        <div class="row">
+          <div class="k">Base per event</div>
+          <div id="ps-base" class="v">$0.00</div>
+        </div>
+        <div class="row">
+          <div class="k">Media add-on</div>
+          <div id="ps-media-val" class="v">$0.00</div>
+        </div>
+        <div class="row">
+          <div class="k">Monthly allocation percent</div>
+          <div id="ps-percent" class="v">0%</div>
+        </div>
+        <div class="row">
+          <div class="k">Host pay per event</div>
+          <div id="ps-host" class="v">$0.00</div>
+        </div>
+
+        <div class="alloc" style="margin-top:14px;">
+          <h4>Base allocation guide</h4>
+          <ul id="ps-alloc-list">
+            <!-- rows injected -->
+          </ul>
+        </div>
+
+        <div id="ps-note" class="hint" style="margin-top:12px;"></div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    (function(){
+      const $ = (id)=>document.getElementById(id);
+
+      const els = {
+        monthly: $('ps-monthly'),
+        events: $('ps-events'),
+        media: $('ps-media'),
+        mode: $('ps-autocalc'),
+        calc: $('ps-calc'),
+        reset: $('ps-reset'),
+        copy: $('ps-copy'),
+        error: $('ps-error'),
+        card: $('ps-result-card'),
+        total: $('ps-total'),
+        base: $('ps-base'),
+        mediaVal: $('ps-media-val'),
+        percent: $('ps-percent'),
+        host: $('ps-host'),
+        tier: $('ps-tier'),
+        allocList: $('ps-alloc-list'),
+        note: $('ps-note'),
+      };
+
+      // currency formatter
+      const f = new Intl.NumberFormat(undefined,{style:'currency', currency:'USD', maximumFractionDigits:2});
+
+      // sanitize and soft-format monthly on input
+      els.monthly.addEventListener('input', () => {
+        // do not force commas while typing, only validate numeric
+        const v = els.monthly.value;
+        if (v && Number(v) < 0) els.monthly.value = Math.abs(Number(v));
+        if (els.mode.value === 'auto') run();
+      });
+      els.events.addEventListener('input', () => {
+        if (els.mode.value === 'auto') run();
+      });
+      els.media.addEventListener('change', () => {
+        if (els.mode.value === 'auto') run();
+      });
+      els.mode.addEventListener('change', () => {
+        // no action; user controls manual vs auto
+      });
+
+      els.calc.addEventListener('click', run);
+      els.reset.addEventListener('click', () => {
+        els.monthly.value = '';
+        els.events.value = '';
+        els.media.value = 'none';
+        els.error.classList.add('hidden');
+        els.card.classList.add('hidden');
+        els.copy.disabled = true;
+      });
+
+      els.copy.addEventListener('click', async () => {
+        const text = els.copy.dataset.clip || '';
+        try{
+          await navigator.clipboard.writeText(text);
+          const prev = els.copy.textContent;
+          els.copy.textContent = 'Copied';
+          setTimeout(()=> els.copy.textContent = prev, 1600);
+        }catch(e){
+          alert('Copy failed. Try again.');
+        }
+      });
+
+      function getPercentTier(monthly){
+        // Returns {percent, label}
+        let percent = .33, label = 'Standard';
+        if (monthly <= 1299){ percent=.45; label='Entry'; }
+        else if (monthly <= 1799){ percent=.40; label='Tier 1'; }
+        else if (monthly <= 2499){ percent=.35; label='Tier 2'; }
+        else if (monthly <= 3499){ percent=.30; label='Tier 3'; }
+        else if (monthly <= 4999){ percent=.28; label='Tier 4'; }
+        else { percent=.25; label='Enterprise'; }
+        return { percent, label };
+      }
+
+      function mediaAddOn(val){
+        if (val==='photo') return 200;
+        if (val==='video') return 300;
+        if (val==='both')  return 500;
+        return 0;
+      }
+
+      function validate(){
+        const monthly = parseFloat(els.monthly.value);
+        const events  = parseFloat(els.events.value);
+        let msg = '';
+        if (!monthly || monthly <= 0) msg = 'Enter a valid monthly price.';
+        else if (!events || events <= 0) msg = 'Enter a valid events count.';
+        if (msg){
+          els.error.textContent = msg;
+          els.error.classList.remove('hidden');
+          els.card.classList.add('hidden');
+          els.copy.disabled = true;
+          return null;
+        }
+        els.error.classList.add('hidden');
+        return { monthly, events };
+      }
+
+      function run(){
+        const vals = validate();
+        if (!vals) return;
+
+        const { monthly, events } = vals;
+        const { percent, label } = getPercentTier(monthly);
+
+        const baseBudgetMonthly = monthly * percent;
+        const basePerEvent = baseBudgetMonthly / events;
+
+        const hostPerEvent = Math.max((baseBudgetMonthly * 0.10) / events, 75);
+        const mediaPerEvent = mediaAddOn(els.media.value);
+        const totalPerEvent = basePerEvent + mediaPerEvent;
+
+        // UI populate
+        els.card.classList.remove('hidden');
+        els.tier.textContent = `${label} • ${Math.round(percent*100)}%`;
+        els.base.textContent = f.format(basePerEvent);
+        els.mediaVal.textContent = f.format(mediaPerEvent);
+        els.percent.textContent = `${Math.round(percent*100)}% of monthly`;
+        els.host.textContent = f.format(hostPerEvent);
+        els.total.textContent = f.format(totalPerEvent);
+
+        // allocation list (base only)
+        const allocations = [
+          { name:'Food & Treats', pct:.35 },
+          { name:'Entertainment / Vendor', pct:.25 },
+          { name:'Supplies / Décor', pct:.15 },
+          { name:'Host / Coordinator (min $75)', pct:.10, force: hostPerEvent },
+          { name:'Flex Reserve', pct:.15 },
+        ];
+        els.allocList.innerHTML = allocations.map(a => {
+          const amt = a.force != null ? a.force : basePerEvent * a.pct;
+          return `<li><span>${a.name} <span class="muted">(${Math.round((a.force!=null? (a.force/basePerEvent) : a.pct)*100)}%)</span></span><span class="right">${f.format(amt)}</span></li>`;
+        }).join('');
+
+        // Manager note
+        els.note.innerHTML = els.media.value !== 'none'
+          ? `Media adds ${f.format(mediaPerEvent)} per event. Total shown includes media.`
+          : `No media selected. Total equals base allocation only.`;
+
+        // Build clean copy text
+        const copy = [
+          `Recommended Budget per Event: ${f.format(totalPerEvent)}`,
+          `Base: ${f.format(basePerEvent)} (${Math.round(percent*100)}% of monthly)`,
+          `Media add-on: ${f.format(mediaPerEvent)} ${mediaPerEvent ? `(${els.media.options[els.media.selectedIndex].text})` : ''}`.trim(),
+          ``,
+          `Breakdown (Base Only):`,
+          `- 35% Food & Treats: ${f.format(basePerEvent * .35)}`,
+          `- 25% Entertainment / Vendor: ${f.format(basePerEvent * .25)}`,
+          `- 15% Supplies / Décor: ${f.format(basePerEvent * .15)}`,
+          `- 10% Host (min $75): ${f.format(hostPerEvent)}`,
+          `- 15% Flex Reserve: ${f.format(basePerEvent * .15)}`,
+        ].join('\n');
+        els.copy.dataset.clip = copy;
+        els.copy.disabled = false;
+      }
+    })();
+  </script>
+</div>
+<!-- END: PureStay Event Budget Calculator -->

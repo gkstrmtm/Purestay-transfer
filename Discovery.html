@@ -1,0 +1,671 @@
+<!-- =========================================================
+PURESTAY • Discover Landing • GHL Custom HTML Block (FULL PAGE)
+Scope: fix form helper text color; keep discovery header light; retain last working UX
+========================================================= -->
+<div id="ps-discover"></div>
+
+<style>
+  /* ---------- Reset ---------- */
+  #ps-discover, #ps-discover * { box-sizing: border-box; }
+  #ps-discover { all: initial; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial; display:block; }
+  #ps-discover a, #ps-discover button { all: unset; cursor:pointer; }
+  #ps-discover img { display:block; max-width:100%; height:auto; }
+
+  :root{
+    --ps-maroon:#73261F;
+    --ps-gold:#CEA43C;
+    --ps-off:#F8F6F2;
+    --ps-ghost:#ffffff;
+  }
+
+  /* ---------- HERO ---------- */
+  .ps-hero{
+    position: relative; min-height: 100vh; overflow: hidden; color: var(--ps-ghost);
+    background:
+      radial-gradient(1200px 600px at 10% -10%, rgba(206,164,60,0.35), transparent 60%),
+      radial-gradient(900px 700px at 110% 20%, rgba(115,38,31,0.55), transparent 60%),
+      linear-gradient(180deg, #1a0d0b, #0c0706 60%);
+  }
+  .ps-hero__orbs{ position:absolute; inset:0; pointer-events:none; filter: blur(30px) saturate(115%); }
+  .orb{ position:absolute; width:260px; height:260px; border-radius:50%;
+    background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.85), rgba(255,255,255,0.05) 60%), linear-gradient(135deg, var(--ps-gold), rgba(206,164,60,0.25));
+    opacity:0.1; mix-blend-mode: screen; animation: drift 18s ease-in-out infinite alternate;
+  }
+  .orb--2{ width:340px; height:340px; background: radial-gradient(circle at 60% 40%, rgba(255,255,255,0.8), rgba(255,255,255,0.05) 60%), linear-gradient(135deg, #ffb178, var(--ps-gold)); animation-duration:22s; left:65%; top:10%; opacity:0.12; }
+  .orb--3{ width:280px; height:280px; background: radial-gradient(circle at 40% 60%, rgba(255,255,255,0.9), rgba(255,255,255,0.05) 60%), linear-gradient(135deg, #e27b62, var(--ps-maroon)); animation-duration:26s; left:15%; bottom:-6%; opacity:0.1; }
+  @keyframes drift{ 0%{ transform: translate(-10%,-10%) scale(1);} 100%{ transform: translate(6%,12%) scale(1.2);} }
+
+  .ps-hero__top{ position:absolute; inset:0 0 auto 0; height:88px; display:flex; align-items:center; justify-content:space-between;
+    padding:18px clamp(16px,4vw,48px); z-index:5; background: linear-gradient(to bottom, rgba(0,0,0,0.38), rgba(0,0,0,0));
+  }
+  .ps-hero__brand{ display:flex; align-items:center; gap:12px; }
+  .ps-hero__logo{ height:185px; width:auto; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5)); }
+
+  .ps-hero__stage{ position: relative; z-index: 4; display:grid; place-items:center; text-align:center; padding: clamp(72px, 12vh, 160px) 20px 120px; max-width:1200px; margin:0 auto; }
+  .tag{
+    display:inline-grid; place-items:center; font-size: clamp(12px, 1.3vw, 14px); letter-spacing: .08em; text-transform: uppercase;
+    padding:9px 14px; border-radius:999px; color:#111; background: linear-gradient(90deg, var(--ps-gold), #ffd98c);
+    box-shadow: inset 0 0 0 1px rgba(17,17,17,0.12), 0 8px 30px rgba(206,164,60,0.25); opacity:0; transform: translateY(8px); animation: riseIn .8s .2s forwards;
+  }
+  @keyframes riseIn{ to{ opacity:1; transform:none; } }
+
+  .headline{
+    margin-top:18px; font-weight:800; font-size: clamp(34px, 6.6vw, 74px); line-height:1.02; letter-spacing:-0.01em;
+    background: linear-gradient(180deg, #fff, #eaeaea); -webkit-background-clip:text; background-clip:text; color: transparent;
+    text-wrap: balance; opacity:0; transform: translateY(12px); animation: riseIn 1s .6s forwards; text-shadow: 0 2px 36px rgba(0,0,0,0.55);
+  }
+  .subhead{ margin-top:14px; font-size: clamp(16px, 2.3vw, 22px); color:#f3efe9; opacity:0.98; text-wrap: pretty; opacity:0; transform: translateY(12px); animation: riseIn .9s 1.1s forwards; }
+
+  .proof{ display:flex; flex-wrap:wrap; gap:14px; justify-content:center; margin-top:22px; opacity:0; transform: translateY(10px); animation: riseIn .8s 1.6s forwards; }
+  .proof__chip{ display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:12px; background: rgba(255,255,255,0.10); border:1px solid rgba(255,255,255,0.18); font-size:14px; color:#fff; }
+  .proof__icon{ width:16px; height:16px; flex:none; opacity:.95; }
+
+  .cta{
+    margin-top:36px; display:inline-flex; align-items:center; gap:10px; padding:14px 22px; border-radius:14px; background: linear-gradient(180deg, #fff, #efefef);
+    color:#121212; font-weight:700; font-size: clamp(14px, 2.2vw, 16px); box-shadow: 0 10px 30px rgba(255,255,255,0.15), 0 16px 60px rgba(206,164,60,0.25);
+    transform: translateY(6px) scale(0.98); opacity:0; animation: ctaIn .9s 2s forwards;
+  }
+  @keyframes ctaIn{ to{ opacity:1; transform:none; } }
+
+  .cue{ position:absolute; left:50%; transform:translateX(-50%); bottom:20px; color:#fff; font-size:12px; opacity:.7; display:grid; place-items:center; gap:6px; }
+  .cue__chev{ width:14px; height:14px; border-right:2px solid #fff; border-bottom:2px solid #fff; transform: rotate(45deg); animation: bounce 1.8s infinite; }
+  @keyframes bounce{ 0%,100%{transform: translateY(0) rotate(45deg); opacity:.6;} 50%{transform: translateY(6px) rotate(45deg); opacity:1;} }
+
+  /* ---------- COMMON SECTIONS ---------- */
+  .js-bleed{ position:relative; }
+  .cal-wrap{ position:relative; background: linear-gradient(180deg, #0c0706, #140a09 30%, #1c110f 60%, #241513 100%); padding: clamp(32px, 6vw, 72px) 0; }
+  .cal-shell{ max-width: 1160px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 24px); }
+
+  .cal-head{ padding: clamp(16px, 2.8vw, 28px) clamp(16px, 2.8vw, 28px) 0; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .cal-title{ color:#ffffff; font-weight:800; font-size: clamp(22px, 4.4vw, 34px); letter-spacing:-0.01em; text-shadow: 0 2px 24px rgba(0,0,0,0.5); }
+  /* Keep the discovery header kicker LIGHT on dark */
+  .cal-head .cal-kicker{ color:#f2eee8; font-size: clamp(13px, 2.2vw, 16px); text-shadow: 0 1px 18px rgba(0,0,0,0.45); }
+
+  .cal-card{
+    background:#ffffff; border-radius:22px; box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 12px 30px rgba(0,0,0,0.10), 0 40px 80px rgba(115,38,31,0.15);
+    padding: clamp(10px, 1.8vw, 18px); overflow:hidden;
+    /* keep each step feeling centered on desktop */
+    min-height: min(78vh, 860px);
+    display:block;
+  }
+  .cal-iframe{ width:100%; height:900px; border:0; display:block; margin-top: clamp(12px, 2.2vw, 18px); border-radius:18px; background:#fff; }
+
+  .trustbar{ display:flex; gap:16px; align-items:center; justify-content:center; color:#e9e3db; opacity:.95; font-size:14px; margin-top: clamp(18px, 3vw, 28px); text-align:center; flex-wrap:wrap; }
+  .trustbar b{ color:#fff; }
+
+  @media (max-width:720px){
+    .ps-hero__top{ height:76px; }
+    .ps-hero__logo{ height:40px; }
+    .cal-iframe{ height:1100px; }
+    .cal-card{ min-height: auto; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    .orb{ animation:none; }
+    .cue__chev{ animation:none; }
+  }
+
+  /* ---------- QUOTE styles ---------- */
+  #ps-quote .psq-title{ color:#121212 !important; text-shadow:none !important; }
+  /* Make only the helper lines INSIDE steps dark on white card */
+  #ps-quote .psq-step .cal-kicker{ color:#4a4a4a; text-shadow:none; }
+
+  .psq-field{ display:grid; gap:8px; }
+  .psq-label{ font-weight:700; color:#1a1a1a; }
+  .psq-input{ width:100%; padding:12px 14px; border:1px solid #e6e6e6; border-radius:12px; background:#fff; }
+
+  .psq-chips{ display:flex; flex-wrap:wrap; gap:10px; }
+  .chip{
+    padding:10px 14px; border:1px solid #e6e6e6; border-radius:999px; background:#fff; font-size:14px;
+    transition: box-shadow .15s, border-color .15s, background .15s, color .15s;
+  }
+  .chip:hover{ border-color:#d6d6d6; }
+  .chip[data-selected]{ background:#111; color:#fff; border-color:#111; box-shadow:0 6px 18px rgba(0,0,0,.12); }
+  .psq-chips--segment .chip{ border-radius:10px; }
+  .psq-chips--segment .chip[data-selected]{ background:linear-gradient(180deg,#111,#1a1a1a); }
+
+  .psq-steppers{ display:flex; align-items:center; gap:12px; }
+  .stepper{ width:44px; height:44px; border-radius:12px; background:#fff; border:1px solid #e6e6e6; font-size:22px; line-height:1; }
+  .psq-count{ width:80px; text-align:center; padding:10px 12px; border:1px solid #e6e6e6; border-radius:12px; font-size:16px; }
+
+  /* Buttons */
+  .btn-ghost{
+    background:#fff; color:#121212; border:1px solid rgba(0,0,0,.18); border-radius:14px; padding:12px 18px;
+    box-shadow:0 6px 18px rgba(0,0,0,.12), 0 0 0 3px rgba(0,0,0,.03) inset;
+  }
+  .btn-wide{ min-width:140px; }
+  .cta-wide{ min-width:220px; text-align:center; justify-content:center; }
+
+  /* Gold CTAs */
+  .cta-gold{
+    display:inline-flex; align-items:center; justify-content:center;
+    padding:12px 20px; border-radius:14px;
+    background: linear-gradient(180deg, #FFD775, #D2A43B);
+    color:#1a1a1a; font-weight:700; box-shadow: 0 8px 24px rgba(206,164,60,0.35), inset 0 0 0 1px rgba(0,0,0,.08);
+  }
+  .cta-gold:hover{ filter:saturate(1.05) brightness(1.02); }
+
+  .psq-actions{ display:flex; gap:12px; flex-wrap:wrap; margin-top:12px; }
+  .psq-nav{ display:flex; justify-content:space-between; gap:12px; margin-top:6px; }
+
+  .psq-summary{ display:grid; gap:8px; margin-top:8px; }
+  .psq-msg{ padding:12px 14px; border-radius:12px; background:#fff5f5; color:#7a1f1f; border:1px solid #f0caca; }
+  .psq-err{ color:#7a1f1f; font-size:13px; }
+</style>
+
+<!-- ================= HERO ================= -->
+<section class="ps-hero js-bleed" aria-label="PureStay discovery intro">
+  <div class="ps-hero__orbs" aria-hidden="true">
+    <span class="orb" style="left:-6%; top:8%"></span>
+    <span class="orb orb--2"></span>
+    <span class="orb orb--3"></span>
+  </div>
+
+  <div class="ps-hero__top">
+    <div class="ps-hero__brand">
+      <a href="https://www.purestaync.com/home" aria-label="PureStay Home">
+        <img class="ps-hero__logo" src="https://storage.googleapis.com/msgsndr/TPwxGisIBKbxlbrOoolh/media/68b27005e7747007c0dd1464.svg" alt="PureStay" />
+      </a>
+    </div>
+    <!-- no skip button -->
+  </div>
+
+  <div class="ps-hero__stage">
+    <span class="tag">Resident Retention, Simplified</span>
+    <h1 class="headline">Keep residents longer. <br />Make your community feel like home.</h1>
+    <p class="subhead">On-site experiences, smart content, and a clean system your team can actually run. Book a discovery call, pick a time, done.</p>
+
+    <div class="proof" role="list" aria-label="Quick reasons to book">
+      <div class="proof__chip" role="listitem"><svg class="proof__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Fast 15-minute intro</div>
+      <div class="proof__chip" role="listitem"><svg class="proof__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 8v8m4-4H8" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Clear plan and pricing</div>
+      <div class="proof__chip" role="listitem"><svg class="proof__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="#fff" stroke-width="2"/><path d="M8 12h8" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>Built for NC communities</div>
+    </div>
+
+    <button class="cta" id="ps-scroll">Book your discovery call</button>
+  </div>
+
+  <div class="cue" aria-hidden="true"><div class="cue__chev"></div></div>
+</section>
+
+<!-- ================= DISCOVERY / QUOTE ================= -->
+<section id="ps-quote" class="cal-wrap js-bleed" aria-label="Tell us about your property">
+  <div class="cal-shell">
+    <div class="cal-head">
+      <h2 class="cal-title">Tell us about your property</h2>
+      <div class="cal-kicker">A few quick questions and we’ll set up the right plan. You can review and start right away.</div>
+    </div>
+
+    <div class="cal-card" id="psq-card">
+      <!-- Progress -->
+      <div id="psq-progress" style="height:6px; background:#f2f2f2; border-radius:999px; overflow:hidden;">
+        <div id="psq-progress-bar" style="height:100%; width:14%; background:linear-gradient(90deg,#CEA43C,#ffd98c); transition:width .25s;"></div>
+      </div>
+
+      <div id="psq" style="margin-top:14px; display:grid; gap:16px;">
+        <!-- Step 1 -->
+        <div class="psq-step" data-step="1">
+          <div class="cal-title psq-title">Let’s start with the basics</div>
+          <div class="cal-kicker">We’ll send your plan to this email.</div>
+
+          <div class="psq-field">
+            <label class="psq-label" for="psq-name">Property name</label>
+            <input id="psq-name" type="text" placeholder="e.g., Oakview Apartments" class="psq-input" autocomplete="organization">
+            <div id="err-name" class="psq-err" style="display:none;">Please enter a property name.</div>
+          </div>
+
+          <div class="psq-field">
+            <label class="psq-label" for="psq-email">Work email</label>
+            <input id="psq-email" type="email" placeholder="name@company.com" class="psq-input" autocomplete="email">
+            <div id="err-email" class="psq-err" style="display:none;">Enter a valid work email.</div>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="psq-step" data-step="2" hidden>
+          <div class="cal-title psq-title">Who mostly lives here?</div>
+          <div class="cal-kicker">Pick all that apply.</div>
+
+          <div id="psq-demo" class="psq-chips" data-multi="true" role="group" aria-label="Demographics">
+            <button type="button" class="chip" data-val="Young professionals" aria-pressed="false">Young professionals</button>
+            <button type="button" class="chip" data-val="Families" aria-pressed="false">Families</button>
+            <button type="button" class="chip" data-val="Students" aria-pressed="false">Students</button>
+            <button type="button" class="chip" data-val="Seniors" aria-pressed="false">Seniors</button>
+            <button type="button" class="chip" data-val="Mixed community" aria-pressed="false">Mixed community</button>
+            <button type="button" class="chip" data-val="Other" aria-pressed="false">Other</button>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="psq-step" data-step="3" hidden>
+          <div class="cal-title psq-title">What are you running today?</div>
+          <div class="cal-kicker">Tell us about your current cadence.</div>
+
+          <div class="psq-field">
+            <label class="psq-label">Events per month (current)</label>
+            <div id="psq-current" class="psq-chips" data-multi="false" role="group" aria-label="Current events per month">
+              <button class="chip" data-val="None yet" aria-pressed="false">None yet</button>
+              <button class="chip" data-val="1" aria-pressed="false">1</button>
+              <button class="chip" data-val="2" aria-pressed="false">2</button>
+              <button class="chip" data-val="3" aria-pressed="false">3</button>
+              <button class="chip" data-val="4+" aria-pressed="false">4+</button>
+            </div>
+          </div>
+
+          <div class="psq-field">
+            <label class="psq-label">Who runs these?</label>
+            <div id="psq-runby" class="psq-chips" data-multi="true" role="group" aria-label="Who runs events">
+              <button class="chip" data-val="in-house" aria-pressed="false">We run these in-house</button>
+              <button class="chip" data-val="vendors" aria-pressed="false">We use vendors</button>
+            </div>
+          </div>
+
+          <div class="psq-field">
+            <label class="psq-label" for="psq-partners">Partners we should know about (optional)</label>
+            <input id="psq-partners" type="text" placeholder="Sponsor, caterer, etc." class="psq-input">
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="psq-step" data-step="4" hidden>
+          <div class="cal-title psq-title">Where do you want to be?</div>
+          <div class="cal-kicker">Pick what matters most right now.</div>
+
+          <div class="psq-field">
+            <label class="psq-label">Ideal events per month</label>
+            <div id="psq-desired" class="psq-chips" data-multi="false" role="group" aria-label="Desired events per month">
+              <button class="chip" data-val="1" aria-pressed="false">1</button>
+              <button class="chip" data-val="2" aria-pressed="false">2</button>
+              <button class="chip" data-val="3" aria-pressed="false">3</button>
+              <button class="chip" data-val="4" aria-pressed="false">4</button>
+              <button class="chip" data-val="5+" aria-pressed="false">5+</button>
+            </div>
+          </div>
+
+          <div class="psq-field">
+            <label class="psq-label">What matters most right now?</label>
+            <div id="psq-goals" class="psq-chips" data-multi="true" role="group" aria-label="Primary goals">
+              <button class="chip" data-val="Renewals" aria-pressed="false">Renewals</button>
+              <button class="chip" data-val="Lease-ups" aria-pressed="false">Lease-ups</button>
+              <button class="chip" data-val="Engagement" aria-pressed="false">Engagement</button>
+              <button class="chip" data-val="Reviews" aria-pressed="false">Reviews</button>
+              <button class="chip" data-val="Awareness" aria-pressed="false">Awareness</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="psq-step" data-step="5" hidden>
+          <div class="cal-title psq-title">How should we capture and share it?</div>
+          <div class="cal-kicker">Light = quick photos and clips. Full = polished edits and monthly highlights.</div>
+
+          <div id="psq-content" class="psq-chips" data-multi="false" role="group" aria-label="Content level">
+            <button class="chip" data-val="simple" aria-pressed="false">Keep it simple</button>
+            <button class="chip" data-val="light" aria-pressed="false">Light content</button>
+            <button class="chip" data-val="full" aria-pressed="false">Full content</button>
+          </div>
+
+          <div class="psq-field">
+            <div id="psq-ads" class="psq-chips" data-multi="false" role="group" aria-label="Ads">
+              <button class="chip" data-val="no"  data-selected aria-pressed="true">Ads off</button>
+              <button class="chip" data-val="yes" aria-pressed="false">Run targeted ads</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 6 -->
+        <div class="psq-step" data-step="6" hidden>
+          <div class="cal-title psq-title">How many properties are we setting up?</div>
+          <div class="cal-kicker">Choose your initial term.</div>
+
+          <div class="psq-steppers" role="group" aria-label="Property count">
+            <button class="stepper" id="cnt-dec" aria-label="Decrease">−</button>
+            <input id="psq-count" type="text" inputmode="numeric" value="1" class="psq-count" aria-label="Count">
+            <button class="stepper" id="cnt-inc" aria-label="Increase">+</button>
+          </div>
+
+          <div class="psq-field" style="margin-top:10px;">
+            <label class="psq-label">Pick a term</label>
+            <div id="psq-term" class="psq-chips psq-chips--segment" data-multi="false" role="group" aria-label="Term length">
+              <button class="chip" data-val="1m"  data-selected aria-pressed="true">1m</button>
+              <button class="chip" data-val="3m" aria-pressed="false">3m pilot</button>
+              <button class="chip" data-val="6m" aria-pressed="false">6m (5% off)</button>
+              <button class="chip" data-val="12m" aria-pressed="false">12m (10% off)</button>
+            </div>
+            <div class="cal-kicker" style="margin-top:6px;">We recommend at least 3 months to see full effect.</div>
+          </div>
+        </div>
+
+        <!-- Step 7 -->
+        <div class="psq-step" data-step="7" hidden>
+          <div class="cal-title psq-title">Your plan</div>
+          <div id="psq-msg" class="psq-msg" hidden></div>
+          <div id="psq-summary" class="psq-summary"></div>
+
+          <div class="psq-actions">
+            <a id="psq-pay" class="cta-gold cta-wide" href="#" target="_blank" rel="noopener">Review plan &amp; start</a>
+            <a class="cta-gold cta-wide" href="https://purestaync.com/connect">Talk to an account manager</a>
+          </div>
+          <div class="cal-kicker" style="margin-top:8px;">Taxes and fees handled at checkout.</div>
+        </div>
+
+        <!-- Nav -->
+        <div class="psq-nav">
+          <button id="psq-back" class="cta-gold btn-wide" type="button">Back</button>
+          <button id="psq-next" class="cta-gold btn-wide" type="button">Continue</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="trustbar"><span>Local team. Fast setup. <b>Clear ROI.</b></span></div>
+  </div>
+</section>
+
+<!-- ================= CALENDAR ================= -->
+<section id="ps-calendar" class="cal-wrap js-bleed" aria-label="Book a discovery call">
+  <div class="cal-shell">
+    <div class="cal-head">
+      <h2 class="cal-title">Prefer to build your plan with a member of our team?</h2>
+      <div class="cal-kicker">Book a discovery call below.</div>
+    </div>
+
+    <div class="cal-card">
+      <iframe class="cal-iframe" title="PureStay Discovery Calendar" src="https://api.leadconnectorhq.com/widget/booking/mrHEOrJ2HigWjdcjHcvP" loading="lazy" allowtransparency="true"></iframe>
+    </div>
+
+    <div class="trustbar">
+      <span>Local team. Fast setup. <b>Clear ROI.</b></span>
+      <span>Questions before booking? <a href="mailto:hello@purestaync.com" style="text-decoration:underline; color:#fff;">Email us</a></span>
+    </div>
+  </div>
+  <noscript>
+    <div style="max-width:920px;margin:24px auto;color:#fff;padding:0 16px;">
+      JavaScript is required to load the calendar. You can also book at
+      <a href="https://api.leadconnectorhq.com/widget/booking/mrHEOrJ2HigWjdcjHcvP" style="color:#ffd98c; text-decoration:underline;">this link</a>.
+    </div>
+  </noscript>
+</section>
+
+<!-- ================= SCRIPTS ================= -->
+<script>
+  /* HERO scroll + full-bleed (kept) */
+  (function(){
+    const btn  = document.getElementById('ps-scroll');
+    const target = document.getElementById('ps-calendar');
+
+    function scrollToCalendar(){
+      if (!target) return;
+      const y = target.getBoundingClientRect().top + window.scrollY - 12;
+      window.scrollTo({ top:y, behavior:'smooth' });
+    }
+    btn && btn.addEventListener('click', scrollToCalendar);
+
+    function applyBleed(){
+      const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+      document.querySelectorAll('.js-bleed').forEach(el=>{
+        el.style.marginLeft = el.style.marginRight = el.style.width = '';
+        const r = el.getBoundingClientRect();
+        el.style.marginLeft  = (-r.left) + 'px';
+        el.style.marginRight = (-(vw - r.right)) + 'px';
+        el.style.width       = vw + 'px';
+      });
+    }
+    applyBleed();
+    window.addEventListener('resize', applyBleed);
+  })();
+</script>
+
+<script>
+/* ================= Quote Flow (JSONP; copy/UX updated) ================= */
+(function(){
+  const ENDPOINT = "https://script.google.com/macros/s/AKfycbxuZoHqLFXFpK-lUjroCCOcXxFXVa8NtIbVrFtqK7P2FSmS_NQhWvdgo4iY_qhJe9dp/exec";
+
+  const scope   = document.getElementById('ps-quote');
+  const steps   = Array.from(scope.querySelectorAll('.psq-step'));
+  const bar     = scope.querySelector('#psq-progress-bar');
+  const btnNext = scope.querySelector('#psq-next');
+  const btnBack = scope.querySelector('#psq-back');
+  const payBtn  = scope.querySelector('#psq-pay');
+  const msgBox  = scope.querySelector('#psq-msg');
+  const summary = scope.querySelector('#psq-summary');
+
+  const f = {
+    name: scope.querySelector('#psq-name'),
+    email: scope.querySelector('#psq-email'),
+    partners: scope.querySelector('#psq-partners'),
+    count: scope.querySelector('#psq-count'),
+    dec: scope.querySelector('#cnt-dec'),
+    inc: scope.querySelector('#cnt-inc'),
+    errName: scope.querySelector('#err-name'),
+    errEmail: scope.querySelector('#err-email')
+  };
+
+  const data = {
+    propertyName:'', email:'',
+    demographics:[], goals:[],
+    currentEvents:'None yet', runBy:[], partners:'',
+    desiredEvents:'1', content:'simple', ads:false,
+    properties:1, term:'1m'
+  };
+  let step = 1;
+  let userMoved = false; // prevents auto-jump on initial render
+
+  /* -------- helpers -------- */
+  function setStep(n, fromUser=false){
+    if (fromUser) userMoved = true;
+    step = Math.max(1, Math.min(7, n));
+    steps.forEach(s => s.hidden = (parseInt(s.dataset.step,10)!==step));
+    bar.style.width = (step/7*100) + '%';
+    btnBack.hidden = (step===1);
+    btnNext.textContent = step===6 ? 'Build my plan' : step===7 ? 'Done' : 'Continue';
+    btnNext.style.display = (step===7) ? 'none' : ''; // hide on result step
+
+    // keep card in view only after the user interacts (no initial jump)
+    if (userMoved) {
+      document.getElementById('psq-card').scrollIntoView({behavior:'smooth', block:'start'});
+      const title = steps.find(s => !s.hidden)?.querySelector('.psq-title');
+      if (title) title.setAttribute('tabindex','-1'), title.focus({preventScroll:true});
+    }
+  }
+
+  function valueFromGroup(id, multi=false){
+    const chips = scope.querySelectorAll('#'+id+' .chip[data-selected]');
+    if (multi){ return Array.from(chips).map(c=>c.dataset.val); }
+    return chips[0] ? chips[0].dataset.val : null;
+  }
+
+  function setChipPressed(group){
+    group.querySelectorAll('.chip').forEach(ch=>{
+      ch.setAttribute('aria-pressed', ch.hasAttribute('data-selected') ? 'true' : 'false');
+    });
+  }
+
+  function initChips(){
+    scope.querySelectorAll('.psq-chips').forEach(group=>{
+      const multi = group.dataset.multi === 'true';
+      group.addEventListener('click', e=>{
+        const b = e.target.closest('.chip'); if(!b) return;
+        if (!multi){
+          group.querySelectorAll('.chip[data-selected]').forEach(x=>x.removeAttribute('data-selected'));
+          b.setAttribute('data-selected','');
+        } else {
+          b.toggleAttribute('data-selected');
+        }
+        setChipPressed(group);
+      });
+      setChipPressed(group);
+    });
+    // defaults
+    scope.querySelector('#psq-current .chip[data-val="None yet"]').setAttribute('data-selected','');
+    setChipPressed(scope.querySelector('#psq-current'));
+  }
+
+  function hydrateStep(){
+    if (step===1){
+      data.propertyName = (f.name.value||'').trim();
+      data.email = (f.email.value||'').trim();
+    }
+    if (step===2){ data.demographics = valueFromGroup('psq-demo', true) || []; }
+    if (step===3){
+      data.currentEvents = valueFromGroup('psq-current', false) || 'None yet';
+      data.runBy = valueFromGroup('psq-runby', true) || [];
+      data.partners = (f.partners.value||'').trim();
+    }
+    if (step===4){
+      data.desiredEvents = valueFromGroup('psq-desired', false) || '1';
+      data.goals = valueFromGroup('psq-goals', true) || [];
+    }
+    if (step===5){
+      data.content = valueFromGroup('psq-content', false) || 'simple';
+      data.ads = (valueFromGroup('psq-ads', false) === 'yes');
+    }
+    if (step===6){
+      data.properties = Math.max(1, parseInt((f.count.value||'1').replace(/\D/g,''), 10) || 1);
+      f.count.value = String(data.properties);
+      data.term = valueFromGroup('psq-term', false) || '1m';
+    }
+  }
+
+  function bumpCount(delta){
+    const v = Math.max(1, (parseInt((f.count.value||'1').replace(/\D/g,''),10) || 1) + delta);
+    f.count.value = v;
+  }
+
+  /* -------- routing (unchanged logic, name→slug map) -------- */
+  const PKG_MAP = {
+    'Discounted CORE':'discount_core',
+    'CORE':'core',
+    'CORE Plus':'core_plus',
+    'Culture Shift Lite':'culture_lite',
+    'Culture Shift':'culture',
+    'Culture Shift Plus':'culture_ads',
+    'Signature Stay Intro':'sig_intro',
+    'Signature Stay':'signature'
+  };
+  function routePackage(d){
+    const desired = d.desiredEvents, content = d.content, ads = d.ads;
+    const complex = (d.demographics||[]).length >= 3;
+    const currentIsOne = d.currentEvents==='1';
+    const high = desired==='4' || desired==='5+';
+    let pkg = 'CORE';
+    if (desired==='1' && content==='simple' && !ads && d.properties===1 && currentIsOne) pkg='Discounted CORE';
+    if (desired==='1' || desired==='2') pkg = (content==='light') ? 'CORE Plus' : (pkg==='Discounted CORE' ? 'Discounted CORE' : 'CORE');
+    if (desired==='3') pkg = (content==='light') ? 'Culture Shift Lite' : (ads ? 'Culture Shift Plus' : 'Culture Shift');
+    if (high) pkg = (content==='full' && ads) ? 'Signature Stay' : (content==='full' ? 'Signature Stay Intro' : 'Culture Shift');
+    if (complex){
+      const order=['Discounted CORE','CORE','CORE Plus','Culture Shift Lite','Culture Shift','Culture Shift Plus','Signature Stay Intro','Signature Stay'];
+      const i=order.indexOf(pkg); if (i>=0 && i<order.length-1) pkg=order[i+1];
+    }
+    return pkg;
+  }
+
+  function toSlug(name){ return PKG_MAP[name] || 'core'; }
+  function s(v){ return v==null ? "" : String(v); }
+
+  function renderResult(resp, pkg){
+    const q = resp.quote || {};
+    const band = q.band || '—';
+    const per  = (q.perProperty!=null) ? `$${q.perProperty.toLocaleString()}/mo` : '—';
+    const tot  = (q.total!=null) ? `$${q.total.toLocaleString()}/mo` : '—';
+    const safe = (t)=> String(t).replace(/[<>&]/g, m => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[m]));
+
+    summary.innerHTML = `
+      <div><b>Plan:</b> ${safe(pkg)}</div>
+      <div><b>Term:</b> ${safe(data.term)}</div>
+      <div><b>Properties:</b> ${safe(data.properties)}</div>
+      <div><b>Band:</b> ${safe(band)}</div>
+      <div><b>Per-property:</b> ${safe(per)}</div>
+      <div><b>Monthly total:</b> ${safe(tot)}</div>
+    `;
+
+    const co = resp.checkout || {};
+    if (co.url){ payBtn.href = co.url; payBtn.style.pointerEvents='auto'; }
+    else { payBtn.removeAttribute('href'); payBtn.style.pointerEvents='none'; }
+  }
+
+  /* -------- validation -------- */
+  function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+  function validateStep1(){
+    let ok = true;
+    if (!data.propertyName){ f.errName.style.display='block'; ok=false; } else f.errName.style.display='none';
+    if (!validEmail(data.email)){ f.errEmail.style.display='block'; ok=false; } else f.errEmail.style.display='none';
+    return ok;
+  }
+
+  /* -------- JSONP submit -------- */
+  function jsonp(url, payload){
+    return new Promise((resolve, reject)=>{
+      const cb = 'psq_cb_' + Date.now() + '_' + Math.floor(Math.random()*1e6);
+      const s  = document.createElement('script');
+      const src = url + '?callback=' + cb + '&payload=' + encodeURIComponent(JSON.stringify(payload));
+
+      const timer = setTimeout(()=>{ cleanup(); reject(new Error('Timeout')); }, 15000);
+      function cleanup(){
+        clearTimeout(timer);
+        delete window[cb];
+        s.remove();
+      }
+      window[cb] = (data)=>{ cleanup(); resolve(data); };
+      s.onerror = ()=>{ cleanup(); reject(new Error('Network error')); };
+      s.src = src;
+      document.head.appendChild(s);
+    });
+  }
+
+  async function submitQuote(){
+    const pkgName = routePackage(data);
+    const payload = {
+      package_key: toSlug(pkgName),
+      term_code: data.term,
+      property_count: data.properties,
+      property: {
+        property_name:   s(data.propertyName),
+        work_email:      s(data.email),
+        demographics:    s((data.demographics||[]).join(', ')),
+        current_events:  s(data.currentEvents || ''),
+        ideal_events:    s(data.desiredEvents || ''),
+        in_house_events: data.runBy.includes('in-house') ? 'Yes' : 'No',
+        vendors_used:    data.runBy.includes('vendors')  ? 'Yes' : 'No',
+        vendor_partners: s(data.partners || ''),
+        multi_property:  data.properties>1 ? 'Yes' : 'No'
+      }
+    };
+
+    msgBox.hidden = true; msgBox.textContent = '';
+    const orig = btnNext.textContent;
+    btnNext.textContent = 'Building your plan…'; btnNext.disabled = true; btnNext.setAttribute('aria-busy','true');
+
+    try{
+      const json = await jsonp(ENDPOINT, payload);
+      if (!json || !json.ok){
+        msgBox.hidden = false;
+        msgBox.textContent = (json && json.error) ? json.error : 'Could not build your plan.';
+        return;
+      }
+      renderResult(json, pkgName);
+      setStep(7, true);
+    }catch(err){
+      msgBox.hidden = false;
+      msgBox.textContent = String(err).slice(0,240);
+    }finally{
+      btnNext.textContent = orig; btnNext.disabled = false; btnNext.removeAttribute('aria-busy');
+    }
+  }
+
+  /* -------- nav -------- */
+  btnNext.addEventListener('click', async ()=>{
+    hydrateStep();
+    if (step===1){
+      if (!validateStep1()) return;
+    }
+    if (step===6){ await submitQuote(); return; }
+    setStep(step+1, true);
+  });
+  btnBack.addEventListener('click', ()=> setStep(step-1, true));
+
+  f.dec.addEventListener('click', ()=> { bumpCount(-1); userMoved = true; });
+  f.inc.addEventListener('click', ()=> { bumpCount(+1); userMoved = true; });
+  f.count.addEventListener('input', ()=> { f.count.value = f.count.value.replace(/[^\d]/g,''); userMoved = true; });
+
+  initChips();
+  setStep(1, /*fromUser*/ false); // render without jumping
+})();
+</script>
