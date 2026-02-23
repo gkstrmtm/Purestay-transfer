@@ -208,6 +208,47 @@ const server = http.createServer(async (req, res) => {
     return json(res, 200, { ok: true, now: new Date().toISOString() });
   }
 
+  // --- Blogs (local dev parity with Vercel rewrites) ---
+  if (pathname === '/blogs' || pathname === '/blogs/') {
+    const handler = require('../api/blogs/page');
+    req.url = `/api/blogs/page${u.search || ''}`;
+    return handler(req, res);
+  }
+  if (pathname.startsWith('/blogs/')) {
+    const slug = pathname.slice('/blogs/'.length);
+    const handler = require('../api/blogs/page');
+    const qs = new URLSearchParams(u.searchParams);
+    qs.set('slug', slug);
+    req.url = `/api/blogs/page?${qs.toString()}`;
+    return handler(req, res);
+  }
+  if (pathname === '/sitemap.xml') {
+    const handler = require('../api/sitemap.xml');
+    req.url = `/api/sitemap.xml${u.search || ''}`;
+    return handler(req, res);
+  }
+
+  if (pathname === '/api/blogs' && req.method === 'GET') {
+    const handler = require('../api/blogs');
+    return handler(req, res);
+  }
+  if (pathname === '/api/blogs/status' && req.method === 'GET') {
+    const handler = require('../api/blogs/status');
+    return handler(req, res);
+  }
+  if (pathname === '/api/blogs/generate' && req.method === 'POST') {
+    const handler = require('../api/blogs/generate');
+    return handler(req, res);
+  }
+  if (pathname === '/api/blogs/backfill-next' && req.method === 'POST') {
+    const handler = require('../api/blogs/backfill-next');
+    return handler(req, res);
+  }
+  if (pathname === '/api/cron/blogs' && (req.method === 'GET' || req.method === 'POST')) {
+    const handler = require('../api/cron/blogs');
+    return handler(req, res);
+  }
+
   if (pathname === '/api/settings' && req.method === 'GET') {
     const settings = sanitizeSettingsForPublic(readSettings());
     return json(res, 200, { ok: true, settings });

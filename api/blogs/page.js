@@ -51,55 +51,81 @@ function pageShell({ title, description, canonical, og, jsonLd, body }) {
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" href="/brand/purestay_exact_SVG.svg" type="image/svg+xml">
   <style>
-    :root{ --ink:#101010; --muted:#5a5854; --card:#fff; --line:#ece6dc; --gold:#CEA43C; --bg:#f7f5f2; }
+    :root{
+      --ink:#101010;
+      --muted:#5d5b56;
+      --bg:#f6f4f1;
+      --card:#ffffff;
+      --line:#e9e3da;
+      --shadow: 0 14px 40px rgba(0,0,0,.06);
+      --gold:#CEA43C;
+      --maroon:#4a2b22;
+      --link:#0d4d8b;
+    }
     *{ box-sizing:border-box; }
     body{ margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial; color:var(--ink); background:var(--bg); }
-    a{ color:inherit; }
+    a{ color:var(--link); text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+
     .top{ background:#fff; border-bottom:1px solid var(--line); }
-    .topInner{ max-width:1100px; margin:0 auto; padding:18px 18px; display:flex; align-items:center; justify-content:space-between; gap:14px; }
-    .brand{ display:flex; align-items:center; gap:10px; text-decoration:none; }
+    .topInner{ max-width:1100px; margin:0 auto; padding:16px 18px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .brand{ display:flex; align-items:center; gap:10px; color:var(--ink); }
+    .brand:hover{ text-decoration:none; }
     .brand img{ width:34px; height:34px; }
-    .brand b{ font-weight:1000; letter-spacing:-0.02em; }
-    .nav{ display:flex; gap:10px; flex-wrap:wrap; }
-    .pill{ display:inline-flex; align-items:center; gap:8px; padding:10px 12px; border-radius:999px; border:1px solid #e6e0d6; background:#fff; text-decoration:none; font-weight:900; }
-    .pill.primary{ border-color: transparent; background:linear-gradient(180deg, var(--gold), #ffd98c); color:#1b1208; }
+    .brand b{ font-weight:950; letter-spacing:-0.02em; }
 
-    .wrap{ max-width:1100px; margin:0 auto; padding:22px 18px 70px; }
-    .hero{ padding:10px 0 18px; }
-    .kicker{ display:inline-flex; align-items:center; gap:8px; font-weight:1000; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:#1b1208;
-      background:linear-gradient(180deg, var(--gold), #ffd98c); border-radius:999px; padding:7px 10px; }
-    h1{ margin:12px 0 0; font-size:clamp(28px,4.8vw,46px); letter-spacing:-0.02em; line-height:1.06; }
-    .sub{ margin:10px 0 0; color:var(--muted); font-weight:800; max-width:70ch; }
+    .nav{ display:flex; gap:14px; flex-wrap:wrap; align-items:center; }
+    .nav a{ color:var(--ink); font-weight:850; text-decoration:none; }
+    .nav a:hover{ text-decoration:underline; }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:10px 14px; border-radius:12px; font-weight:950;
+      background:var(--maroon); color:#fff; border:1px solid rgba(0,0,0,.06);
+      box-shadow: 0 10px 26px rgba(0,0,0,.10);
+    }
+    .btn:hover{ filter:brightness(1.03); text-decoration:none; }
 
-    .grid{ display:grid; grid-template-columns: 1.15fr .85fr; gap:16px; margin-top:18px; }
+    .wrap{ max-width:1100px; margin:0 auto; padding:26px 18px 70px; }
+    .hero{ padding:6px 0 18px; }
+    .kicker{ display:inline-block; font-weight:950; font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--maroon); }
+    .rule{ height:3px; width:44px; background:var(--gold); border-radius:999px; margin-top:10px; }
+    h1{ margin:14px 0 0; font-size:clamp(30px,4.8vw,48px); letter-spacing:-0.03em; line-height:1.05; }
+    .sub{ margin:10px 0 0; color:var(--muted); font-weight:750; max-width:72ch; line-height:1.55; }
+
+    .grid{ display:grid; grid-template-columns: 1.25fr .75fr; gap:18px; margin-top:18px; align-items:start; }
     @media (max-width: 980px){ .grid{ grid-template-columns:1fr; } }
-    .card{ background:var(--card); border:1px solid var(--line); border-radius:18px; box-shadow:0 18px 50px rgba(0,0,0,.06); overflow:hidden; }
+
+    .card{ background:var(--card); border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow); overflow:hidden; }
     .cardPad{ padding:18px; }
 
-    .metaRow{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
-    .chip{ font-size:12px; font-weight:1000; color:#1b1b1b; background:#faf8f5; border:1px solid var(--line); padding:7px 10px; border-radius:999px; }
-
-    article{ color:#151515; }
-    article h2{ margin:22px 0 10px; letter-spacing:-0.02em; }
-    article p{ margin:10px 0; color:#2b2b2b; line-height:1.65; font-weight:650; }
-    article ul{ margin:10px 0 10px 18px; color:#2b2b2b; line-height:1.6; font-weight:650; }
-    article a{ color:#1a4b8c; }
-    article .cta{ margin:18px 0; padding:14px; border-radius:16px; background:#faf7ef; border:1px solid #f0e7cf; }
+    .metaRow{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+    .chip{ font-size:12px; font-weight:900; color:#2b2b2b; background:#faf9f7; border:1px solid var(--line); padding:7px 10px; border-radius:12px; }
 
     .list{ display:grid; gap:12px; }
-    .postLink{ display:block; padding:14px; border-radius:16px; border:1px solid var(--line); background:#fff; text-decoration:none; }
-    .postLink:hover{ border-color:#e0d2ad; box-shadow:0 10px 26px rgba(0,0,0,.06); }
-    .postTitle{ font-weight:1000; letter-spacing:-0.01em; }
+    .postLink{ display:block; padding:16px; border-radius:16px; border:1px solid var(--line); background:#fff; color:var(--ink); text-decoration:none; }
+    .postLink:hover{ border-color:#dccfae; box-shadow:0 10px 28px rgba(0,0,0,.06); text-decoration:none; }
+    .postTitle{ font-weight:950; letter-spacing:-0.015em; font-size:16px; }
     .postMeta{ margin-top:6px; color:var(--muted); font-weight:800; font-size:13px; }
     .postExcerpt{ margin-top:8px; color:#2b2b2b; font-weight:650; line-height:1.55; }
 
+    article{ color:#141414; }
+    article h2, article h3{ margin:24px 0 10px; letter-spacing:-0.02em; }
+    article p{ margin:12px 0; color:#222; line-height:1.72; font-weight:560; }
+    article ul{ margin:10px 0 10px 18px; color:#222; line-height:1.65; font-weight:560; }
+    article a{ color:var(--link); }
+    article hr{ border:none; border-top:1px solid var(--line); margin:18px 0; }
+    article blockquote{ margin:16px 0; padding:14px 14px; border-left:3px solid var(--gold); background:#fbfaf7; border-radius:12px; }
+    article .cta{ margin:18px 0; padding:16px; border-radius:16px; background:#fbf8f1; border:1px solid #efe3c7; }
+
     .sideBox h3{ margin:0; font-size:14px; letter-spacing:-0.01em; }
-    .sideBox p{ margin:8px 0 0; color:var(--muted); font-weight:750; line-height:1.55; }
+    .sideBox p{ margin:8px 0 0; color:var(--muted); font-weight:700; line-height:1.55; }
     .sideBox .links{ margin-top:12px; display:grid; gap:10px; }
+    .sideBox .links a{ color:var(--ink); font-weight:900; padding:12px 12px; border-radius:14px; border:1px solid var(--line); background:#fff; text-decoration:none; }
+    .sideBox .links a:hover{ border-color:#dccfae; box-shadow:0 10px 22px rgba(0,0,0,.06); }
 
     .foot{ border-top:1px solid var(--line); background:#fff; }
-    .footInner{ max-width:1100px; margin:0 auto; padding:18px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
-    .footInner span{ color:var(--muted); font-weight:800; font-size:13px; }
+    .footInner{ max-width:1100px; margin:0 auto; padding:18px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .footInner span{ color:var(--muted); font-weight:750; font-size:13px; }
   </style>
   <script type="application/ld+json">${jsonLdSafe}</script>
 </head>
@@ -111,11 +137,11 @@ function pageShell({ title, description, canonical, og, jsonLd, body }) {
         <b>PureStay</b>
       </a>
       <nav class="nav" aria-label="Site">
-        <a class="pill" href="/discovery">Discovery</a>
-        <a class="pill" href="/core">Core</a>
-        <a class="pill" href="/culture-shift">Culture Shift</a>
-        <a class="pill" href="/signature-stay">Signature Stay</a>
-        <a class="pill primary" href="/blogs">Blogs</a>
+        <a href="/discovery">Discovery</a>
+        <a href="/core">Core</a>
+        <a href="/culture-shift">Culture Shift</a>
+        <a href="/signature-stay">Signature Stay</a>
+        <a class="btn" href="/blogs">Blogs</a>
       </nav>
     </div>
   </header>
@@ -180,9 +206,10 @@ function renderIndex({ siteUrl, posts, total }) {
   const body = `
   <main class="wrap">
     <section class="hero">
-      <span class="kicker">Blogs</span>
+      <span class="kicker">PURESTAY BLOG</span>
+      <div class="rule"></div>
       <h1>Resident retention strategies for multifamily</h1>
-      <p class="sub">SEO resources about resident events, engagement, and retention systems built for apartment communities.</p>
+      <p class="sub">Practical, field-tested ideas: resident events, engagement playbooks, and retention systems built for apartment communities.</p>
     </section>
 
     <section class="grid" aria-label="Blog index">
@@ -193,8 +220,9 @@ function renderIndex({ siteUrl, posts, total }) {
           <div class="list">
             ${posts.map((p) => {
               const date = p.publishedAt ? isoDateOnly(p.publishedAt) : '';
+              const href = `/blogs/${encodeURIComponent(String(p.slug || ''))}`;
               return `
-              <a class="postLink" href="/blogs/${escapeHtml(p.slug)}">
+              <a class="postLink" href="${href}">
                 <div class="postTitle">${escapeHtml(p.title || '')}</div>
                 <div class="postMeta">${date ? escapeHtml(date) + ' • ' : ''}PureStay</div>
                 <div class="postExcerpt">${escapeHtml(p.excerpt || p.metaDescription || '')}</div>
@@ -209,10 +237,10 @@ function renderIndex({ siteUrl, posts, total }) {
           <h3>Want this done-for-you?</h3>
           <p>PureStay runs on-site resident experiences and provides reporting so your team can focus on leasing and renewals.</p>
           <div class="links">
-            <a class="pill primary" href="/discovery">Book a discovery call</a>
-            <a class="pill" href="/core">See Core Package</a>
-            <a class="pill" href="/culture-shift">See Culture Shift</a>
-            <a class="pill" href="/signature-stay">See Signature Stay</a>
+            <a href="/discovery">Book a discovery call</a>
+            <a href="/core">See Core Package</a>
+            <a href="/culture-shift">See Culture Shift</a>
+            <a href="/signature-stay">See Signature Stay</a>
           </div>
         </div>
       </aside>
@@ -254,7 +282,8 @@ function renderPost({ siteUrl, post }) {
   const body = `
   <main class="wrap">
     <section class="hero">
-      <span class="kicker">PureStay Blog</span>
+      <span class="kicker">PURESTAY BLOG</span>
+      <div class="rule"></div>
       <h1>${escapeHtml(post.title)}</h1>
       <p class="sub">${escapeHtml(post.excerpt || post.metaDescription || '')}</p>
       <div class="metaRow">
@@ -272,7 +301,7 @@ function renderPost({ siteUrl, post }) {
           <div class="cta">
             <b>Ready to improve renewals?</b>
             <p style="margin:8px 0 0;">PureStay runs the experiences. You get the resident sentiment and reporting.</p>
-            <p style="margin:10px 0 0;"><a class="pill primary" href="/discovery" style="display:inline-flex;">Book a discovery call</a></p>
+            <p style="margin:12px 0 0;"><a class="btn" href="/discovery" style="display:inline-flex;">Book a discovery call</a></p>
           </div>
         </div>
       </article>
@@ -282,17 +311,17 @@ function renderPost({ siteUrl, post }) {
           <h3>Packages</h3>
           <p>Pick the level of resident touchpoints and media you want. We handle planning and on-site hosting.</p>
           <div class="links">
-            <a class="pill" href="/core">Core Package</a>
-            <a class="pill" href="/culture-shift">Culture Shift</a>
-            <a class="pill" href="/signature-stay">Signature Stay</a>
-            <a class="pill primary" href="/discovery">Talk to us</a>
+            <a href="/core">Core Package</a>
+            <a href="/culture-shift">Culture Shift</a>
+            <a href="/signature-stay">Signature Stay</a>
+            <a href="/discovery">Talk to us</a>
           </div>
         </div>
       </aside>
     </section>
 
     <div style="height:14px"></div>
-    <a class="pill" href="/blogs">← Back to all blogs</a>
+    <a href="/blogs" style="font-weight:900; color:var(--ink);">← Back to all blogs</a>
   </main>`;
 
   return pageShell({

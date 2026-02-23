@@ -202,15 +202,9 @@
             </div>
 
             <div>
-              <label for="backfillYears">Backfill range (years)</label>
-              <input id="backfillYears" type="number" min="1" max="10" step="1" value="2" />
-
-              <div style="height:10px"></div>
-
-              <label for="backfillStepDays">Backfill spacing (days)</label>
-              <input id="backfillStepDays" type="number" min="1" max="14" step="1" value="3" />
-
-              <p class="muted" style="margin-top:10px;">Backfill generates one post at a time with a backdated publish date, moving forward by the spacing you choose.</p>
+              <label>Cadence</label>
+              <div class="status ok" style="margin-top:8px;">Every 3 days • Backfill range: past 2 years</div>
+              <p class="muted" style="margin-top:10px;">Backfill generates one post at a time, starting 2 years ago and moving forward every 3 days.</p>
             </div>
           </div>
         </section>
@@ -246,8 +240,6 @@
         blogStatus: $('blogStatus'),
         blogMeta: $('blogMeta'),
         blogLast: $('blogLast'),
-        backfillYears: $('backfillYears'),
-        backfillStepDays: $('backfillStepDays'),
       };
 
       // Prefill from localStorage to reduce retyping
@@ -257,7 +249,6 @@
       }catch{}
 
       const BLOG_CURSOR_KEY = 'ps_blog_backfill_cursor';
-      const BLOG_PREFS_KEY = 'ps_blog_backfill_prefs';
 
       function readBlogCursor(){
         try{ return (localStorage.getItem(BLOG_CURSOR_KEY) || '').trim(); }catch{ return ''; }
@@ -271,13 +262,6 @@
         }catch{}
       }
 
-      function readBlogPrefs(){
-        try{ return JSON.parse(localStorage.getItem(BLOG_PREFS_KEY) || '{}') || {}; }catch{ return {}; }
-      }
-
-      function writeBlogPrefs(p){
-        try{ localStorage.setItem(BLOG_PREFS_KEY, JSON.stringify(p || {})); }catch{}
-      }
 
       function setStatus(msg, ok=true){
         fields.status.textContent = msg;
@@ -382,10 +366,6 @@
             if(mode !== 'scheduled') fields.blogLast.textContent = 'No posts yet.';
           }
 
-          // Restore backfill prefs locally (scheduled mode has no server state)
-          const prefs = readBlogPrefs();
-          if(fields.backfillYears && prefs.years) fields.backfillYears.value = String(prefs.years);
-          if(fields.backfillStepDays && prefs.stepDays) fields.backfillStepDays.value = String(prefs.stepDays);
         }catch{
           blogSetStatus('Could not load blog status.', false);
         }
@@ -417,15 +397,10 @@
 
       async function blogBackfillNext(){
         const token = (fields.adminToken.value || '').trim();
-        const years = Number(fields.backfillYears.value || 2);
-        const stepDays = Number(fields.backfillStepDays.value || 3);
+        const years = 2;
+        const stepDays = 3;
         blogSetStatus('Generating backfill…', true);
         try{
-          // Save prefs and reset cursor if cadence changed
-          const prev = readBlogPrefs();
-          if(prev.years !== years || prev.stepDays !== stepDays) writeBlogCursor('');
-          writeBlogPrefs({ years, stepDays });
-
           const cursor = readBlogCursor();
           const r = await fetch('/api/blogs/backfill-next', {
             method:'POST',
