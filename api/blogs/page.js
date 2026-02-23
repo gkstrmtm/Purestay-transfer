@@ -68,24 +68,17 @@ function pageShell({ title, description, canonical, og, jsonLd, body }) {
     a:hover{ text-decoration:underline; }
 
     .top{ background:#fff; border-bottom:1px solid var(--line); }
-    .topInner{ max-width:1100px; margin:0 auto; padding:16px 18px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
-    .brand{ display:flex; align-items:center; gap:10px; color:var(--ink); }
-    .brand:hover{ text-decoration:none; }
-    .brand img{ width:34px; height:34px; }
-    .brand b{ font-weight:950; letter-spacing:-0.02em; }
+    .topInner{ max-width:1100px; margin:0 auto; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .homeBtn{ display:inline-flex; align-items:center; gap:10px; padding:10px 12px; border-radius:14px; border:1px solid var(--line); background:#fff; color:var(--ink); box-shadow:0 10px 24px rgba(0,0,0,.06); }
+    .homeBtn:hover{ text-decoration:none; border-color:#dccfae; }
+    .homeBtn img{ width:30px; height:30px; }
+    .homeBtn b{ font-weight:950; letter-spacing:-0.02em; }
 
-    .nav{ display:flex; gap:14px; flex-wrap:wrap; align-items:center; }
-    .nav a{ color:var(--ink); font-weight:850; text-decoration:none; }
-    .nav a:hover{ text-decoration:underline; }
-    .btn{
-      display:inline-flex; align-items:center; justify-content:center;
-      padding:10px 14px; border-radius:12px; font-weight:950;
-      background:var(--maroon); color:#fff; border:1px solid rgba(0,0,0,.06);
-      box-shadow: 0 10px 26px rgba(0,0,0,.10);
-    }
-    .btn:hover{ filter:brightness(1.03); text-decoration:none; }
+    .nav{ display:flex; gap:10px; align-items:center; }
+    .ctaBtn{ display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; border-radius:14px; font-weight:950; background:var(--maroon); color:#fff; border:1px solid rgba(0,0,0,.06); box-shadow:0 10px 26px rgba(0,0,0,.10); }
+    .ctaBtn:hover{ filter:brightness(1.03); text-decoration:none; }
 
-    .wrap{ max-width:1100px; margin:0 auto; padding:26px 18px 70px; }
+    .wrap{ max-width:1100px; margin:0 auto; padding:24px 18px 70px; }
     .hero{ padding:6px 0 18px; }
     .kicker{ display:inline-block; font-weight:950; font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--maroon); }
     .rule{ height:3px; width:44px; background:var(--gold); border-radius:999px; margin-top:10px; }
@@ -104,6 +97,7 @@ function pageShell({ title, description, canonical, og, jsonLd, body }) {
     .list{ display:grid; gap:12px; }
     .postLink{ display:block; padding:16px; border-radius:16px; border:1px solid var(--line); background:#fff; color:var(--ink); text-decoration:none; }
     .postLink:hover{ border-color:#dccfae; box-shadow:0 10px 28px rgba(0,0,0,.06); text-decoration:none; }
+    .postLink{ cursor:pointer; }
     .postTitle{ font-weight:950; letter-spacing:-0.015em; font-size:16px; }
     .postMeta{ margin-top:6px; color:var(--muted); font-weight:800; font-size:13px; }
     .postExcerpt{ margin-top:8px; color:#2b2b2b; font-weight:650; line-height:1.55; }
@@ -126,22 +120,24 @@ function pageShell({ title, description, canonical, og, jsonLd, body }) {
     .foot{ border-top:1px solid var(--line); background:#fff; }
     .footInner{ max-width:1100px; margin:0 auto; padding:18px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
     .footInner span{ color:var(--muted); font-weight:750; font-size:13px; }
+
+    .pager{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:14px; }
+    .pager a{ display:inline-flex; align-items:center; justify-content:center; padding:10px 12px; border-radius:12px; border:1px solid var(--line); background:#fff; color:var(--ink); font-weight:950; text-decoration:none; }
+    .pager a:hover{ border-color:#dccfae; box-shadow:0 10px 22px rgba(0,0,0,.06); }
+    .pager .dim{ opacity:.55; pointer-events:none; }
+    .pager .center{ color:var(--muted); font-weight:850; }
   </style>
   <script type="application/ld+json">${jsonLdSafe}</script>
 </head>
 <body>
   <header class="top">
     <div class="topInner">
-      <a class="brand" href="/" aria-label="PureStay Home">
+      <a class="homeBtn" href="/" aria-label="PureStay Home">
         <img src="/brand/purestay_exact_SVG.svg" alt="PureStay" />
         <b>PureStay</b>
       </a>
       <nav class="nav" aria-label="Site">
-        <a href="/discovery">Discovery</a>
-        <a href="/core">Core</a>
-        <a href="/culture-shift">Culture Shift</a>
-        <a href="/signature-stay">Signature Stay</a>
-        <a class="btn" href="/blogs">Blogs</a>
+        <a class="ctaBtn" href="/discovery">Book a call</a>
       </nav>
     </div>
   </header>
@@ -154,6 +150,23 @@ function pageShell({ title, description, canonical, og, jsonLd, body }) {
       <a class="pill primary" href="/discovery">Book a call</a>
     </div>
   </footer>
+
+  <script>
+    // Click fallback: ensure cards always navigate.
+    (function(){
+      try{
+        document.querySelectorAll('a.postLink').forEach(function(a){
+          a.addEventListener('click', function(e){
+            if(!a || !a.getAttribute) return;
+            var href = a.getAttribute('href');
+            if(!href) return;
+            // Let normal navigation happen; this is just a guard.
+            if(e.defaultPrevented) window.location.assign(href);
+          });
+        });
+      }catch{}
+    })();
+  </script>
 </body>
 </html>`;
 }
@@ -198,10 +211,16 @@ function blogPostJsonLd({ siteUrl, post }) {
   };
 }
 
-function renderIndex({ siteUrl, posts, total }) {
+function renderIndex({ siteUrl, posts, total, page, perPage }) {
   const title = 'PureStay Blogs | Multifamily Resident Retention';
   const description = 'Practical retention strategies, resident event ideas, and multifamily community-building playbooks from PureStay.';
   const canonical = `${siteUrl}/blogs`;
+
+  const p = Math.max(1, Number(page || 1));
+  const pp = Math.max(1, Number(perPage || 10));
+  const totalPages = Math.max(1, Math.ceil(Number(total || 0) / pp));
+  const prevHref = p > 1 ? `/blogs?page=${p - 1}` : '';
+  const nextHref = p < totalPages ? `/blogs?page=${p + 1}` : '';
 
   const body = `
   <main class="wrap">
@@ -215,7 +234,7 @@ function renderIndex({ siteUrl, posts, total }) {
     <section class="grid" aria-label="Blog index">
       <div class="card">
         <div class="cardPad">
-          <div class="metaRow"><span class="chip">${escapeHtml(String(total))} posts</span><span class="chip">Updated automatically</span></div>
+          <div class="metaRow"><span class="chip">${escapeHtml(String(total))} posts</span><span class="chip">Page ${escapeHtml(String(p))} of ${escapeHtml(String(totalPages))}</span></div>
           <div style="height:12px"></div>
           <div class="list">
             ${posts.map((p) => {
@@ -228,6 +247,12 @@ function renderIndex({ siteUrl, posts, total }) {
                 <div class="postExcerpt">${escapeHtml(p.excerpt || p.metaDescription || '')}</div>
               </a>`;
             }).join('')}
+          </div>
+
+          <div class="pager" aria-label="Pagination">
+            <a ${prevHref ? `href="${prevHref}"` : ''} class="${prevHref ? '' : 'dim'}">← Prev</a>
+            <div class="center">Showing ${escapeHtml(String(Math.min(total, (p - 1) * pp + 1)))}–${escapeHtml(String(Math.min(total, p * pp)))} of ${escapeHtml(String(total))}</div>
+            <a ${nextHref ? `href="${nextHref}"` : ''} class="${nextHref ? '' : 'dim'}">Next →</a>
           </div>
         </div>
       </div>
@@ -352,15 +377,17 @@ module.exports = async (req, res) => {
 
   if (!slug) {
     // Index page: either KV-backed list, or deterministic schedule list.
-    const limit = url.searchParams.get('limit');
-    const offset = url.searchParams.get('offset');
+    const perPage = 10;
+    const page = Math.max(1, Number(url.searchParams.get('page') || 1));
+    const limit = perPage;
+    const offset = (page - 1) * perPage;
 
     let listing;
     if (kvEnabled) listing = await listPosts({ limit, offset });
     else listing = listScheduled({ limit: limit || 50, offset: offset || 0 });
 
     setEdgeCache(res, 60 * 60); // cache index for 1 hour
-    return sendHtml(res, 200, renderIndex({ siteUrl, posts: listing.posts, total: listing.total }));
+    return sendHtml(res, 200, renderIndex({ siteUrl, posts: listing.posts, total: listing.total, page, perPage }));
   }
 
   let post = null;
