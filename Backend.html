@@ -256,6 +256,29 @@
         if(t) fields.adminToken.value = t;
       }catch{}
 
+      const BLOG_CURSOR_KEY = 'ps_blog_backfill_cursor';
+      const BLOG_PREFS_KEY = 'ps_blog_backfill_prefs';
+
+      function readBlogCursor(){
+        try{ return (localStorage.getItem(BLOG_CURSOR_KEY) || '').trim(); }catch{ return ''; }
+      }
+
+      function writeBlogCursor(v){
+        try{
+          const s = (v || '').trim();
+          if(!s) localStorage.removeItem(BLOG_CURSOR_KEY);
+          else localStorage.setItem(BLOG_CURSOR_KEY, s);
+        }catch{}
+      }
+
+      function readBlogPrefs(){
+        try{ return JSON.parse(localStorage.getItem(BLOG_PREFS_KEY) || '{}') || {}; }catch{ return {}; }
+      }
+
+      function writeBlogPrefs(p){
+        try{ localStorage.setItem(BLOG_PREFS_KEY, JSON.stringify(p || {})); }catch{}
+      }
+
       function setStatus(msg, ok=true){
         fields.status.textContent = msg;
         fields.status.className = 'status ' + (ok ? 'ok' : 'bad');
@@ -339,21 +362,30 @@
           if(!r.ok || !j || !j.ok) throw new Error('status_failed');
 
           const total = Number(j.total || 0);
-          const st = j.state || {};
-          const bf = st.backfill || {};
+          const mode = String(j.mode || 'scheduled');
 
           blogSetStatus('Ready.', true);
-          fields.blogMeta.textContent = `Total posts: ${total} • Auto cadence: every ${String(2)}+ days`;
+          if(mode === 'scheduled'){
+            const sched = j.schedule || {};
+            const stepDays = Number(sched.stepDays || 3);
+            const years = Number(sched.years || 2);
+            const cursor = readBlogCursor();
+            fields.blogMeta.textContent = `Mode: Scheduled (no database) • Total: ${total} • Every ${stepDays} days • ${years} years back • Backfill: ${cursor ? cursor.slice(0,10) : 'not started'}`;
+          } else {
+            fields.blogMeta.textContent = `Mode: Stored (KV) • Total posts: ${total}`;
+          }
 
           const latest = j.latest;
           if(latest && latest.slug){
             fields.blogLast.innerHTML = `Latest: <a href="/blogs/${latest.slug}" style="text-decoration:underline;">${latest.title || latest.slug}</a>`;
           } else {
-            fields.blogLast.textContent = 'No posts yet.';
+            if(mode !== 'scheduled') fields.blogLast.textContent = 'No posts yet.';
           }
 
-          if(fields.backfillYears && bf.years) fields.backfillYears.value = String(bf.years);
-          if(fields.backfillStepDays && bf.stepDays) fields.backfillStepDays.value = String(bf.stepDays);
+          // Restore backfill prefs locally (scheduled mode has no server state)
+          const prefs = readBlogPrefs();
+          if(fields.backfillYears && prefs.years) fields.backfillYears.value = String(prefs.years);
+          if(fields.backfillStepDays && prefs.stepDays) fields.backfillStepDays.value = String(prefs.stepDays);
         }catch{
           blogSetStatus('Could not load blog status.', false);
         }
@@ -374,13 +406,12 @@
           const j = await r.json().catch(()=>null);
           if(!r.ok || !j || !j.ok) throw new Error('generate_failed');
           blogSetStatus('Generated.', true);
-          const p = j.post;
-          if(p && p.slug){
-            fields.blogLast.innerHTML = `Latest: <a href="/blogs/${p.slug}" style="text-decoration:underline;">${p.title || p.slug}</a>`;
+          if(j.slug){
+            fields.blogLast.innerHTML = `Latest: <a href="/blogs/${j.slug}" style="text-decoration:underline;">Open generated post</a>`;
           }
           await blogLoadStatus();
         }catch{
-          blogSetStatus('Generation failed. Check AI_API_KEY + KV.', false);
+          blogSetStatus('Generation failed. Check AI_API_KEY.', false);
         }
       }
 
@@ -390,28 +421,36 @@
         const stepDays = Number(fields.backfillStepDays.value || 3);
         blogSetStatus('Generating backfill…', true);
         try{
+          // Save prefs and reset cursor if cadence changed
+          const prev = readBlogPrefs();
+          if(prev.years !== years || prev.stepDays !== stepDays) writeBlogCursor('');
+          writeBlogPrefs({ years, stepDays });
+
+          const cursor = readBlogCursor();
           const r = await fetch('/api/blogs/backfill-next', {
             method:'POST',
             headers:{
               'Content-Type':'application/json',
               ...(token ? { 'Authorization': 'Bearer ' + token } : {}),
             },
-            body: JSON.stringify({ years, stepDays }),
+            body: JSON.stringify({ years, stepDays, ...(cursor ? { cursor } : {}) }),
           });
           const j = await r.json().catch(()=>null);
           if(!r.ok || !j || !j.ok) throw new Error('backfill_failed');
+
+          if(j.nextCursor) writeBlogCursor(String(j.nextCursor));
           if(j.done){
             blogSetStatus('Backfill complete.', true);
+            writeBlogCursor('');
           } else {
             blogSetStatus('Backfill generated.', true);
           }
-          const p = j.post;
-          if(p && p.slug){
-            fields.blogLast.innerHTML = `Latest: <a href="/blogs/${p.slug}" style="text-decoration:underline;">${p.title || p.slug}</a>`;
+          if(j.slug){
+            fields.blogLast.innerHTML = `Latest: <a href="/blogs/${j.slug}" style="text-decoration:underline;">Open generated post</a>`;
           }
           await blogLoadStatus();
         }catch{
-          blogSetStatus('Backfill failed. Check AI_API_KEY + KV.', false);
+          blogSetStatus('Backfill failed. Check AI_API_KEY.', false);
         }
       }
 

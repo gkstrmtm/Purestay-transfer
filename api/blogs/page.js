@@ -1,11 +1,24 @@
 const { handleCors } = require('../../lib/vercelApi');
 const { listPosts, getPost, getSiteUrl, isoDateOnly } = require('../../lib/blogs');
+const { hasKvEnv } = require('../../lib/storage');
+const { listScheduled, parseDateFromSlug, sequenceForDate, startDateAligned, intervalDays, scheduledMeta } = require('../../lib/blogSchedule');
+const { generateBlogPost } = require('../../lib/aiBlog');
 
 function sendHtml(res, status, html) {
   res.statusCode = status;
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  // default; overridden per-response
   res.setHeader('Cache-Control', 'no-store');
   res.end(html);
+}
+
+function setEdgeCache(res, seconds) {
+  const s = Math.max(0, Math.min(31536000, Number(seconds || 0)));
+  if (!s) {
+    res.setHeader('Cache-Control', 'no-store');
+    return;
+  }
+  res.setHeader('Cache-Control', `public, s-maxage=${s}, stale-while-revalidate=86400`);
 }
 
 function escapeHtml(s) {
@@ -306,12 +319,92 @@ module.exports = async (req, res) => {
   const slug = String(url.searchParams.get('slug') || '').trim();
   const siteUrl = getSiteUrl(req);
 
+  const kvEnabled = hasKvEnv();
+
   if (!slug) {
-    const { posts, total } = await listPosts({ limit: 50, offset: 0 });
-    return sendHtml(res, 200, renderIndex({ siteUrl, posts, total }));
+    // Index page: either KV-backed list, or deterministic schedule list.
+    const limit = url.searchParams.get('limit');
+    const offset = url.searchParams.get('offset');
+
+    let listing;
+    if (kvEnabled) listing = await listPosts({ limit, offset });
+    else listing = listScheduled({ limit: limit || 50, offset: offset || 0 });
+
+    setEdgeCache(res, 60 * 60); // cache index for 1 hour
+    return sendHtml(res, 200, renderIndex({ siteUrl, posts: listing.posts, total: listing.total }));
   }
 
-  const post = await getPost(slug);
+  let post = null;
+  if (kvEnabled) post = await getPost(slug);
+
+  // No-KV mode: generate on-demand from slug's date/sequence and rely on edge cache.
+  if (!post && !kvEnabled) {
+    const date = parseDateFromSlug(slug) || new Date();
+    const stepDays = intervalDays();
+    const start = startDateAligned({ years: 2, stepDays });
+    const seq = sequenceForDate(date, { start, stepDays });
+    const meta = scheduledMeta({ sequence: seq, publishedAt: date.toISOString(), stepDays, start });
+
+    const gen = await generateBlogPost({
+      sequence: seq,
+      publishedAt: meta.publishedAt,
+      siteUrl,
+      forced: {
+        title: meta.title,
+        slug: meta.slug,
+        topic: meta.topic,
+        primaryKeyword: meta.topic,
+      },
+    });
+
+    if (!gen.ok) {
+      const html = pageShell({
+        title: 'Blogs | PureStay',
+        description: 'Blog generation is not configured yet.',
+        canonical: `${siteUrl}/blogs/${encodeURIComponent(slug)}`,
+        og: {
+          title: 'Blogs | PureStay',
+          description: 'Blog generation is not configured yet.',
+          type: 'website',
+          url: `${siteUrl}/blogs/${encodeURIComponent(slug)}`,
+          image: `${siteUrl}/brand/PureStay_white.png`,
+        },
+        jsonLd: { '@context': 'https://schema.org', '@type': 'WebPage', name: 'Blogs' },
+        body: `
+          <main class="wrap">
+            <section class="hero">
+              <span class="kicker">Blogs</span>
+              <h1>Blog generation isn’t configured</h1>
+              <p class="sub">Set <b>AI_API_KEY</b> in Vercel Environment Variables to enable automated posts.</p>
+            </section>
+            <a class="pill primary" href="/blogs">Go to blogs</a>
+          </main>`,
+      });
+      setEdgeCache(res, 60); // short cache for misconfig
+      return sendHtml(res, 503, html);
+    }
+
+    const wcText = String(gen.data.html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    const wordCount = wcText ? wcText.split(' ').length : 0;
+    const readingMinutes = Math.max(3, Math.round(wordCount / 220));
+
+    post = {
+      title: gen.data.title,
+      slug: meta.slug,
+      excerpt: gen.data.excerpt || meta.excerpt,
+      metaDescription: gen.data.metaDescription,
+      primaryKeyword: gen.data.primaryKeyword || meta.topic,
+      keywords: gen.data.keywords || [],
+      tags: gen.data.tags || [],
+      html: gen.data.html,
+      faq: gen.data.faq || [],
+      publishedAt: meta.publishedAt,
+      updatedAt: meta.publishedAt,
+      wordCount,
+      readingMinutes,
+    };
+  }
+
   if (!post) {
     const html = pageShell({
       title: 'Not Found | PureStay Blogs',
@@ -335,8 +428,11 @@ module.exports = async (req, res) => {
           <a class="pill primary" href="/blogs">Go to blogs</a>
         </main>`,
     });
+    setEdgeCache(res, 60 * 10);
     return sendHtml(res, 404, html);
   }
 
+  // Cache individual post pages aggressively.
+  setEdgeCache(res, 60 * 60 * 24 * 365);
   return sendHtml(res, 200, renderPost({ siteUrl, post }));
 };

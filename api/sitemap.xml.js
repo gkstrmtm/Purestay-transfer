@@ -1,9 +1,11 @@
 const { listPosts, getSiteUrl } = require('../lib/blogs');
+const { hasKvEnv } = require('../lib/storage');
+const { listScheduled } = require('../lib/blogSchedule');
 
 function sendXml(res, status, xml) {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/xml; charset=utf-8');
-  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
   res.end(xml);
 }
 
@@ -22,7 +24,14 @@ function iso(d) {
 
 module.exports = async (req, res) => {
   const siteUrl = getSiteUrl(req);
-  const { posts } = await listPosts({ limit: 500, offset: 0 });
+  let posts = [];
+  if (hasKvEnv()) {
+    const data = await listPosts({ limit: 500, offset: 0 });
+    posts = data.posts || [];
+  } else {
+    const data = listScheduled({ limit: 500, offset: 0 });
+    posts = data.posts || [];
+  }
 
   const staticUrls = [
     { loc: `${siteUrl}/`, lastmod: '' },
