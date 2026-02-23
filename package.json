@@ -1,0 +1,11 @@
+{
+  "name": "purestay-transfer",
+  "private": true,
+  "version": "0.1.0",
+  "description": "PureStay static pages + minimal backend",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node server/server.js"
+  }
+}

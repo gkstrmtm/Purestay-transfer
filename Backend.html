@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PureStay • Backend</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <link rel="icon" href="brand/purestay_exact_SVG.svg" type="image/svg+xml">
+  <style>
+    :root{ --ink:#111; --muted:#5a5854; --card:#fff; --line:#ece6dc; --gold:#CEA43C; --maroon:#73261F; }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial;
+      color:var(--ink);
+      background:
+        radial-gradient(1200px 700px at 10% -10%, rgba(206,164,60,0.18), transparent 60%),
+        radial-gradient(900px 700px at 110% 10%, rgba(115,38,31,0.20), transparent 55%),
+        linear-gradient(180deg, #140b09, #0c0706 62%);
+      padding:24px;
+    }
+    a{ color:inherit; }
+
+    .shell{ max-width: 1000px; margin:0 auto; }
+    .top{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:14px; margin-bottom:14px;
+      color:#fff;
+    }
+    .brand{ display:flex; align-items:center; gap:12px; }
+    .brand img{ height:42px; width:auto; display:block; }
+    .brand .t{ font-weight:1000; letter-spacing:-0.02em; }
+
+    .nav{ display:flex; gap:10px; flex-wrap:wrap; }
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:10px 12px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.22);
+      background:rgba(255,255,255,.10);
+      color:#fff;
+      text-decoration:none;
+      font-weight:900;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow:0 30px 90px rgba(0,0,0,.35);
+      overflow:hidden;
+    }
+
+    .head{ padding:18px 18px 10px; border-bottom:1px solid var(--line); }
+    .head h1{ margin:0; font-size:22px; letter-spacing:-0.02em; }
+    .head p{ margin:6px 0 0; color:var(--muted); font-weight:700; }
+
+    .body{ padding:18px; display:grid; gap:14px; }
+
+    .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    @media (max-width: 900px){ .grid{ grid-template-columns:1fr; } }
+
+    label{ display:block; font-weight:1000; font-size:13px; margin-bottom:6px; }
+    input, textarea{
+      width:100%;
+      border:1px solid #e6e0d6;
+      border-radius:12px;
+      padding:12px 12px;
+      font-size:15px;
+      outline:none;
+      background:#fff;
+    }
+    textarea{ min-height:92px; resize:vertical; }
+    input:focus, textarea:focus{ border-color: var(--gold); box-shadow:0 0 0 3px rgba(206,164,60,.28); }
+
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .btn{
+      appearance:none;
+      border:1px solid transparent;
+      background:linear-gradient(180deg, var(--gold), #ffd98c);
+      color:#1b1208;
+      padding:12px 14px;
+      border-radius:12px;
+      font-weight:1000;
+      cursor:pointer;
+    }
+    .btn.secondary{
+      background:#fff;
+      border-color:#e6e0d6;
+      color:#111;
+    }
+
+    .status{ font-weight:900; font-size:14px; }
+    .ok{ color:#0b6b2b; }
+    .bad{ color:#7a1f1f; }
+
+    .hint{ font-size:13px; color:var(--muted); font-weight:700; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="top">
+      <div class="brand">
+        <img src="brand/purestay_exact_SVG.svg" alt="PureStay" />
+        <div>
+          <div class="t">Backend</div>
+          <div style="opacity:.85; font-size:12px; font-weight:800;">Calendar + Stripe link settings</div>
+        </div>
+      </div>
+      <div class="nav">
+        <a class="chip" href="Home.html">Home</a>
+        <a class="chip" href="Discovery.html">Discovery</a>
+        <a class="chip" href="DialerTraining.html">Training</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="head">
+        <h1>Paste links here</h1>
+        <p>This page saves settings to the Node backend. You’ll need your admin token to save.</p>
+      </div>
+
+      <div class="body">
+        <div class="grid">
+          <div>
+            <label for="bookingCalendarUrl">Booking calendar URL</label>
+            <input id="bookingCalendarUrl" type="url" placeholder="https://..." />
+            <div class="hint">Discovery booking buttons will send people to this link.</div>
+          </div>
+          <div>
+            <label for="stripeCheckoutUrl">Stripe checkout URL (optional)</label>
+            <input id="stripeCheckoutUrl" type="url" placeholder="https://buy.stripe.com/..." />
+            <div class="hint">If set, quote flow will use this instead of Discovery booking.</div>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div>
+            <label for="stripePricingUrl">Stripe pricing page URL (optional)</label>
+            <input id="stripePricingUrl" type="url" placeholder="https://..." />
+            <div class="hint">Used for future pricing links / portal references.</div>
+          </div>
+          <div>
+            <label for="adminToken">Admin token</label>
+            <input id="adminToken" type="password" placeholder="Set ADMIN_TOKEN in .env" />
+            <div class="hint mono">Sent as: Authorization: Bearer &lt;token&gt;</div>
+          </div>
+        </div>
+
+        <div>
+          <label for="googleSheets">Google Sheets links (notes)</label>
+          <textarea id="googleSheets" placeholder="Paste any related sheets here..."></textarea>
+          <div class="hint">Stored as notes only (we’re not pulling data automatically yet).</div>
+        </div>
+
+        <div class="row">
+          <button class="btn" id="btnSave" type="button">Save settings</button>
+          <button class="btn secondary" id="btnReload" type="button">Reload</button>
+          <span class="status" id="status"></span>
+        </div>
+
+        <div class="hint">Slug for this backend: <span class="mono">/backend</span> (or open <span class="mono">Backend.html</span>)</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const $ = (id)=>document.getElementById(id);
+      const fields = {
+        bookingCalendarUrl: $('bookingCalendarUrl'),
+        stripeCheckoutUrl: $('stripeCheckoutUrl'),
+        stripePricingUrl: $('stripePricingUrl'),
+        googleSheets: $('googleSheets'),
+        adminToken: $('adminToken'),
+        status: $('status'),
+        btnSave: $('btnSave'),
+        btnReload: $('btnReload'),
+      };
+
+      // Prefill from localStorage to reduce retyping
+      try{
+        const t = localStorage.getItem('ps_admin_token');
+        if(t) fields.adminToken.value = t;
+      }catch{}
+
+      function setStatus(msg, ok=true){
+        fields.status.textContent = msg;
+        fields.status.className = 'status ' + (ok ? 'ok' : 'bad');
+      }
+
+      async function load(){
+        setStatus('Loading…');
+        try{
+          const r = await fetch('/api/settings', { method:'GET' });
+          const j = await r.json().catch(()=>null);
+          if(!j || !j.ok) throw new Error('load_failed');
+          const s = j.settings || {};
+          fields.bookingCalendarUrl.value = s.bookingCalendarUrl || '';
+          fields.stripeCheckoutUrl.value = s.stripeCheckoutUrl || '';
+          fields.stripePricingUrl.value = s.stripePricingUrl || '';
+          fields.googleSheets.value = s.googleSheets || '';
+          setStatus('Loaded.', true);
+        }catch{
+          setStatus('Could not load settings (server not running?).', false);
+        }
+      }
+
+      async function save(){
+        const token = (fields.adminToken.value || '').trim();
+        if(!token){ setStatus('Admin token required to save.', false); return; }
+
+        // remember token locally
+        try{ localStorage.setItem('ps_admin_token', token); }catch{}
+
+        setStatus('Saving…');
+        const body = {
+          bookingCalendarUrl: fields.bookingCalendarUrl.value.trim(),
+          stripeCheckoutUrl: fields.stripeCheckoutUrl.value.trim(),
+          stripePricingUrl: fields.stripePricingUrl.value.trim(),
+          googleSheets: fields.googleSheets.value.trim(),
+        };
+
+        try{
+          const r = await fetch('/api/settings', {
+            method:'POST',
+            headers:{
+              'Content-Type':'application/json',
+              'Authorization': 'Bearer ' + token,
+            },
+            body: JSON.stringify(body)
+          });
+          const j = await r.json().catch(()=>null);
+          if(!r.ok || !j || !j.ok){
+            const err = (j && j.error) ? j.error : 'save_failed';
+            setStatus('Save failed: ' + err, false);
+            return;
+          }
+          setStatus('Saved.', true);
+        }catch{
+          setStatus('Save failed (server not running?).', false);
+        }
+      }
+
+      fields.btnSave.addEventListener('click', save);
+      fields.btnReload.addEventListener('click', load);
+      load();
+    })();
+  </script>
+</body>
+</html>

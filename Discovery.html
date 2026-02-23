@@ -2,7 +2,18 @@
 PURESTAY • Discover Landing • GHL Custom HTML Block (FULL PAGE)
 Scope: fix form helper text color; keep discovery header light; retain last working UX
 ========================================================= -->
-<div id="ps-discover"></div>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PureStay • Discover</title>
+  <meta name="description" content="Book a discovery call with PureStay. Build your plan in minutes and pick a time that works." />
+  <link rel="icon" href="brand/purestay_exact_SVG.svg" type="image/svg+xml">
+</head>
+
+<body style="margin:0">
+<div id="ps-discover">
 
 <style>
   /* ---------- Reset ---------- */
@@ -90,6 +101,19 @@ Scope: fix form helper text color; keep discovery header light; retain last work
   }
   .cal-iframe{ width:100%; height:900px; border:0; display:block; margin-top: clamp(12px, 2.2vw, 18px); border-radius:18px; background:#fff; }
 
+  /* ---------- BOOKING LINK (configured in Backend.html) ---------- */
+  .book-link{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:14px; border:1px solid #efebe3; border-radius:18px; background:#fff;
+  }
+  .book-link .left{ min-width:0; }
+  .book-link .title{ font-weight:1000; color:#121212; }
+  .book-link .sub{ color:#5a5854; font-weight:700; margin-top:4px; }
+  .book-link .btn{ white-space:nowrap; }
+  .book-fallback{ margin-top:14px; border:1px dashed #efebe3; border-radius:18px; padding:14px; background:#fff; }
+  .book-fallback .row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  @media (max-width:980px){ .book-fallback .row{ grid-template-columns:1fr; } }
+
   .trustbar{ display:flex; gap:16px; align-items:center; justify-content:center; color:#e9e3db; opacity:.95; font-size:14px; margin-top: clamp(18px, 3vw, 28px); text-align:center; flex-wrap:wrap; }
   .trustbar b{ color:#fff; }
 
@@ -162,8 +186,8 @@ Scope: fix form helper text color; keep discovery header light; retain last work
 
   <div class="ps-hero__top">
     <div class="ps-hero__brand">
-      <a href="https://www.purestaync.com/home" aria-label="PureStay Home">
-        <img class="ps-hero__logo" src="https://storage.googleapis.com/msgsndr/TPwxGisIBKbxlbrOoolh/media/68b27005e7747007c0dd1464.svg" alt="PureStay" />
+      <a href="Home.html" aria-label="PureStay Home">
+        <img class="ps-hero__logo" src="brand/PureStay_white.png" alt="PureStay" />
       </a>
     </div>
     <!-- no skip button -->
@@ -342,7 +366,7 @@ Scope: fix form helper text color; keep discovery header light; retain last work
 
           <div class="psq-actions">
             <a id="psq-pay" class="cta-gold cta-wide" href="#" target="_blank" rel="noopener">Review plan &amp; start</a>
-            <a class="cta-gold cta-wide" href="https://purestaync.com/connect">Talk to an account manager</a>
+            <a class="cta-gold cta-wide" href="Home.html#contact">Talk to an account manager</a>
           </div>
           <div class="cal-kicker" style="margin-top:8px;">Taxes and fees handled at checkout.</div>
         </div>
@@ -368,7 +392,36 @@ Scope: fix form helper text color; keep discovery header light; retain last work
     </div>
 
     <div class="cal-card">
-      <iframe class="cal-iframe" title="PureStay Discovery Calendar" src="https://api.leadconnectorhq.com/widget/booking/mrHEOrJ2HigWjdcjHcvP" loading="lazy" allowtransparency="true"></iframe>
+      <div class="book-link" aria-label="Book a discovery call">
+        <div class="left">
+          <div class="title">Book your discovery call</div>
+          <div class="sub" id="ps-book-sub">We’ll open the calendar in a new tab.</div>
+        </div>
+        <a class="cta-gold cta-wide btn" id="ps-book-link" href="#" target="_blank" rel="noopener">Open booking calendar</a>
+      </div>
+
+      <div class="book-fallback" id="ps-book-fallback" hidden>
+        <div style="font-weight:1000; margin-bottom:6px;">No calendar link configured yet</div>
+        <div class="cal-kicker" style="margin-bottom:10px;">Admin: set it in <a href="/backend" style="text-decoration:underline;">/backend</a>. Meanwhile, you can submit a request below.</div>
+        <form id="ps-book-form">
+          <div class="row">
+            <div class="psq-field">
+              <label class="psq-label" for="ps-book-name">Name</label>
+              <input id="ps-book-name" class="psq-input" type="text" autocomplete="name" placeholder="Full name" />
+            </div>
+            <div class="psq-field">
+              <label class="psq-label" for="ps-book-email">Email</label>
+              <input id="ps-book-email" class="psq-input" type="email" autocomplete="email" placeholder="name@company.com" />
+            </div>
+          </div>
+          <div class="psq-field" style="margin-top:10px;">
+            <label class="psq-label" for="ps-book-notes">Notes</label>
+            <input id="ps-book-notes" class="psq-input" type="text" placeholder="Best times / property / anything helpful" />
+          </div>
+          <button class="cta-gold cta-wide" type="submit" style="margin-top:10px;">Request booking</button>
+          <div class="cal-kicker" id="ps-book-status" style="margin-top:10px;"></div>
+        </form>
+      </div>
     </div>
 
     <div class="trustbar">
@@ -376,13 +429,17 @@ Scope: fix form helper text color; keep discovery header light; retain last work
       <span>Questions before booking? <a href="mailto:hello@purestaync.com" style="text-decoration:underline; color:#fff;">Email us</a></span>
     </div>
   </div>
-  <noscript>
-    <div style="max-width:920px;margin:24px auto;color:#fff;padding:0 16px;">
-      JavaScript is required to load the calendar. You can also book at
-      <a href="https://api.leadconnectorhq.com/widget/booking/mrHEOrJ2HigWjdcjHcvP" style="color:#ffd98c; text-decoration:underline;">this link</a>.
-    </div>
-  </noscript>
 </section>
+
+<footer class="cal-wrap js-bleed" aria-label="Footer" style="padding-top: 24px; padding-bottom: 40px;">
+  <div class="cal-shell">
+    <div class="trustbar" style="margin-top:0;">
+      <span>© <span id="yr"></span> PureStay</span>
+      <span><a href="Privacy.html" style="color:#ffd98c; text-decoration:underline;">Privacy</a></span>
+      <span><a href="Terms.html" style="color:#ffd98c; text-decoration:underline;">Terms</a></span>
+    </div>
+  </div>
+</footer>
 
 <!-- ================= SCRIPTS ================= -->
 <script>
@@ -416,7 +473,7 @@ Scope: fix form helper text color; keep discovery header light; retain last work
 <script>
 /* ================= Quote Flow (JSONP; copy/UX updated) ================= */
 (function(){
-  const ENDPOINT = "https://script.google.com/macros/s/AKfycbxuZoHqLFXFpK-lUjroCCOcXxFXVa8NtIbVrFtqK7P2FSmS_NQhWvdgo4iY_qhJe9dp/exec";
+  const ENDPOINT = "/api/quote";
 
   const scope   = document.getElementById('ps-quote');
   const steps   = Array.from(scope.querySelectorAll('.psq-step'));
@@ -591,25 +648,6 @@ Scope: fix form helper text color; keep discovery header light; retain last work
   }
 
   /* -------- JSONP submit -------- */
-  function jsonp(url, payload){
-    return new Promise((resolve, reject)=>{
-      const cb = 'psq_cb_' + Date.now() + '_' + Math.floor(Math.random()*1e6);
-      const s  = document.createElement('script');
-      const src = url + '?callback=' + cb + '&payload=' + encodeURIComponent(JSON.stringify(payload));
-
-      const timer = setTimeout(()=>{ cleanup(); reject(new Error('Timeout')); }, 15000);
-      function cleanup(){
-        clearTimeout(timer);
-        delete window[cb];
-        s.remove();
-      }
-      window[cb] = (data)=>{ cleanup(); resolve(data); };
-      s.onerror = ()=>{ cleanup(); reject(new Error('Network error')); };
-      s.src = src;
-      document.head.appendChild(s);
-    });
-  }
-
   async function submitQuote(){
     const pkgName = routePackage(data);
     const payload = {
@@ -634,7 +672,12 @@ Scope: fix form helper text color; keep discovery header light; retain last work
     btnNext.textContent = 'Building your plan…'; btnNext.disabled = true; btnNext.setAttribute('aria-busy','true');
 
     try{
-      const json = await jsonp(ENDPOINT, payload);
+      const r = await fetch(ENDPOINT, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      const json = await r.json().catch(()=>null);
       if (!json || !json.ok){
         msgBox.hidden = false;
         msgBox.textContent = (json && json.error) ? json.error : 'Could not build your plan.';
@@ -669,3 +712,84 @@ Scope: fix form helper text color; keep discovery header light; retain last work
   setStep(1, /*fromUser*/ false); // render without jumping
 })();
 </script>
+
+<script>
+/* Booking calendar link comes from Backend.html via /api/settings */
+(function(){
+  const link = document.getElementById('ps-book-link');
+  const sub = document.getElementById('ps-book-sub');
+  const fallback = document.getElementById('ps-book-fallback');
+  const status = document.getElementById('ps-book-status');
+
+  const nameEl = document.getElementById('ps-book-name');
+  const emailEl = document.getElementById('ps-book-email');
+  const notesEl = document.getElementById('ps-book-notes');
+  const form = document.getElementById('ps-book-form');
+
+  async function loadSettings(){
+    try{
+      const r = await fetch('/api/settings', { method:'GET' });
+      const j = await r.json().catch(()=>null);
+      const url = (j && j.ok && j.settings && j.settings.bookingCalendarUrl) ? String(j.settings.bookingCalendarUrl).trim() : '';
+      if(url){
+        link.href = url;
+        sub.textContent = 'We’ll open the calendar in a new tab.';
+        fallback.hidden = true;
+        return;
+      }
+      link.href = '#';
+      sub.textContent = 'Admin needs to set a calendar link in /backend.';
+      fallback.hidden = false;
+    }catch{
+      link.href = '#';
+      sub.textContent = 'Server not running. Start Node or configure a calendar link.';
+      fallback.hidden = false;
+    }
+  }
+
+  form?.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    if(!status) return;
+    const email = (emailEl?.value || '').trim();
+    if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+      status.textContent = 'Enter a valid email.';
+      status.style.color = '#7a1f1f';
+      return;
+    }
+    status.textContent = 'Sending…';
+    status.style.color = '#5a5854';
+    try{
+      const r = await fetch('/api/booking', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          name: (nameEl?.value || '').trim(),
+          email,
+          property: '',
+          date: 'request',
+          time: (notesEl?.value || '').trim() || 'Requested via Discovery fallback form',
+          tz: Intl.DateTimeFormat().resolvedOptions().timeZone || ''
+        })
+      });
+      const j = await r.json().catch(()=>null);
+      if(r.ok && j && j.ok){
+        status.textContent = 'Request sent. We’ll follow up by email.';
+        status.style.color = '#0b6b2b';
+        return;
+      }
+      throw new Error('booking_failed');
+    }catch{
+      status.textContent = 'Could not send. Email hello@purestaync.com.';
+      status.style.color = '#7a1f1f';
+    }
+  });
+
+  const yr = document.getElementById('yr');
+  if(yr) yr.textContent = new Date().getFullYear();
+  loadSettings();
+})();
+</script>
+
+</div>
+</body>
+</html>

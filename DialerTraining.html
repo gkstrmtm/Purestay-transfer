@@ -1,13 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PureStay • Dialer Training</title>
+  <meta name="description" content="PureStay Remote Setter Training modules and certification." />
+  <link rel="icon" href="brand/purestay_exact_SVG.svg" type="image/svg+xml">
+</head>
+
+<body style="margin:0">
 <!-- =========================================================
-PURESTAY • Dialer Training • Remote Setter Training (GHL Custom HTML Block)
+PURESTAY • Dialer Training • Remote Setter Training
 Notes:
-- Single-file embed (HTML + CSS + JS)
-- Progress tracking + certificate generation via Google Apps Script endpoint
+- Single-file page (HTML + CSS + JS)
+- Progress tracking via local backend (/api/training/*) with localStorage fallback
+- Certificate via Certificate.html (Print → Save as PDF)
 ========================================================= -->
 <div id="ps-remote" class="ps-wrap js-bleed">
   <!-- Gate -->
   <section id="ps-gate" class="card">
-    <img src="https://storage.googleapis.com/msgsndr/TPwxGisIBKbxlbrOoolh/media/68b27005e7747007c0dd1464.svg" alt="PureStay" class="brand">
+    <img src="brand/purestay_exact_SVG.svg" alt="PureStay" class="brand">
     <h2 class="h">Enter Remote Setter Training</h2>
     <p class="p">Use your name and email. We save your progress so you can come back anytime.</p>
     <div class="grid">
@@ -21,7 +33,7 @@ Notes:
   <!-- Stepper -->
   <section id="ps-app" class="app" hidden>
     <header class="hdr">
-      <img src="https://storage.googleapis.com/msgsndr/TPwxGisIBKbxlbrOoolh/media/68b27005e7747007c0dd1464.svg" alt="PureStay" class="brand brand--sm">
+      <a href="Home.html" aria-label="PureStay Home"><img src="brand/purestay_exact_SVG.svg" alt="PureStay" class="brand brand--sm"></a>
       <div id="ps-progress" class="progress"></div>
     </header>
 
@@ -96,7 +108,7 @@ Notes:
 
 <script>
 (function(){
-  const API = 'https://script.google.com/macros/s/AKfycbximxNlAdyqsbf9rNfdP0qOxBYoTPxXNCx2sUrc9j-qQw2_Xevp53dk-fWlPBHApaWN/exec';
+  const API_ENABLED = location.protocol !== 'file:';
 
   // Edge to edge bleed inside GHL containers
   function applyBleed(){
@@ -150,11 +162,28 @@ Notes:
   function escapeHtml(s){ return String(s||'').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
   function escapeAttr(s){ return String(s||'').replace(/"/g,'&quot;'); }
 
-  // CORS safe POST
-  async function post(route, payload){
-    const params = new URLSearchParams({ route });
-    Object.entries(payload || {}).forEach(([k,v])=>{ if (v!==undefined && v!==null) params.append(k, String(v)); });
-    const res = await fetch(API, { method:'POST', body: params });
+  const storageKey = (email) => `ps_training_completed_${String(email||'').toLowerCase()}`;
+  function loadLocal(email){
+    try{
+      const raw = localStorage.getItem(storageKey(email));
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    }catch{ return []; }
+  }
+  function saveLocal(email, completedSet){
+    try{ localStorage.setItem(storageKey(email), JSON.stringify(Array.from(completedSet))); }catch{}
+  }
+
+  async function apiPost(path, payload){
+    const res = await fetch(path, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload || {})
+    });
+    return res.json();
+  }
+  async function apiGet(path){
+    const res = await fetch(path, { method:'GET' });
     return res.json();
   }
 
@@ -178,15 +207,18 @@ Notes:
     if (!emailOk(email)){ msg.textContent = 'Enter a valid email.'; return; }
     msg.textContent = '';
     try{
-      const resp = await post('enter', { full_name, email, user_agent:navigator.userAgent, source:'ghl' });
-      if (!resp || !resp.ok){ msg.textContent = 'Could not enter. Check access settings on the script.'; return; }
       state.email = email; state.name = full_name;
 
-      const prog = await post('progress', { email });
-      if (prog && prog.ok && Array.isArray(prog.items)){
-        prog.items.forEach(it=>{ if (it.action==='completed') state.completed.add(it.module_slug); });
-        for (let i=0;i<MODULES.length;i++){ if (!state.completed.has(MODULES[i].slug)){ state.idx = i; break; } }
+      // Load progress (API if available, else localStorage)
+      let completed = [];
+      if (API_ENABLED){
+        const prog = await apiGet(`/api/training/progress?email=${encodeURIComponent(email)}`).catch(()=>null);
+        if (prog && prog.ok && Array.isArray(prog.completed)) completed = prog.completed;
+        apiPost('/api/training/enter', { full_name, email, user_agent:navigator.userAgent }).catch(()=>null);
       }
+      if (!completed.length) completed = loadLocal(email);
+      completed.forEach(slug => state.completed.add(slug));
+      for (let i=0;i<MODULES.length;i++){ if (!state.completed.has(MODULES[i].slug)){ state.idx = i; break; } }
 
       gate.hidden = true; app.hidden = false;
       render();
@@ -209,28 +241,26 @@ Notes:
       if (!cname){ alert('Enter your name.'); return; }
       if (!cdateISO){ alert('Pick a valid date.'); return; }
       try{
-        const r = await post('certificate', { full_name:cname, email:state.email, date_iso:cdateISO });
-        if (r && r.ok && r.pdf_base64){
-          const blob = b64toBlob(r.pdf_base64, 'application/pdf');
-          const url  = URL.createObjectURL(blob);
-          const a    = document.createElement('a');
-          a.href = url;
-          a.download = r.filename || 'PureStay-Certification.pdf';
-          document.body.appendChild(a);
-          a.click();
-          URL.revokeObjectURL(url);
-          state.completed.add('certification');
-          render();
-        } else {
-          alert('Could not generate certificate. Try again.');
-        }
+        if (API_ENABLED) apiPost('/api/training/certificate', { full_name:cname, email:state.email, date_iso:cdateISO }).catch(()=>null);
+
+        const u = new URL('Certificate.html', location.href);
+        u.searchParams.set('name', cname);
+        u.searchParams.set('date', cdateISO);
+        u.searchParams.set('autoprint', '1');
+        window.open(u.toString(), '_blank', 'noopener');
+
+        state.completed.add('certification');
+        saveLocal(state.email, state.completed);
+        render();
       }catch(e){
         alert('Network error. Try again.');
       }
       return;
     }
-    await track('completed');
     state.completed.add(m.slug);
+    saveLocal(state.email, state.completed);
+    if (API_ENABLED) apiPost('/api/training/complete', { email: state.email, full_name: state.name, module_slug: m.slug, module_title: m.title, device: device(), user_agent: navigator.userAgent }).catch(()=>null);
+    track('completed');
     render();
   });
 
@@ -251,14 +281,16 @@ Notes:
 
   async function track(action){
     const m = MODULES[state.idx];
-    await post('track', {
+    if (!API_ENABLED) return;
+    apiPost('/api/training/track', {
       email: state.email,
+      full_name: state.name,
       module_slug: m.slug,
       module_title: m.title,
       action,
       device: device(),
-      session_id: ''
-    });
+      user_agent: navigator.userAgent
+    }).catch(()=>null);
   }
 
   function render(){
@@ -293,7 +325,7 @@ Notes:
     const prefill = state.name || '';
     return `
       <div class="card" style="border-color:#e8e2d8; margin:8px 0 0;">
-        <p style="margin:0 0 10px;">Enter your name and pick today’s date. Then click Generate certificate to download your PDF.</p>
+        <p style="margin:0 0 10px;">Enter your name and pick today’s date. Then click Generate certificate and print/save as PDF.</p>
         <div class="grid" style="grid-template-columns:1.2fr 1fr auto;">
           <input id="cert-name" class="input" type="text" placeholder="Full name" value="${escapeAttr(prefill)}">
           <input id="cert-date" class="input" type="date" value="${today}">
@@ -303,3 +335,5 @@ Notes:
   }
 })();
 </script>
+</body>
+</html>

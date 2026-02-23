@@ -1,2 +1,11 @@
 # Ignore exported contact lists (likely contains PII)
 Export_Contacts_*.csv
+
+# Node
+node_modules/
+
+# Local env
+.env
+
+# Local backend data (contains PII)
+server/data/

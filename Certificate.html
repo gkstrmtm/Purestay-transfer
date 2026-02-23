@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PureStay • Certification</title>
+  <link rel="icon" href="brand/purestay_exact_SVG.svg" type="image/svg+xml">
+  <style>
+    :root{ --gold:#CEA43C; --maroon:#73261F; --ink:#111; --paper:#fff; }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial;
+      color:var(--ink);
+      background:
+        radial-gradient(1200px 700px at 10% -10%, rgba(206,164,60,0.20), transparent 60%),
+        radial-gradient(900px 700px at 110% 10%, rgba(115,38,31,0.25), transparent 55%),
+        linear-gradient(180deg, #140b09, #0c0706 62%);
+      padding:24px;
+    }
+    .shell{ max-width: 980px; margin:0 auto; }
+    .bar{
+      display:flex; gap:10px; align-items:center; justify-content:space-between;
+      color:#fff; margin-bottom:14px;
+    }
+    .bar a{ color:#ffd98c; text-decoration:underline; font-weight:800; }
+    .btn{
+      appearance:none; border:1px solid rgba(255,255,255,.22);
+      background:rgba(255,255,255,.10); color:#fff;
+      padding:10px 14px; border-radius:12px; font-weight:900; cursor:pointer;
+    }
+
+    .paper{
+      background:var(--paper);
+      border-radius:18px;
+      border:1px solid rgba(0,0,0,.08);
+      box-shadow:0 30px 90px rgba(0,0,0,.40);
+      padding:28px;
+    }
+
+    .cert{
+      position:relative;
+      border-radius:14px;
+      border:2px solid rgba(206,164,60,.6);
+      padding:28px;
+      overflow:hidden;
+    }
+    .cert:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(800px 280px at 10% 0%, rgba(206,164,60,0.22), transparent 60%),
+        radial-gradient(600px 360px at 110% 100%, rgba(115,38,31,0.12), transparent 55%);
+      pointer-events:none;
+    }
+
+    .brand{ display:flex; align-items:center; justify-content:space-between; gap:16px; position:relative; }
+    .brand img{ height:54px; width:auto; display:block; }
+    .stamp{
+      font-weight:1000; letter-spacing:.08em; text-transform:uppercase;
+      font-size:12px;
+      padding:10px 12px;
+      border-radius:999px;
+      background:linear-gradient(90deg, var(--gold), #ffd98c);
+      color:#1b1208;
+      box-shadow: inset 0 0 0 1px rgba(17,17,17,.12);
+    }
+
+    h1{
+      position:relative;
+      margin:18px 0 6px;
+      font-size:44px;
+      line-height:1.04;
+      color:var(--maroon);
+      letter-spacing:-0.02em;
+    }
+    .sub{
+      position:relative;
+      margin:0 0 18px;
+      color:#3b2a20;
+      font-weight:700;
+    }
+    .name{
+      position:relative;
+      margin:14px 0 6px;
+      font-size:34px;
+      font-weight:1000;
+      letter-spacing:-0.02em;
+      color:#111;
+    }
+    .meta{
+      position:relative;
+      display:flex; flex-wrap:wrap; gap:10px;
+      margin-top:8px;
+      color:#3b2a20;
+      font-weight:800;
+    }
+    .pill{
+      border:1px solid rgba(0,0,0,.10);
+      padding:10px 12px;
+      border-radius:999px;
+      background:#fff;
+    }
+
+    .footer{
+      position:relative;
+      margin-top:18px;
+      color:#4a4036;
+      font-weight:700;
+      font-size:13px;
+      display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    }
+
+    @media print{
+      body{ background:#fff; padding:0; }
+      .bar{ display:none; }
+      .paper{ box-shadow:none; border-radius:0; border:0; padding:0; }
+      .shell{ max-width:none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="bar">
+      <div>
+        <div style="font-weight:1000;">Certificate preview</div>
+        <div style="opacity:.9; font-size:13px;">Use Print → “Save as PDF” to download.</div>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <a href="DialerTraining.html">Back to training</a>
+        <button class="btn" id="btnPrint" type="button">Print / Save PDF</button>
+      </div>
+    </div>
+
+    <div class="paper">
+      <div class="cert" role="document" aria-label="PureStay certification certificate">
+        <div class="brand">
+          <img src="brand/purestay_exact_SVG.svg" alt="PureStay" />
+          <div class="stamp">Certified</div>
+        </div>
+
+        <h1>Phone Certification</h1>
+        <p class="sub">This certifies that the individual listed below has completed PureStay Remote Setter dialer training.</p>
+
+        <div class="name" id="certName">Name</div>
+        <div class="meta">
+          <div class="pill">Date: <span id="certDate">YYYY-MM-DD</span></div>
+          <div class="pill">Program: Remote Setter Training</div>
+        </div>
+
+        <div class="footer">
+          <div>PureStay • Resident retention activations</div>
+          <div>Contact: hello@purestaync.com</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const params = new URLSearchParams(location.search);
+      const name = (params.get('name') || '').trim();
+      const date = (params.get('date') || '').trim();
+
+      const nameEl = document.getElementById('certName');
+      const dateEl = document.getElementById('certDate');
+      if(nameEl) nameEl.textContent = name || 'Name';
+      if(dateEl) dateEl.textContent = date || new Date().toISOString().slice(0,10);
+
+      document.getElementById('btnPrint')?.addEventListener('click', ()=>window.print());
+
+      if(params.get('autoprint') === '1'){
+        setTimeout(()=>window.print(), 250);
+      }
+    })();
+  </script>
+</body>
+</html>

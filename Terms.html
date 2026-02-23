@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PureStay • Terms of Service</title>
+  <link rel="icon" href="brand/purestay_exact_SVG.svg" type="image/svg+xml">
+  <style>
+    :root{ --ink:#111; --muted:#555; --bg:#0c0706; --card:#fff; --border:#ece6dd; }
+    *{ box-sizing:border-box; }
+    body{ margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial; color:var(--ink);
+      background: radial-gradient(1200px 600px at 10% -10%, rgba(206,164,60,0.18), transparent 60%),
+                  radial-gradient(900px 700px at 110% 20%, rgba(115,38,31,0.35), transparent 60%),
+                  linear-gradient(180deg, #1a0d0b, var(--bg) 60%);
+      padding: 28px 16px 56px;
+    }
+    .shell{ max-width: 980px; margin: 0 auto; }
+    .top{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+    .brand{ display:flex; align-items:center; gap:12px; text-decoration:none; color:#fff; }
+    .brand img{ height:42px; width:auto; display:block; }
+    .nav a{ color:#fff; text-decoration:underline; font-weight:800; }
+    .card{ background:var(--card); border:1px solid var(--border); border-radius:16px; box-shadow:0 10px 36px rgba(0,0,0,.22); padding: 22px 20px; }
+    h1{ margin:0 0 4px; font-size: 34px; letter-spacing:-.01em; }
+    .meta{ margin:0 0 18px; color:var(--muted); font-weight:700; }
+    h2{ margin:20px 0 10px; font-size: 18px; }
+    p{ margin:0 0 10px; color:#2b2927; }
+    .footer{ margin-top:14px; text-align:center; color:#fff; opacity:.9; }
+    .footer a{ color:#fff; text-decoration:underline; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="top">
+      <a class="brand" href="Home.html" aria-label="PureStay Home">
+        <img src="brand/purestay_exact_SVG.svg" alt="PureStay" />
+      </a>
+      <div class="nav">
+        <a href="Home.html">Home</a>
+        &nbsp;·&nbsp;
+        <a href="Privacy.html">Privacy</a>
+      </div>
+    </div>
+
+    <main class="card">
+      <h1>Terms of Service</h1>
+      <p class="meta">Effective Date: May 14, 2025</p>
+
+      <p>Welcome to PureStay. By accessing or using our website, services, or submitting your information, you agree to be bound by the following Terms of Service.</p>
+
+      <h2>1. Use of Services</h2>
+      <p>You agree to use PureStay’s services for lawful purposes only. You may not use our services to violate any local, state, or federal laws or regulations.</p>
+
+      <h2>2. Service Availability</h2>
+      <p>We reserve the right to modify, suspend, or discontinue any part of our services at any time, with or without notice. We are not liable for any downtime, delays, or interruptions in service.</p>
+
+      <h2>3. Communications</h2>
+      <p>By submitting your contact information, you consent to receive communications from us via email and SMS. You may opt out at any time by replying STOP to text messages or using the unsubscribe link in emails.</p>
+
+      <h2>4. Intellectual Property</h2>
+      <p>All content on our website, including logos, branding, and written materials, is the property of PureStay and may not be reproduced or used without permission.</p>
+
+      <h2>5. Limitation of Liability</h2>
+      <p>PureStay is not liable for any indirect, incidental, or consequential damages that may arise from your use of our services or website. We provide all services “as is” without warranties of any kind.</p>
+
+      <h2>6. User Responsibilities</h2>
+      <p>You agree to provide accurate and current information. You are responsible for maintaining the confidentiality of any login credentials and for all activities under your account.</p>
+
+      <h2>7. Third-Party Links</h2>
+      <p>Our site may include links to third-party websites. We are not responsible for the content, policies, or practices of those sites.</p>
+
+      <h2>8. Changes to Terms</h2>
+      <p>We may update these Terms of Service at any time. Changes will be posted on this page with the updated effective date.</p>
+
+      <h2>9. Contact Information</h2>
+      <p>If you have any questions about these Terms of Service, please contact us at <a href="mailto:contact@purestaync.com">contact@purestaync.com</a>.</p>
+    </main>
+
+    <div class="footer">
+      © <span id="yr"></span> PureStay
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('yr').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

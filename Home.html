@@ -6,10 +6,20 @@ Patch 2025-10-08-t:
     width:100%, height:auto; overlay hidden. Desktop unchanged.
 - Keeps all prior fixes: See More modal, packages layout, contact full-bleed.
 ========================================================= -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PureStay — Resident Retention</title>
+  <meta name="description" content="PureStay helps apartment communities retain residents through consistent on-site activations, marketing touchpoints, and reporting.">
+  <link rel="icon" href="brand/purestay_exact_SVG.svg" type="image/svg+xml">
+</head>
+
+<body style="margin:0">
 <section id="ps" class="ps" aria-label="PureStay — Resident Retention">
 
   <!-- Preconnects + Fonts -->
-  <link rel="preconnect" href="https://storage.googleapis.com" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;800&family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
@@ -291,11 +301,11 @@ Patch 2025-10-08-t:
   <!-- ===== HEADER ===== -->
   <header class="topbar" role="banner">
     <nav class="nav" aria-label="Primary">
-      <a class="brand" href="https://www.purestaync.com/" target="_self" aria-label="PureStay Home">
-        <img src="https://storage.googleapis.com/msgsndr/TPwxGisIBKbxlbrOoolh/media/684b78c9869388f61b129f51.png" alt="PureStay logo">
+      <a class="brand" href="Home.html" aria-label="PureStay Home">
+        <img src="brand/purestay_exact_SVG.svg" alt="PureStay logo">
       </a>
       <div class="menu">
-        <a href="https://purestaync.com/discover" target="_self" rel="noopener">Discover</a>
+        <a href="Discovery.html">Discover</a>
         <a href="#contact" data-scroll>Contact Us</a>
       </div>
     </nav>
@@ -312,7 +322,7 @@ Patch 2025-10-08-t:
       </video>
       <div class="overlay" aria-hidden="true"></div>
       <div class="poster" id="heroPoster">
-        <img class="logo" alt="PureStay" src="https://storage.googleapis.com/msgsndr/TPwxGisIBKbxlbrOoolh/media/684b78c9869388f61b129f51.png">
+        <img class="logo" alt="PureStay" src="brand/purestay_exact_SVG.svg">
       </div>
     </section>
   </div>
@@ -345,7 +355,7 @@ Patch 2025-10-08-t:
       <div class="grid-2" style="margin-top:16px;">
         <article class="card" data-reveal>
           <h3>Step One</h3>
-          <p>Either <a href="https://purestaync.com/discover#book" target="_self" rel="noopener">Book a Call</a> or fill out the <a href="https://purestaync.com/discover#form" target="_self" rel="noopener">Discovery Form</a>. This is how we learn your property, your residents, the event space, and your goals.</p>
+          <p>Either <a href="Discovery.html">Book a Call</a> or fill out the <a href="Discovery.html">Discovery Form</a>. This is how we learn your property, your residents, the event space, and your goals.</p>
         </article>
         <article class="card" data-reveal>
           <h3>Step Two</h3>
@@ -370,14 +380,10 @@ Patch 2025-10-08-t:
     <div class="logos-rail">
       <div class="logos-wrap" data-reveal>
         <div class="logos-track" aria-hidden="true">
-          <div class="logos-item"><img src="https://storage.googleapis.com/msgsndr/TPwxGisIBKbxlbrOoolh/media/68acb253e91d969fff90bb2a.jpeg" alt="Michaels Companies"></div>
-          <div class="logos-item"><img src="https://storage.googleapis.com/msgsndr/TPwxGisIBKbxlbrOoolh/media/68acb1a7a7e598118684fad8.png" alt="TAA"></div>
-          <div class="logos-item"><img src="https://storage.googleapis.com/msgsndr/TPwxGisIBKbxlbrOoolh/media/68acb1a7baaed6616983f4bf.jpeg" alt="Drucker & Falk"></div>
-          <div class="logos-item"><img src="https://storage.googleapis.com/msgsndr/TPwxGisIBKbxlbrOoolh/media/68acb1a7a7e598a58484fad7.webp" alt="Greystar"></div>
-          <div class="logos-item" aria-hidden="true"><img src="" alt=""></div>
-          <div class="logos-item" aria-hidden="true"><img src="" alt=""></div>
-          <div class="logos-item" aria-hidden="true"><img src="" alt=""></div>
-          <div class="logos-item" aria-hidden="true"><img src="" alt=""></div>
+          <div class="logos-item"><img src="brand/clients/michaels-companies.jpeg" alt="Michaels Companies"></div>
+          <div class="logos-item"><img src="brand/clients/taa.png" alt="TAA"></div>
+          <div class="logos-item"><img src="brand/clients/drucker-and-falk.jpeg" alt="Drucker & Falk"></div>
+          <div class="logos-item"><img src="brand/clients/greystar.webp" alt="Greystar"></div>
         </div>
       </div>
     </div>
@@ -504,6 +510,7 @@ Patch 2025-10-08-t:
             <textarea id="msg" placeholder="Write your message..."></textarea>
           </div>
           <button class="btn" id="mailtoSend" type="button" style="margin-top:10px;">Send</button>
+          <div id="contactStatus" style="margin-top:10px;font-weight:800;"></div>
         </div>
 
         <div class="card" data-reveal>
@@ -518,24 +525,24 @@ Patch 2025-10-08-t:
         <div class="card" data-reveal>
           <h3>Discover</h3>
           <p>Book a discovery call with a retention expert.</p>
-          <a class="btn" href="https://purestaync.com/discover" target="_self" rel="noopener" style="margin-top:10px;">Book a Call</a>
+          <a class="btn" href="Discovery.html" style="margin-top:10px;">Book a Call</a>
         </div>
       </div>
 
       <div class="footerline">
         <small>© <span id="yr"></span> PureStay</small>
-        · <a href="https://privacy.purestaync.com/privacy-policy" target="_blank" rel="noopener">Privacy</a>
-        · <a href="https://terms.purestaync.com/terms-of-service" target="_blank" rel="noopener">Terms</a>
+        · <a href="Privacy.html">Privacy</a>
+        · <a href="Terms.html">Terms</a>
       </div>
     </div>
   </section>
 
   <!-- ===== SCHEMA ===== -->
   <script type="application/ld+json">
-  {"@context":"https://schema.org","@type":"Organization","name":"PureStay","url":"https://www.purestaync.com/","logo":"https://storage.googleapis.com/msgsndr/TPwxGisIBKbxlbrOoolh/media/684b78c9869388f61b129f51.png","contactPoint":[{"@type":"ContactPoint","telephone":"+1-980-350-7381","contactType":"sales","email":"contact@purestaync.com","areaServed":"US"}]}
+  {"@context":"https://schema.org","@type":"Organization","name":"PureStay","url":"https://www.purestaync.com/","logo":"brand/purestay_exact_SVG.svg","contactPoint":[{"@type":"ContactPoint","telephone":"+1-980-350-7381","contactType":"sales","email":"contact@purestaync.com","areaServed":"US"}]}
   </script>
   <script type="application/ld+json">
-  {"@context":"https://schema.org","@type":"LocalBusiness","name":"PureStay Resident Retention","image":"https://storage.googleapis.com/msgsndr/TPwxGisIBKbxlbrOoolh/media/684b78c9869388f61b129f51.png","url":"https://www.purestaync.com/","areaServed":{"@type":"AdministrativeArea","name":"North Carolina"},"serviceArea":[{"@type":"City","name":"Charlotte"},{"@type":"City","name":"Raleigh"},{"@type":"City","name":"Durham"},{"@type":"City","name":"Greensboro"},{"@type":"City","name":"Winston-Salem"},{"@type":"City","name":"Cary"},{"@type":"City","name":"Chapel Hill"},{"@type":"City","name":"Wilmington"},{"@type":"City","name":"Asheville"},{"@type":"City","name":"Fayetteville"},{"@type":"City","name":"Concord"},{"@type":"City","name":"Gastonia"},{"@type":"City","name":"Huntersville"},{"@type":"City","name":"Greenville"},{"@type":"City","name":"Jacksonville"}]}
+  {"@context":"https://schema.org","@type":"LocalBusiness","name":"PureStay Resident Retention","image":"brand/purestay_exact_SVG.svg","url":"https://www.purestaync.com/","areaServed":{"@type":"AdministrativeArea","name":"North Carolina"},"serviceArea":[{"@type":"City","name":"Charlotte"},{"@type":"City","name":"Raleigh"},{"@type":"City","name":"Durham"},{"@type":"City","name":"Greensboro"},{"@type":"City","name":"Winston-Salem"},{"@type":"City","name":"Cary"},{"@type":"City","name":"Chapel Hill"},{"@type":"City","name":"Wilmington"},{"@type":"City","name":"Asheville"},{"@type":"City","name":"Fayetteville"},{"@type":"City","name":"Concord"},{"@type":"City","name":"Gastonia"},{"@type":"City","name":"Huntersville"},{"@type":"City","name":"Greenville"},{"@type":"City","name":"Jacksonville"}]}
   </script>
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"ItemList","itemListElement":[
@@ -694,13 +701,61 @@ Patch 2025-10-08-t:
       t.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ const k=t.getAttribute('data-modal'); const title=t.querySelector('h3')?.textContent.trim(); if(k) openModal(title, content[k]); } });
     });
 
-    /* Contact mailto builder */
-    $('#mailtoSend')?.addEventListener('click', ()=>{
-      const subj = encodeURIComponent(($('#subj').value||'').trim());
-      const body = encodeURIComponent(($('#msg').value||'').trim() + '\n\n— Sent from PureStay Website');
-      const href = `mailto:contact@purestaync.com?subject=${subj}&body=${body}`;
-      window.location.href = href;
-    });
+    /* Contact: backend POST first; fallback to mailto for file:// or if server is down */
+    const statusEl = $('#contactStatus');
+    function setStatus(text, ok=true){
+      if(!statusEl) return;
+      statusEl.textContent = text || '';
+      statusEl.style.color = ok ? '#F4EDE3' : '#FFD1D1';
+    }
+    async function sendContact(){
+      const subject = ($('#subj')?.value || '').trim();
+      const message = ($('#msg')?.value || '').trim();
+      if(!subject && !message){ setStatus('Add a subject or message.', false); return; }
+
+      const mailto = ()=>{
+        const subj = encodeURIComponent(subject);
+        const body = encodeURIComponent(message + '\n\n— Sent from PureStay Website');
+        window.location.href = `mailto:contact@purestaync.com?subject=${subj}&body=${body}`;
+      };
+
+      if(window.location && window.location.protocol === 'file:'){
+        setStatus('Opening your email client…');
+        mailto();
+        return;
+      }
+
+      setStatus('Sending…');
+      try{
+        const res = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subject,
+            message,
+            page: 'home',
+            ts: new Date().toISOString()
+          })
+        });
+
+        const data = await res.json().catch(()=>null);
+        if(res.ok && data && data.ok){
+          if($('#subj')) $('#subj').value = '';
+          if($('#msg')) $('#msg').value = '';
+          setStatus('Sent. We’ll reply soon.');
+          return;
+        }
+
+        throw new Error('Contact API failed');
+      }catch(err){
+        setStatus('Server unavailable — opening email…');
+        mailto();
+      }
+    }
+    $('#mailtoSend')?.addEventListener('click', sendContact);
   })();
   </script>
 </section>
+
+</body>
+</html>
