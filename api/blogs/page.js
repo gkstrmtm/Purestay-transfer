@@ -59,7 +59,11 @@ function pageShell({ title, description, canonical, og, jsonLd, body }) {
       --line:#e9e3da;
       --shadow: 0 14px 40px rgba(0,0,0,.06);
       --gold:#CEA43C;
-      --maroon:#4a2b22;
+      /* Match Home.html brand tokens */
+      --maroon:#7A2E26;
+      --maroon-700:#66271f;
+      --gold:#C79A3B;
+      --gold-700:#B78A2F;
       --link:#0d4d8b;
     }
     *{ box-sizing:border-box; }
@@ -75,8 +79,8 @@ function pageShell({ title, description, canonical, og, jsonLd, body }) {
     .homeBtn b{ font-weight:950; letter-spacing:-0.02em; }
 
     .nav{ display:flex; gap:10px; align-items:center; }
-    .ctaBtn{ display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; border-radius:14px; font-weight:950; background:var(--maroon); color:#fff; border:1px solid rgba(0,0,0,.06); box-shadow:0 10px 26px rgba(0,0,0,.10); }
-    .ctaBtn:hover{ filter:brightness(1.03); text-decoration:none; }
+    .ctaBtn{ display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; border-radius:12px; font-weight:950; background:var(--maroon); color:#fff; border:1px solid transparent; box-shadow:0 14px 38px rgba(0,0,0,.10); }
+    .ctaBtn:hover{ background:var(--maroon-700); text-decoration:none; }
 
     .wrap{ max-width:1100px; margin:0 auto; padding:24px 18px 70px; }
     .hero{ padding:6px 0 18px; }
@@ -114,8 +118,19 @@ function pageShell({ title, description, canonical, og, jsonLd, body }) {
     .sideBox h3{ margin:0; font-size:14px; letter-spacing:-0.01em; }
     .sideBox p{ margin:8px 0 0; color:var(--muted); font-weight:700; line-height:1.55; }
     .sideBox .links{ margin-top:12px; display:grid; gap:10px; }
-    .sideBox .links a{ color:var(--ink); font-weight:900; padding:12px 12px; border-radius:14px; border:1px solid var(--line); background:#fff; text-decoration:none; }
-    .sideBox .links a:hover{ border-color:#dccfae; box-shadow:0 10px 22px rgba(0,0,0,.06); }
+    .linkBtn{ display:flex; align-items:center; justify-content:space-between; gap:10px; color:var(--ink); font-weight:950; padding:12px 12px; border-radius:14px; border:1px solid var(--line); background:#fff; text-decoration:none; }
+    .linkBtn:hover{ box-shadow:0 10px 22px rgba(0,0,0,.06); text-decoration:none; }
+    .linkBtn::after{ content:'→'; opacity:.55; font-weight:950; }
+    .linkBtn.call{ background:rgba(122,46,38,.10); border-color:rgba(122,46,38,.22); color:var(--maroon-700); }
+    .linkBtn.call:hover{ background:rgba(122,46,38,.14); border-color:rgba(122,46,38,.30); }
+    .linkBtn.core{ background:rgba(199,154,59,.16); border-color:rgba(199,154,59,.30); color:#3d2a10; }
+    .linkBtn.core:hover{ background:rgba(199,154,59,.22); border-color:rgba(199,154,59,.38); }
+    .linkBtn.culture{ background:rgba(13,110,92,.12); border-color:rgba(13,110,92,.26); color:#0b3d34; }
+    .linkBtn.culture:hover{ background:rgba(13,110,92,.16); border-color:rgba(13,110,92,.32); }
+    .linkBtn.signature{ background:rgba(67,56,202,.11); border-color:rgba(67,56,202,.24); color:#26236c; }
+    .linkBtn.signature:hover{ background:rgba(67,56,202,.15); border-color:rgba(67,56,202,.30); }
+    .linkBtn.talk{ background:rgba(16,16,16,.06); border-color:rgba(16,16,16,.14); color:var(--ink); }
+    .linkBtn.talk:hover{ background:rgba(16,16,16,.08); border-color:rgba(16,16,16,.18); }
 
     .foot{ border-top:1px solid var(--line); background:#fff; }
     .footInner{ max-width:1100px; margin:0 auto; padding:18px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
@@ -262,10 +277,10 @@ function renderIndex({ siteUrl, posts, total, page, perPage }) {
           <h3>Want this done-for-you?</h3>
           <p>PureStay runs on-site resident experiences and provides reporting so your team can focus on leasing and renewals.</p>
           <div class="links">
-            <a href="/discovery">Book a discovery call</a>
-            <a href="/core">See Core Package</a>
-            <a href="/culture-shift">See Culture Shift</a>
-            <a href="/signature-stay">See Signature Stay</a>
+            <a class="linkBtn call" href="/discovery">Book a discovery call</a>
+            <a class="linkBtn core" href="/core">See Core Package</a>
+            <a class="linkBtn culture" href="/culture-shift">See Culture Shift</a>
+            <a class="linkBtn signature" href="/signature-stay">See Signature Stay</a>
           </div>
         </div>
       </aside>
@@ -336,10 +351,10 @@ function renderPost({ siteUrl, post }) {
           <h3>Packages</h3>
           <p>Pick the level of resident touchpoints and media you want. We handle planning and on-site hosting.</p>
           <div class="links">
-            <a href="/core">Core Package</a>
-            <a href="/culture-shift">Culture Shift</a>
-            <a href="/signature-stay">Signature Stay</a>
-            <a href="/discovery">Talk to us</a>
+            <a class="linkBtn core" href="/core">Core Package</a>
+            <a class="linkBtn culture" href="/culture-shift">Culture Shift</a>
+            <a class="linkBtn signature" href="/signature-stay">Signature Stay</a>
+            <a class="linkBtn call" href="/discovery">Talk to us</a>
           </div>
         </div>
       </aside>
