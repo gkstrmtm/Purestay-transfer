@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PureStay • Culture Shift</title>
+  <meta name="description" content="PureStay Culture Shift — Enhanced experience with more touchpoints and light marketing content." />
+  <link rel="icon" href="brand/purestay_exact_SVG.svg" type="image/svg+xml">
+  <style>
+    :root{ --ps-gold:#CEA43C; --ps-maroon:#73261F; --ink:#0e0e0e; }
+    *{ box-sizing:border-box; }
+    html, body{ margin:0; padding:0; }
+    body{ font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial; color:#fff; }
+    a{ color:inherit; }
+
+    .ps-shell{ position:relative; }
+    .ps-shell .bg{
+      position:absolute; inset:0; z-index:0;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(206,164,60,.35), transparent 60%),
+        radial-gradient(900px 700px at 110% 20%, rgba(115,38,31,.55), transparent 60%),
+        linear-gradient(180deg, #1a0d0b, #0c0706 60%);
+    }
+    .hero, .wrap, .footer{ position:relative; z-index:1; }
+
+    .hero{ min-height:88vh; overflow:hidden; background:transparent; }
+    .heroTop{
+      position:absolute; inset:0 0 auto 0;
+      display:flex; align-items:flex-start; justify-content:space-between;
+      padding:18px clamp(16px,4vw,48px); z-index:5;
+      background:linear-gradient(to bottom, rgba(0,0,0,.38), rgba(0,0,0,0));
+    }
+    .brand a{ display:inline-block; }
+    .logo{ height:46px; width:auto; filter:drop-shadow(0 2px 8px rgba(0,0,0,.5)); }
+    @media (max-width:760px){ .logo{ height:38px; } }
+
+    .homeBtn{
+      color:#111; background:#fff; font-size:14px; padding:11px 16px; border-radius:999px;
+      border:1px solid rgba(0,0,0,.22);
+      box-shadow:0 6px 18px rgba(0,0,0,.22), 0 0 0 3px rgba(255,255,255,.35) inset;
+      transition:transform .15s, box-shadow .15s; margin-top:8px;
+      text-decoration:none; font-weight:700;
+    }
+    .homeBtn:hover{ transform:translateY(-1px); box-shadow:0 10px 26px rgba(0,0,0,.28), 0 0 0 3px rgba(255,255,255,.55) inset; }
+
+    .orbs{ position:absolute; inset:0; pointer-events:none; filter:blur(30px) saturate(115%); }
+    .orb{ position:absolute; width:260px; height:260px; border-radius:50%;
+      background:radial-gradient(circle at 35% 35%, rgba(255,255,255,.85), rgba(255,255,255,.05) 60%), linear-gradient(135deg, var(--ps-gold), rgba(206,164,60,.25));
+      opacity:.1; mix-blend-mode:screen; animation:drift 18s ease-in-out infinite alternate;
+    }
+    .orb--2{ width:340px; height:340px; background:radial-gradient(circle at 60% 40%, rgba(255,255,255,.8), rgba(255,255,255,.05) 60%), linear-gradient(135deg, #ffb178, var(--ps-gold)); animation-duration:22s; left:65%; top:10%; opacity:.12; }
+    .orb--3{ width:280px; height:280px; background:radial-gradient(circle at 40% 60%, rgba(255,255,255,.9), rgba(255,255,255,.05) 60%), linear-gradient(135deg, #e27b62, var(--ps-maroon)); animation-duration:26s; left:15%; bottom:-6%; opacity:.1; }
+    @keyframes drift{0%{transform:translate(-10%,-10%) scale(1);}100%{transform:translate(6%,12%) scale(1.2);}}
+
+    .stage{
+      position:relative; z-index:4; display:grid; place-items:center; text-align:center;
+      padding: clamp(220px, 26vh, 300px) 20px 120px; max-width:1100px; margin:0 auto;
+    }
+    .kicker{
+      display:inline-grid; place-items:center; font-size:clamp(12px,1.3vw,14px); letter-spacing:.08em; text-transform:uppercase;
+      padding:9px 14px; border-radius:999px; color:#111;
+      background:linear-gradient(90deg, var(--ps-gold), #ffd98c);
+      box-shadow:inset 0 0 0 1px rgba(17,17,17,.12), 0 8px 30px rgba(206,164,60,.25);
+    }
+    .h1{
+      margin:18px 0 0; font-weight:800; font-size:clamp(34px,6.4vw,70px); line-height:1.03; letter-spacing:-0.01em;
+      background:linear-gradient(180deg, #fff, #eaeaea); -webkit-background-clip:text; background-clip:text; color:transparent;
+      text-wrap:balance; text-shadow:0 2px 36px rgba(0,0,0,.55);
+      position:relative; display:inline-block;
+    }
+    .h1::after{
+      content:""; position:absolute; left:0; bottom:.15em; height:.6em; width:0%;
+      background:linear-gradient(90deg, rgba(206,164,60,.25), rgba(255,255,255,.0));
+      border-radius:6px; filter:blur(6px);
+      animation:revealSweep 1.6s ease .2s forwards;
+    }
+    @keyframes revealSweep{ to { width:100%; } }
+
+    .sub{ margin-top:14px; font-size:clamp(16px,2.2vw,22px); color:#f2eee8; opacity:.96; text-wrap:pretty; max-width:68ch; }
+    .proof{ display:flex; flex-wrap:wrap; gap:14px; justify-content:center; margin-top:22px; }
+    .chip{ display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:12px; background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.18); font-size:14px; color:#fff; opacity:0; transform:translateY(10px); transition:opacity .5s, transform .5s; }
+    .chip svg{ width:16px; height:16px; }
+    .chip.reveal.is-in{ opacity:1; transform:none; }
+
+    .ctaPrimary{ margin-top:28px; display:inline-flex; align-items:center; gap:10px; padding:14px 22px; border-radius:14px;
+      background:linear-gradient(180deg,#fff,#efefef); color:#121212; font-weight:700; font-size:clamp(14px,2.2vw,16px);
+      box-shadow:0 10px 30px rgba(255,255,255,.15), 0 16px 60px rgba(206,164,60,.25); text-decoration:none; }
+
+    .wrap{ max-width:980px; margin:0 auto; padding:0 clamp(16px,4vw,24px) 80px; }
+
+    .card{
+      background:#fff; color:var(--ink); border-radius:18px; padding:22px; box-shadow:
+        0 1px 2px rgba(0,0,0,.06),
+        0 12px 28px rgba(0,0,0,.10),
+        0 40px 80px rgba(115,38,31,.10);
+      border:1px solid #eee; margin-top:-70px;
+    }
+    @media (max-width:900px){ .card{ margin-top:-40px; } }
+
+    .badge{ display:inline-flex; align-items:center; gap:8px; font-size:12px; font-weight:800; letter-spacing:.02em; color:#111;
+      background:linear-gradient(90deg, var(--ps-gold), #ffd98c); padding:6px 10px; border-radius:999px; }
+    .plan{ margin:12px 0 6px; font-size:26px; font-weight:800; letter-spacing:-0.02em; }
+    .price{ color:#474747; font-size:14px; margin-bottom:14px; }
+    .hr{ height:1px; background:#eee; margin:16px 0; }
+
+    ul.features{ list-style:none; margin:0; padding:0; display:grid; gap:12px; }
+    .feature{ display:grid; grid-template-columns:22px 1fr; gap:10px; align-items:start; }
+    .check{ width:20px; height:20px; border-radius:6px; background:#f4f1e8; border:1px solid #eadfbf; display:grid; place-items:center; flex:0 0 20px; }
+    .check svg{ width:12px; height:12px; fill:#3f3f3f; }
+
+    .upsell{ margin-top:18px; padding:14px; border-radius:14px; background:#faf7ef; border:1px solid #f0e7cf; color:#3b2b12; font-size:14px; }
+    .upsell a{ color:#7a4e00; font-weight:700; text-decoration:none; border-bottom:1px dashed rgba(122,78,0,.4); }
+    .upsell a:hover{ border-bottom-color: rgba(122,78,0,.8); }
+
+    .btnRow{ display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; }
+    .btnPrimary{ display:inline-flex; align-items:center; gap:10px; padding:12px 18px; border-radius:14px;
+      background:linear-gradient(180deg,#fff,#efefef); color:#121212; font-weight:800; text-decoration:none;
+      box-shadow:0 10px 30px rgba(255,255,255,.15), 0 16px 60px rgba(206,164,60,.18); }
+    .btnGhost{ display:inline-flex; align-items:center; gap:10px; padding:12px 18px; border-radius:14px; background:#f7f7f7; color:#111; border:1px solid #e6e6e8; text-decoration:none; }
+
+    .bookBox{ margin-top:24px; border:1px solid #eee; border-radius:18px; padding:16px; background:#fff; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .bookBox .label{ font-weight:900; color:#121212; }
+    .bookBox .hint{ color:#5a5854; font-weight:700; font-size:13px; }
+
+    .footer{ margin:36px auto 0; padding:18px; max-width:1100px;
+      display:flex; gap:16px; flex-wrap:wrap; align-items:center; justify-content:space-between; }
+    .foot-copy{ color:#efeae2; font-size:14px; opacity:.9; }
+
+    @media (prefers-reduced-motion: reduce){
+      .orb, .orb--2, .orb--3{ animation: none !important; }
+      .h1::after{ animation: none !important; width:100%; }
+      .chip{ transition: none !important; opacity:1 !important; transform:none !important; }
+    }
+  </style>
+</head>
+<body>
+  <section class="ps-shell js-bleed" aria-label="PureStay Culture Shift Package">
+    <div class="bg" aria-hidden="true"></div>
+
+    <section class="hero" aria-label="Culture Shift package hero">
+      <div class="orbs" aria-hidden="true">
+        <span class="orb" style="left:-6%; top:8%"></span>
+        <span class="orb orb--2"></span>
+        <span class="orb orb--3"></span>
+      </div>
+
+      <div class="heroTop">
+        <div class="brand">
+          <a href="/" aria-label="PureStay Home">
+            <img class="logo" src="brand/PureStay_white.png" alt="PureStay" />
+          </a>
+        </div>
+        <a class="homeBtn" href="/">Home</a>
+      </div>
+
+      <div class="stage">
+        <span class="kicker">Culture Shift</span>
+        <h1 class="h1">Enhanced Experience with Light Marketing</h1>
+        <p class="sub">Double the touchpoints. More resident momentum. A monthly cadence that feels alive on-site and gives your team usable photos for property channels.</p>
+
+        <div class="proof" role="list" aria-label="Highlights">
+          <div class="chip reveal" role="listitem">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Two events each month
+          </div>
+          <div class="chip reveal" role="listitem">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="#fff" stroke-width="2"/></svg>
+            Host + coordination
+          </div>
+          <div class="chip reveal" role="listitem">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 8v8m4-4H8" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+            Light media included
+          </div>
+        </div>
+
+        <a class="ctaPrimary" href="#details">See what's included</a>
+      </div>
+    </section>
+
+    <div class="wrap" id="details">
+      <article class="card">
+        <span class="badge">Culture Shift</span>
+        <h2 class="plan">What you get each month</h2>
+        <div class="price">From $2,000 per month</div>
+        <div class="hr"></div>
+
+        <ul class="features">
+          <li class="feature">
+            <span class="check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.2 9.2a1 1 0 0 1-1.4 0L3.7 10.3a1 1 0 1 1 1.4-1.4l5 5 8.5-8.5a1 1 0 0 1 1.7.3z"/></svg></span>
+            <span>Two events per month, balanced mix of high-energy and seasonal formats for steady resident touchpoints.</span>
+          </li>
+          <li class="feature">
+            <span class="check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.2 9.2a1 1 0 0 1-1.4 0L3.7 10.3a1 1 0 1 1 1.4-1.4l5 5 8.5-8.5a1 1 0 0 1 1.7.3z"/></svg></span>
+            <span>End-to-end coordination and on-site hosting by the PureStay team. Your staff stays focused on leasing and renewals.</span>
+          </li>
+          <li class="feature">
+            <span class="check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.2 9.2a1 1 0 0 1-1.4 0L3.7 10.3a1 1 0 1 1 1.4-1.4l5 5 8.5-8.5a1 1 0 0 1 1.7.3z"/></svg></span>
+            <span>Upgraded branded materials and premium giveaways where appropriate to elevate on-site feel.</span>
+          </li>
+          <li class="feature">
+            <span class="check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.2 9.2a1 1 0 0 1-1.4 0L3.7 10.3a1 1 0 1 1 1.4-1.4l5 5 8.5-8.5a1 1 0 0 1 1.7.3z"/></svg></span>
+            <span>Light marketing content, ~10–15 photos per event for property use across email and socials.</span>
+          </li>
+          <li class="feature">
+            <span class="check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.2 9.2a1 1 0 0 1-1.4 0L3.7 10.3a1 1 0 1 1 1.4-1.4l5 5 8.5-8.5a1 1 0 0 1 1.7.3z"/></svg></span>
+            <span>Post-event recaps for both events with resident feedback summaries and engagement highlights.</span>
+          </li>
+        </ul>
+
+        <div class="upsell">
+          Need more media and higher-end production? When you’re ready, step up to <a href="/signature-stay">Signature Stay</a>.
+        </div>
+
+        <div class="btnRow">
+          <a href="/discovery" class="btnPrimary">Select Culture Shift</a>
+          <a href="/#packages" class="btnGhost">Compare packages</a>
+        </div>
+
+        <div class="bookBox" aria-label="Book a discovery call">
+          <div>
+            <div class="label">Book a discovery call</div>
+            <div class="hint">Pick a time that works and we’ll take it from there.</div>
+          </div>
+          <a class="btnPrimary" href="/discovery">Book now</a>
+        </div>
+      </article>
+    </div>
+
+    <footer class="footer">
+      <div class="foot-copy">Questions? <a href="mailto:contact@purestaync.com" style="color:#fff; text-decoration:underline;">contact@purestaync.com</a> • Call/Text <a href="tel:19803507381" style="color:#fff; text-decoration:underline;">980-350-7381</a></div>
+      <a href="/discovery" class="ctaPrimary">Talk to a retention expert</a>
+    </footer>
+  </section>
+
+  <script>
+  (function(){
+    function applyBleed(){
+      const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+      document.querySelectorAll('.js-bleed').forEach(el=>{
+        el.style.marginLeft = el.style.marginRight = el.style.width = '';
+        const r = el.getBoundingClientRect();
+        el.style.marginLeft  = (-r.left) + 'px';
+        el.style.marginRight = (-(vw - r.right)) + 'px';
+        el.style.width       = vw + 'px';
+      });
+    }
+    applyBleed();
+    window.addEventListener('resize', applyBleed);
+
+    const chips = Array.from(document.querySelectorAll('.chip.reveal'));
+    const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!prefersReduced) {
+      chips.forEach((c, i)=> setTimeout(()=> c.classList.add('is-in'), 180 + i*120));
+    } else {
+      chips.forEach(c=> c.classList.add('is-in'));
+    }
+  })();
+  </script>
+</body>
+</html>

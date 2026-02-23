@@ -4,6 +4,9 @@
     { "source": "/Discovery.html", "destination": "/discovery", "permanent": true },
     { "source": "/Careers.html", "destination": "/careers", "permanent": true },
     { "source": "/DialerTraining.html", "destination": "/dialer-training", "permanent": true },
+    { "source": "/Core.html", "destination": "/core", "permanent": true },
+    { "source": "/CultureShift.html", "destination": "/culture-shift", "permanent": true },
+    { "source": "/SignatureStay.html", "destination": "/signature-stay", "permanent": true },
     { "source": "/Privacy.html", "destination": "/privacy", "permanent": true },
     { "source": "/Terms.html", "destination": "/terms", "permanent": true },
     { "source": "/Backend.html", "destination": "/backend", "permanent": true },
@@ -20,6 +23,10 @@
     { "source": "/careers", "destination": "/Careers.html" },
     { "source": "/dialer-training", "destination": "/DialerTraining.html" },
     { "source": "/certificate", "destination": "/Certificate.html" },
+
+    { "source": "/core", "destination": "/Core.html" },
+    { "source": "/culture-shift", "destination": "/CultureShift.html" },
+    { "source": "/signature-stay", "destination": "/SignatureStay.html" },
 
     { "source": "/ec-toolkit", "destination": "/ECtoolkit.html" },
     { "source": "/eventcc", "destination": "/eventcc.html" },
