@@ -232,37 +232,32 @@ function isBot(req) {
   return /bot|crawler|spider|google|bing|duckduck|yandex|baidu|facebookexternalhit|twitterbot|slackbot|linkedinbot/.test(ua);
 }
 
-function renderPostSkeleton({ siteUrl, meta }) {
+function renderNotReady({ siteUrl, meta }) {
   const title = `${meta.title} | PureStay`;
-  const description = meta.excerpt;
   const canonical = `${siteUrl}/blogs/${meta.slug}`;
-  const date = meta.publishedAt ? isoDateOnly(meta.publishedAt) : '';
-
   const body = `
   <main class="wrap">
     <section class="hero">
       <span class="kicker">PURESTAY BLOG</span>
       <div class="rule"></div>
-      <h1 id="ps-title">${escapeHtml(meta.title)}</h1>
-      <p class="sub" id="ps-excerpt">${escapeHtml(meta.excerpt)}</p>
-      <div class="metaRow" id="ps-chips">
-        ${date ? `<span class="chip">${escapeHtml(date)}</span>` : ''}
-        <span class="chip">Generating… (first load only)</span>
+      <h1>${escapeHtml(meta.title)}</h1>
+      <p class="sub">This post is being published by our scheduler. Please check back soon.</p>
+      <div class="metaRow">
+        <span class="chip">Not published yet</span>
       </div>
     </section>
 
     <section class="grid" aria-label="Blog post">
       <article class="card">
-        <div class="cardPad" id="ps-article">
-          <p style="margin:0; color:var(--muted); font-weight:800;">This post is generating right now. The first time can take ~10–30 seconds.</p>
+        <div class="cardPad">
+          <p style="margin:0; color:var(--muted); font-weight:750; line-height:1.65;">
+            Posts are generated on a schedule (and via admin backfill), then cached globally.
+            Clicking a post does <b>not</b> trigger AI generation.
+          </p>
           <div style="height:12px"></div>
-          <div style="height:10px; width:100%; background:linear-gradient(90deg, rgba(0,0,0,.06), rgba(0,0,0,.03), rgba(0,0,0,.06)); border-radius:12px; animation: shimmer 1.2s linear infinite; background-size:200% 100%;"></div>
-          <div style="height:10px"></div>
-          <div style="height:10px; width:92%; background:linear-gradient(90deg, rgba(0,0,0,.06), rgba(0,0,0,.03), rgba(0,0,0,.06)); border-radius:12px; animation: shimmer 1.2s linear infinite; background-size:200% 100%;"></div>
-          <div style="height:10px"></div>
-          <div style="height:10px; width:80%; background:linear-gradient(90deg, rgba(0,0,0,.06), rgba(0,0,0,.03), rgba(0,0,0,.06)); border-radius:12px; animation: shimmer 1.2s linear infinite; background-size:200% 100%;"></div>
-          <div style="height:18px"></div>
-          <p style="margin:0; color:var(--muted); font-weight:800;">If this takes longer than 30 seconds, refresh once.</p>
+          <p style="margin:0; color:var(--muted); font-weight:850;">Try again in a minute.</p>
+          <div style="height:16px"></div>
+          <a class="ctaBtn" href="/blogs">Back to Blogs</a>
         </div>
       </article>
 
@@ -279,98 +274,33 @@ function renderPostSkeleton({ siteUrl, meta }) {
         </div>
       </aside>
     </section>
+  </main>`;
 
-    <div style="height:14px"></div>
-    <a href="/blogs" style="font-weight:900; color:var(--ink);">← Back to all blogs</a>
-  </main>
-
-  <style>
-    @keyframes shimmer{0%{background-position:0% 0}100%{background-position:200% 0}}
-  </style>
-
-  <script>
-    (function(){
-      var slug = ${JSON.stringify(String(meta.slug))};
-      var started = Date.now();
-
-      function esc(s){
-        return String(s||'')
-          .replace(/&/g,'&amp;')
-          .replace(/</g,'&lt;')
-          .replace(/>/g,'&gt;')
-          .replace(/"/g,'&quot;')
-          .replace(/'/g,'&#39;');
-      }
-
-      function renderFaq(faq){
-        if(!faq || !faq.length) return '';
-        return '<hr/><h2>FAQ</h2>' + faq.map(function(it){
-          return '<p><b>' + esc(it.q) + '</b><br/>' + esc(it.a) + '</p>';
-        }).join('');
-      }
-
-      function setChips(post){
-        var chips = document.getElementById('ps-chips');
-        if(!chips) return;
-        var date = post.publishedAt ? String(post.publishedAt).slice(0,10) : '';
-        var parts = [];
-        if(date) parts.push('<span class="chip">' + esc(date) + '</span>');
-        if(post.readingMinutes) parts.push('<span class="chip">' + esc(post.readingMinutes) + ' min read</span>');
-        if(post.primaryKeyword) parts.push('<span class="chip">' + esc(post.primaryKeyword) + '</span>');
-        chips.innerHTML = parts.join('');
-      }
-
-      fetch('/api/blogs/render?slug=' + encodeURIComponent(slug), { method: 'GET' })
-        .then(function(r){ return r.json().catch(function(){ return null; }); })
-        .then(function(j){
-          if(!j || !j.ok || !j.post) throw new Error('render_failed');
-          var post = j.post;
-          var t = document.getElementById('ps-title');
-          if(t) t.textContent = post.title || t.textContent;
-          var ex = document.getElementById('ps-excerpt');
-          if(ex) ex.textContent = post.excerpt || ex.textContent;
-          setChips(post);
-
-          var a = document.getElementById('ps-article');
-          if(a) a.innerHTML = (post.html || '') + renderFaq(post.faq || []);
-
-          // Warm the fully SSR-cached page for next time.
-          try{ fetch('/blogs/' + encodeURIComponent(slug) + '?ssr=1', { method:'GET' }); }catch{}
-        })
-        .catch(function(){
-          var a = document.getElementById('ps-article');
-          if(!a) return;
-          var sec = Math.round((Date.now() - started) / 1000);
-          a.innerHTML = '<p style="margin:0; color:var(--muted); font-weight:900;">Still generating…</p>'
-            + '<p style="margin:10px 0 0; color:var(--muted); font-weight:750;">If this is taking too long (' + sec + 's), refresh once. If it keeps happening, the AI key may be rate-limited.</p>';
-        });
-    })();
-  </script>
-  `;
-
-  return pageShell({
+  // Avoid indexing placeholder pages.
+  const shell = pageShell({
     title,
-    description,
+    description: 'This post is being published by our scheduler. Please check back soon.',
     canonical,
     og: {
       title,
-      description,
+      description: 'This post is being published by our scheduler. Please check back soon.',
       type: 'article',
       url: canonical,
       image: `${siteUrl}/brand/PureStay_white.png`,
     },
     jsonLd: {
       '@context': 'https://schema.org',
-      '@type': 'BlogPosting',
-      headline: meta.title,
+      '@type': 'WebPage',
+      name: meta.title,
       url: canonical,
-      datePublished: meta.publishedAt,
-      author: { '@type': 'Organization', name: 'PureStay' },
-      publisher: { '@type': 'Organization', name: 'PureStay' },
-      description: meta.excerpt,
     },
     body,
   });
+
+  return shell.replace(
+    '<meta name="viewport" content="width=device-width, initial-scale=1" />',
+    '<meta name="viewport" content="width=device-width, initial-scale=1" />\n  <meta name="robots" content="noindex, nofollow" />'
+  );
 }
 
 function renderIndex({ siteUrl, posts, total, page, perPage }) {
@@ -567,9 +497,9 @@ module.exports = async (req, res) => {
     const meta = scheduledMeta({ sequence: seq, publishedAt: date.toISOString(), stepDays, start });
 
     if (!allowSsr) {
-      // Don’t block the navigation on a long AI call.
-      setEdgeCache(res, 60);
-      return sendHtml(res, 200, renderPostSkeleton({ siteUrl, meta }));
+      // Never generate for human clicks. Posts are created by cron/admin and cached.
+      setEdgeCache(res, 15);
+      return sendHtml(res, 202, renderNotReady({ siteUrl, meta }));
     }
 
     const gen = await generateBlogPost({
