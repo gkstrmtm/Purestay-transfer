@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/Home.html" },
+    { "source": "/home", "destination": "/Home.html" },
+
+    { "source": "/discovery", "destination": "/Discovery.html" },
+    { "source": "/careers", "destination": "/Careers.html" },
+    { "source": "/dialer-training", "destination": "/DialerTraining.html" },
+
+    { "source": "/privacy", "destination": "/Privacy.html" },
+    { "source": "/terms", "destination": "/Terms.html" },
+
+    { "source": "/backend", "destination": "/Backend.html" },
+    { "source": "/admin", "destination": "/Backend.html" }
+  ]
+}
