@@ -25,7 +25,9 @@ module.exports = async (req, res) => {
     const adminToken = process.env.ADMIN_TOKEN || '';
     const token = bearerToken(req) || (req.url ? new URL(req.url, 'http://localhost').searchParams.get('token') : '') || '';
 
-    if (!adminToken || token !== adminToken) {
+    // If ADMIN_TOKEN is set, require it. If not set, allow saves (unprotected) so initial setup isn't blocked.
+    const isProtected = Boolean(adminToken);
+    if (isProtected && token !== adminToken) {
       return sendJson(res, 401, { ok: false, error: 'unauthorized' });
     }
 
@@ -47,7 +49,11 @@ module.exports = async (req, res) => {
       return sendJson(res, 503, { ok: false, error: 'storage_unavailable', hint: 'Create a Vercel KV store to persist settings.' });
     }
 
-    return sendJson(res, 200, { ok: true, settings: sanitizeSettingsForPublic(next) });
+    return sendJson(res, 200, {
+      ok: true,
+      settings: sanitizeSettingsForPublic(next),
+      ...(isProtected ? {} : { warning: 'unprotected' }),
+    });
   }
 
   return sendJson(res, 405, { ok: false, error: 'method_not_allowed' });

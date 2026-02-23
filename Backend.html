@@ -124,7 +124,7 @@
         <a class="side__link" href="#calendar">Booking link</a>
         <a class="side__link" href="#payments">Payments</a>
         <a class="side__link" href="#notes">Notes</a>
-        <a class="side__link" href="#security">Security</a>
+        <a class="side__link" href="#security">Save access</a>
 
         <div class="side__hr" role="presentation"></div>
 
@@ -182,11 +182,11 @@
         </section>
 
         <section class="section" id="security">
-          <h2>Security</h2>
-          <p class="muted">Enter your admin key to save changes.</p>
+          <h2>Save access</h2>
+          <p class="muted">Only needed if saving is locked. If Save works without it, you can ignore this.</p>
           <div style="margin-top:12px; max-width:520px;">
-            <label for="adminToken">Admin key</label>
-            <input id="adminToken" type="password" placeholder="••••••••" />
+            <label for="adminToken">Save key (optional)</label>
+            <input id="adminToken" type="password" placeholder="(optional)" />
           </div>
         </section>
       </div>
@@ -237,10 +237,10 @@
 
       async function save(){
         const token = (fields.adminToken.value || '').trim();
-        if(!token){ setStatus('Admin key required to save.', false); return; }
-
-        // remember token locally
-        try{ localStorage.setItem('ps_admin_token', token); }catch{}
+        // remember token locally (if provided)
+        if(token){
+          try{ localStorage.setItem('ps_admin_token', token); }catch{}
+        }
 
         setStatus('Saving…');
         const body = {
@@ -255,14 +255,14 @@
             method:'POST',
             headers:{
               'Content-Type':'application/json',
-              'Authorization': 'Bearer ' + token,
+              ...(token ? { 'Authorization': 'Bearer ' + token } : {}),
             },
             body: JSON.stringify(body)
           });
           const j = await r.json().catch(()=>null);
           if(!r.ok || !j || !j.ok){
             const err = (j && j.error) ? String(j.error) : 'save_failed';
-            if(err === 'unauthorized') setStatus('Save failed. Check your admin key.', false);
+            if(err === 'unauthorized') setStatus('Save locked. Enter the save key, then try again.', false);
             else setStatus('Save failed.', false);
             return;
           }
