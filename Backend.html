@@ -7,56 +7,72 @@
   <meta name="robots" content="noindex,nofollow" />
   <link rel="icon" href="brand/purestay_exact_SVG.svg" type="image/svg+xml">
   <style>
-    :root{ --ink:#111; --muted:#5a5854; --card:#fff; --line:#ece6dc; --gold:#CEA43C; --maroon:#73261F; }
+    :root{ --ink:#101010; --muted:#5a5854; --card:#fff; --line:#ece6dc; --gold:#CEA43C; --bg:#f7f5f2; }
     *{ box-sizing:border-box; }
+    html, body{ height:100%; }
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial;
       color:var(--ink);
-      background:
-        radial-gradient(1200px 700px at 10% -10%, rgba(206,164,60,0.18), transparent 60%),
-        radial-gradient(900px 700px at 110% 10%, rgba(115,38,31,0.20), transparent 55%),
-        linear-gradient(180deg, #140b09, #0c0706 62%);
-      padding:24px;
+      background: var(--bg);
     }
-    a{ color:inherit; }
+    a{ color:inherit; text-decoration:none; }
 
-    .shell{ max-width: 1000px; margin:0 auto; }
-    .top{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:14px; margin-bottom:14px;
-      color:#fff;
+    .app{ min-height:100vh; display:grid; grid-template-columns: 260px 1fr; }
+    @media (max-width: 980px){ .app{ grid-template-columns: 1fr; } }
+
+    .side{
+      position:sticky; top:0; align-self:start;
+      height:100vh;
+      padding:18px;
+      border-right:1px solid var(--line);
+      background:#fff;
     }
-    .brand{ display:flex; align-items:center; gap:12px; }
-    .brand img{ height:42px; width:auto; display:block; }
-    .brand .t{ font-weight:1000; letter-spacing:-0.02em; }
-
-    .nav{ display:flex; gap:10px; flex-wrap:wrap; }
-    .chip{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:10px 12px; border-radius:999px;
-      border:1px solid rgba(255,255,255,.22);
-      background:rgba(255,255,255,.10);
-      color:#fff;
-      text-decoration:none;
-      font-weight:900;
+    @media (max-width: 980px){
+      .side{ position:relative; height:auto; border-right:none; border-bottom:1px solid var(--line); }
     }
 
-    .card{
-      background:var(--card);
+    .side__brand{ display:flex; gap:12px; align-items:center; padding:10px; border-radius:14px; }
+    .side__brand:hover{ background:#faf8f5; }
+    .side__brand img{ width:36px; height:36px; }
+    .side__title{ font-weight:1000; letter-spacing:-0.01em; }
+    .side__sub{ font-size:12px; color:var(--muted); font-weight:800; margin-top:2px; }
+
+    .side__nav{ margin-top:12px; display:grid; gap:6px; }
+    .side__hr{ height:1px; background:var(--line); margin:10px 6px; }
+    .side__link{ padding:10px 12px; border-radius:12px; font-weight:900; color:#1b1b1b; }
+    .side__link:hover{ background:#faf8f5; }
+    .side__link.small{ font-weight:900; color:#363636; }
+
+    .main{ padding:26px; }
+    @media (max-width: 980px){ .main{ padding:18px; } }
+
+    .panel{
+      max-width: 980px;
+      margin:0 auto;
+      background: var(--card);
       border:1px solid var(--line);
       border-radius:18px;
-      box-shadow:0 30px 90px rgba(0,0,0,.35);
       overflow:hidden;
+      box-shadow: 0 18px 50px rgba(0,0,0,.06);
     }
 
-    .head{ padding:18px 18px 10px; border-bottom:1px solid var(--line); }
-    .head h1{ margin:0; font-size:22px; letter-spacing:-0.02em; }
-    .head p{ margin:6px 0 0; color:var(--muted); font-weight:700; }
+    .panel__head{
+      padding:18px 18px 14px;
+      border-bottom:1px solid var(--line);
+      display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    }
+    .panel__head h1{ margin:0; font-size:22px; letter-spacing:-0.02em; }
+    .panel__head p{ margin:6px 0 0; color:var(--muted); font-weight:700; }
 
-    .body{ padding:18px; display:grid; gap:14px; }
+    .actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
 
-    .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    .section{ padding:18px; border-top:1px solid var(--line); }
+    .section:first-of-type{ border-top:none; }
+    .section h2{ margin:0; font-size:16px; letter-spacing:-0.01em; }
+    .muted{ margin:6px 0 0; color:var(--muted); font-weight:700; }
+
+    .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px; }
     @media (max-width: 900px){ .grid{ grid-template-columns:1fr; } }
 
     label{ display:block; font-weight:1000; font-size:13px; margin-bottom:6px; }
@@ -69,10 +85,9 @@
       outline:none;
       background:#fff;
     }
-    textarea{ min-height:92px; resize:vertical; }
-    input:focus, textarea:focus{ border-color: var(--gold); box-shadow:0 0 0 3px rgba(206,164,60,.28); }
+    textarea{ min-height:110px; resize:vertical; }
+    input:focus, textarea:focus{ border-color: var(--gold); box-shadow:0 0 0 3px rgba(206,164,60,.22); }
 
-    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
     .btn{
       appearance:none;
       border:1px solid transparent;
@@ -92,76 +107,90 @@
     .status{ font-weight:900; font-size:14px; }
     .ok{ color:#0b6b2b; }
     .bad{ color:#7a1f1f; }
-
-    .hint{ font-size:13px; color:var(--muted); font-weight:700; }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; }
   </style>
 </head>
 <body>
-  <div class="shell">
-    <div class="top">
-      <div class="brand">
+  <div class="app">
+    <aside class="side">
+      <a class="side__brand" href="/" aria-label="PureStay Home">
         <img src="brand/purestay_exact_SVG.svg" alt="PureStay" />
         <div>
-          <div class="t">Backend</div>
-          <div style="opacity:.85; font-size:12px; font-weight:800;">Calendar + Stripe link settings</div>
+          <div class="side__title">Backend</div>
+          <div class="side__sub">Settings</div>
         </div>
-      </div>
-      <div class="nav">
-        <a class="chip" href="Home.html">Home</a>
-        <a class="chip" href="Discovery.html">Discovery</a>
-        <a class="chip" href="DialerTraining.html">Training</a>
-      </div>
-    </div>
+      </a>
 
-    <div class="card">
-      <div class="head">
-        <h1>Paste links here</h1>
-        <p>This page saves settings to the Node backend. You’ll need your admin token to save.</p>
-      </div>
+      <nav class="side__nav" aria-label="Backend sections">
+        <a class="side__link" href="#calendar">Booking link</a>
+        <a class="side__link" href="#payments">Payments</a>
+        <a class="side__link" href="#notes">Notes</a>
+        <a class="side__link" href="#security">Security</a>
 
-      <div class="body">
-        <div class="grid">
+        <div class="side__hr" role="presentation"></div>
+
+        <a class="side__link small" href="/">Home</a>
+        <a class="side__link small" href="/discovery">Discovery</a>
+        <a class="side__link small" href="/dialer-training">Training</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="panel">
+        <header class="panel__head">
           <div>
-            <label for="bookingCalendarUrl">Booking calendar URL</label>
+            <h1>Settings</h1>
+            <p>Update the links used across the site.</p>
+          </div>
+          <div class="actions">
+            <button class="btn" id="btnSave" type="button">Save</button>
+            <button class="btn secondary" id="btnReload" type="button">Reload</button>
+            <span class="status" id="status"></span>
+          </div>
+        </header>
+
+        <section class="section" id="calendar">
+          <h2>Booking link</h2>
+          <p class="muted">Where “Book a call” buttons should send people.</p>
+          <div style="margin-top:12px;">
+            <label for="bookingCalendarUrl">URL</label>
             <input id="bookingCalendarUrl" type="url" placeholder="https://..." />
-            <div class="hint">Discovery booking buttons will send people to this link.</div>
           </div>
-          <div>
-            <label for="stripeCheckoutUrl">Stripe checkout URL (optional)</label>
-            <input id="stripeCheckoutUrl" type="url" placeholder="https://buy.stripe.com/..." />
-            <div class="hint">If set, quote flow will use this instead of Discovery booking.</div>
+        </section>
+
+        <section class="section" id="payments">
+          <h2>Payments</h2>
+          <p class="muted">Optional links for checkout and pricing.</p>
+          <div class="grid">
+            <div>
+              <label for="stripeCheckoutUrl">Stripe checkout URL</label>
+              <input id="stripeCheckoutUrl" type="url" placeholder="https://buy.stripe.com/..." />
+            </div>
+            <div>
+              <label for="stripePricingUrl">Stripe pricing URL</label>
+              <input id="stripePricingUrl" type="url" placeholder="https://..." />
+            </div>
           </div>
-        </div>
+        </section>
 
-        <div class="grid">
-          <div>
-            <label for="stripePricingUrl">Stripe pricing page URL (optional)</label>
-            <input id="stripePricingUrl" type="url" placeholder="https://..." />
-            <div class="hint">Used for future pricing links / portal references.</div>
+        <section class="section" id="notes">
+          <h2>Notes</h2>
+          <p class="muted">Paste anything you want to keep on hand.</p>
+          <div style="margin-top:12px;">
+            <label for="googleSheets">Notes</label>
+            <textarea id="googleSheets" placeholder="Add links, notes, or reminders..."></textarea>
           </div>
-          <div>
-            <label for="adminToken">Admin token</label>
-            <input id="adminToken" type="password" placeholder="Set ADMIN_TOKEN in .env" />
-            <div class="hint mono">Sent as: Authorization: Bearer &lt;token&gt;</div>
+        </section>
+
+        <section class="section" id="security">
+          <h2>Security</h2>
+          <p class="muted">Enter your admin key to save changes.</p>
+          <div style="margin-top:12px; max-width:520px;">
+            <label for="adminToken">Admin key</label>
+            <input id="adminToken" type="password" placeholder="••••••••" />
           </div>
-        </div>
-
-        <div>
-          <label for="googleSheets">Google Sheets links (notes)</label>
-          <textarea id="googleSheets" placeholder="Paste any related sheets here..."></textarea>
-          <div class="hint">Stored as notes only (we’re not pulling data automatically yet).</div>
-        </div>
-
-        <div class="row">
-          <button class="btn" id="btnSave" type="button">Save settings</button>
-          <button class="btn secondary" id="btnReload" type="button">Reload</button>
-          <span class="status" id="status"></span>
-        </div>
-
-        <div class="hint">Slug for this backend: <span class="mono">/backend</span> (or open <span class="mono">Backend.html</span>)</div>
+        </section>
       </div>
-    </div>
+    </main>
   </div>
 
   <script>
@@ -202,13 +231,13 @@
           fields.googleSheets.value = s.googleSheets || '';
           setStatus('Loaded.', true);
         }catch{
-          setStatus('Could not load settings (server not running?).', false);
+          setStatus('Could not load settings.', false);
         }
       }
 
       async function save(){
         const token = (fields.adminToken.value || '').trim();
-        if(!token){ setStatus('Admin token required to save.', false); return; }
+        if(!token){ setStatus('Admin key required to save.', false); return; }
 
         // remember token locally
         try{ localStorage.setItem('ps_admin_token', token); }catch{}
@@ -232,13 +261,14 @@
           });
           const j = await r.json().catch(()=>null);
           if(!r.ok || !j || !j.ok){
-            const err = (j && j.error) ? j.error : 'save_failed';
-            setStatus('Save failed: ' + err, false);
+            const err = (j && j.error) ? String(j.error) : 'save_failed';
+            if(err === 'unauthorized') setStatus('Save failed. Check your admin key.', false);
+            else setStatus('Save failed.', false);
             return;
           }
           setStatus('Saved.', true);
         }catch{
-          setStatus('Save failed (server not running?).', false);
+          setStatus('Save failed.', false);
         }
       }
 

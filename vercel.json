@@ -1,4 +1,17 @@
 {
+  "redirects": [
+    { "source": "/Home.html", "destination": "/", "permanent": true },
+    { "source": "/Discovery.html", "destination": "/discovery", "permanent": true },
+    { "source": "/Careers.html", "destination": "/careers", "permanent": true },
+    { "source": "/DialerTraining.html", "destination": "/dialer-training", "permanent": true },
+    { "source": "/Privacy.html", "destination": "/privacy", "permanent": true },
+    { "source": "/Terms.html", "destination": "/terms", "permanent": true },
+    { "source": "/Backend.html", "destination": "/backend", "permanent": true },
+    { "source": "/Certificate.html", "destination": "/certificate", "permanent": true },
+    { "source": "/ECtoolkit.html", "destination": "/ec-toolkit", "permanent": true },
+    { "source": "/eventcc.html", "destination": "/eventcc", "permanent": true },
+    { "source": "/budgetcal.html", "destination": "/budget-calculator", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/", "destination": "/Home.html" },
     { "source": "/home", "destination": "/Home.html" },
@@ -6,6 +19,11 @@
     { "source": "/discovery", "destination": "/Discovery.html" },
     { "source": "/careers", "destination": "/Careers.html" },
     { "source": "/dialer-training", "destination": "/DialerTraining.html" },
+    { "source": "/certificate", "destination": "/Certificate.html" },
+
+    { "source": "/ec-toolkit", "destination": "/ECtoolkit.html" },
+    { "source": "/eventcc", "destination": "/eventcc.html" },
+    { "source": "/budget-calculator", "destination": "/budgetcal.html" },
 
     { "source": "/privacy", "destination": "/Privacy.html" },
     { "source": "/terms", "destination": "/Terms.html" },

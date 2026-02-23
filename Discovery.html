@@ -50,7 +50,7 @@ Scope: fix form helper text color; keep discovery header light; retain last work
     padding:18px clamp(16px,4vw,48px); z-index:5; background: linear-gradient(to bottom, rgba(0,0,0,0.38), rgba(0,0,0,0));
   }
   .ps-hero__brand{ display:flex; align-items:center; gap:12px; }
-  .ps-hero__logo{ height:185px; width:auto; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5)); }
+  .ps-hero__logo{ height:46px; width:auto; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5)); }
 
   .ps-hero__stage{ position: relative; z-index: 4; display:grid; place-items:center; text-align:center; padding: clamp(72px, 12vh, 160px) 20px 120px; max-width:1200px; margin:0 auto; }
   .tag{
@@ -101,7 +101,7 @@ Scope: fix form helper text color; keep discovery header light; retain last work
   }
   .cal-iframe{ width:100%; height:900px; border:0; display:block; margin-top: clamp(12px, 2.2vw, 18px); border-radius:18px; background:#fff; }
 
-  /* ---------- BOOKING LINK (configured in Backend.html) ---------- */
+  /* ---------- BOOKING LINK ---------- */
   .book-link{
     display:flex; align-items:center; justify-content:space-between; gap:12px;
     padding:14px; border:1px solid #efebe3; border-radius:18px; background:#fff;
@@ -119,7 +119,7 @@ Scope: fix form helper text color; keep discovery header light; retain last work
 
   @media (max-width:720px){
     .ps-hero__top{ height:76px; }
-    .ps-hero__logo{ height:40px; }
+    .ps-hero__logo{ height:38px; }
     .cal-iframe{ height:1100px; }
     .cal-card{ min-height: auto; }
   }
@@ -186,7 +186,7 @@ Scope: fix form helper text color; keep discovery header light; retain last work
 
   <div class="ps-hero__top">
     <div class="ps-hero__brand">
-      <a href="Home.html" aria-label="PureStay Home">
+      <a href="/" aria-label="PureStay Home">
         <img class="ps-hero__logo" src="brand/PureStay_white.png" alt="PureStay" />
       </a>
     </div>
@@ -366,7 +366,7 @@ Scope: fix form helper text color; keep discovery header light; retain last work
 
           <div class="psq-actions">
             <a id="psq-pay" class="cta-gold cta-wide" href="#" target="_blank" rel="noopener">Review plan &amp; start</a>
-            <a class="cta-gold cta-wide" href="Home.html#contact">Talk to an account manager</a>
+            <a class="cta-gold cta-wide" href="/#contact">Talk to an account manager</a>
           </div>
           <div class="cal-kicker" style="margin-top:8px;">Taxes and fees handled at checkout.</div>
         </div>
@@ -435,8 +435,8 @@ Scope: fix form helper text color; keep discovery header light; retain last work
   <div class="cal-shell">
     <div class="trustbar" style="margin-top:0;">
       <span>© <span id="yr"></span> PureStay</span>
-      <span><a href="Privacy.html" style="color:#ffd98c; text-decoration:underline;">Privacy</a></span>
-      <span><a href="Terms.html" style="color:#ffd98c; text-decoration:underline;">Terms</a></span>
+      <span><a href="/privacy" style="color:#ffd98c; text-decoration:underline;">Privacy</a></span>
+      <span><a href="/terms" style="color:#ffd98c; text-decoration:underline;">Terms</a></span>
     </div>
   </div>
 </footer>
@@ -714,7 +714,7 @@ Scope: fix form helper text color; keep discovery header light; retain last work
 </script>
 
 <script>
-/* Booking calendar link comes from Backend.html via /api/settings */
+/* Booking calendar link comes from /api/settings */
 (function(){
   const link = document.getElementById('ps-book-link');
   const sub = document.getElementById('ps-book-sub');

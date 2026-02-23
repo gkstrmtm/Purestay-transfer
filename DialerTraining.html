@@ -14,7 +14,7 @@ PURESTAY • Dialer Training • Remote Setter Training
 Notes:
 - Single-file page (HTML + CSS + JS)
 - Progress tracking via local backend (/api/training/*) with localStorage fallback
-- Certificate via Certificate.html (Print → Save as PDF)
+- Certificate (Print → Save as PDF)
 ========================================================= -->
 <div id="ps-remote" class="ps-wrap js-bleed">
   <!-- Gate -->
@@ -33,7 +33,7 @@ Notes:
   <!-- Stepper -->
   <section id="ps-app" class="app" hidden>
     <header class="hdr">
-      <a href="Home.html" aria-label="PureStay Home"><img src="brand/purestay_exact_SVG.svg" alt="PureStay" class="brand brand--sm"></a>
+      <a href="/" aria-label="PureStay Home"><img src="brand/purestay_exact_SVG.svg" alt="PureStay" class="brand brand--sm"></a>
       <div id="ps-progress" class="progress"></div>
     </header>
 
@@ -243,7 +243,7 @@ Notes:
       try{
         if (API_ENABLED) apiPost('/api/training/certificate', { full_name:cname, email:state.email, date_iso:cdateISO }).catch(()=>null);
 
-        const u = new URL('Certificate.html', location.href);
+        const u = new URL('/certificate', location.href);
         u.searchParams.set('name', cname);
         u.searchParams.set('date', cdateISO);
         u.searchParams.set('autoprint', '1');
