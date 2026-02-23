@@ -32,7 +32,7 @@ module.exports = async (req, res) => {
   const meta = scheduledMeta({ sequence: seq, publishedAt: new Date(publishedAt).toISOString(), stepDays, start });
 
   // Warm the cached HTML page at /blogs/:slug (the rewrite points to api/blogs/page)
-  const warmUrl = `${siteUrl}/blogs/${meta.slug}`;
+  const warmUrl = `${siteUrl}/blogs/${meta.slug}?ssr=1`;
   const r = await fetch(warmUrl, { method: 'GET', headers: { 'User-Agent': 'PureStay-Blog-Warmer' } }).catch(() => null);
   if (!r || !r.ok) {
     return sendJson(res, 503, { ok: false, error: 'warm_failed', slug: meta.slug, url: warmUrl });

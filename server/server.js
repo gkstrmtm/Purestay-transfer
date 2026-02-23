@@ -244,6 +244,10 @@ const server = http.createServer(async (req, res) => {
     const handler = require('../api/blogs/backfill-next');
     return handler(req, res);
   }
+  if (pathname === '/api/blogs/render' && req.method === 'GET') {
+    const handler = require('../api/blogs/render');
+    return handler(req, res);
+  }
   if (pathname === '/api/cron/blogs' && (req.method === 'GET' || req.method === 'POST')) {
     const handler = require('../api/cron/blogs');
     return handler(req, res);
