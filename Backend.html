@@ -124,6 +124,7 @@
         <a class="side__link" href="#calendar">Booking link</a>
         <a class="side__link" href="#payments">Payments</a>
         <a class="side__link" href="#notes">Notes</a>
+        <a class="side__link" href="#blogs">Blogs</a>
         <a class="side__link" href="#security">Save access</a>
 
         <div class="side__hr" role="presentation"></div>
@@ -131,6 +132,7 @@
         <a class="side__link small" href="/">Home</a>
         <a class="side__link small" href="/discovery">Discovery</a>
         <a class="side__link small" href="/dialer-training">Training</a>
+        <a class="side__link small" href="/blogs">Blogs</a>
       </nav>
     </aside>
 
@@ -181,6 +183,38 @@
           </div>
         </section>
 
+        <section class="section" id="blogs">
+          <h2>Blogs</h2>
+          <p class="muted">Automatically-generated SEO blogs for multifamily resident retention. Use backfill to add older posts.</p>
+
+          <div class="grid">
+            <div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:12px;">
+                <button class="btn" id="btnBlogGenerate" type="button">Generate next blog</button>
+                <button class="btn secondary" id="btnBlogBackfill" type="button">Generate next backfill</button>
+                <button class="btn secondary" id="btnBlogRefresh" type="button">Refresh</button>
+              </div>
+              <div style="margin-top:12px;">
+                <div class="status" id="blogStatus"></div>
+                <div class="muted" id="blogMeta" style="margin-top:6px;"></div>
+                <div class="muted" id="blogLast" style="margin-top:6px;"></div>
+              </div>
+            </div>
+
+            <div>
+              <label for="backfillYears">Backfill range (years)</label>
+              <input id="backfillYears" type="number" min="1" max="10" step="1" value="2" />
+
+              <div style="height:10px"></div>
+
+              <label for="backfillStepDays">Backfill spacing (days)</label>
+              <input id="backfillStepDays" type="number" min="1" max="14" step="1" value="3" />
+
+              <p class="muted" style="margin-top:10px;">Backfill generates one post at a time with a backdated publish date, moving forward by the spacing you choose.</p>
+            </div>
+          </div>
+        </section>
+
         <section class="section" id="security">
           <h2>Save access</h2>
           <p class="muted">Only needed if saving is locked. If Save works without it, you can ignore this.</p>
@@ -205,6 +239,15 @@
         status: $('status'),
         btnSave: $('btnSave'),
         btnReload: $('btnReload'),
+
+        btnBlogGenerate: $('btnBlogGenerate'),
+        btnBlogBackfill: $('btnBlogBackfill'),
+        btnBlogRefresh: $('btnBlogRefresh'),
+        blogStatus: $('blogStatus'),
+        blogMeta: $('blogMeta'),
+        blogLast: $('blogLast'),
+        backfillYears: $('backfillYears'),
+        backfillStepDays: $('backfillStepDays'),
       };
 
       // Prefill from localStorage to reduce retyping
@@ -274,7 +317,110 @@
 
       fields.btnSave.addEventListener('click', save);
       fields.btnReload.addEventListener('click', load);
+
+      function blogSetStatus(msg, ok=true){
+        fields.blogStatus.textContent = msg;
+        fields.blogStatus.className = 'status ' + (ok ? 'ok' : 'bad');
+      }
+
+      async function blogLoadStatus(){
+        const token = (fields.adminToken.value || '').trim();
+        blogSetStatus('Loading blogs…', true);
+        fields.blogMeta.textContent = '';
+        fields.blogLast.textContent = '';
+        try{
+          const r = await fetch('/api/blogs/status', {
+            method:'GET',
+            headers: {
+              ...(token ? { 'Authorization': 'Bearer ' + token } : {}),
+            }
+          });
+          const j = await r.json().catch(()=>null);
+          if(!r.ok || !j || !j.ok) throw new Error('status_failed');
+
+          const total = Number(j.total || 0);
+          const st = j.state || {};
+          const bf = st.backfill || {};
+
+          blogSetStatus('Ready.', true);
+          fields.blogMeta.textContent = `Total posts: ${total} • Auto cadence: every ${String(2)}+ days`;
+
+          const latest = j.latest;
+          if(latest && latest.slug){
+            fields.blogLast.innerHTML = `Latest: <a href="/blogs/${latest.slug}" style="text-decoration:underline;">${latest.title || latest.slug}</a>`;
+          } else {
+            fields.blogLast.textContent = 'No posts yet.';
+          }
+
+          if(fields.backfillYears && bf.years) fields.backfillYears.value = String(bf.years);
+          if(fields.backfillStepDays && bf.stepDays) fields.backfillStepDays.value = String(bf.stepDays);
+        }catch{
+          blogSetStatus('Could not load blog status.', false);
+        }
+      }
+
+      async function blogGenerateNext(){
+        const token = (fields.adminToken.value || '').trim();
+        blogSetStatus('Generating blog…', true);
+        try{
+          const r = await fetch('/api/blogs/generate', {
+            method:'POST',
+            headers:{
+              'Content-Type':'application/json',
+              ...(token ? { 'Authorization': 'Bearer ' + token } : {}),
+            },
+            body: JSON.stringify({ publishedAt: new Date().toISOString() }),
+          });
+          const j = await r.json().catch(()=>null);
+          if(!r.ok || !j || !j.ok) throw new Error('generate_failed');
+          blogSetStatus('Generated.', true);
+          const p = j.post;
+          if(p && p.slug){
+            fields.blogLast.innerHTML = `Latest: <a href="/blogs/${p.slug}" style="text-decoration:underline;">${p.title || p.slug}</a>`;
+          }
+          await blogLoadStatus();
+        }catch{
+          blogSetStatus('Generation failed. Check AI_API_KEY + KV.', false);
+        }
+      }
+
+      async function blogBackfillNext(){
+        const token = (fields.adminToken.value || '').trim();
+        const years = Number(fields.backfillYears.value || 2);
+        const stepDays = Number(fields.backfillStepDays.value || 3);
+        blogSetStatus('Generating backfill…', true);
+        try{
+          const r = await fetch('/api/blogs/backfill-next', {
+            method:'POST',
+            headers:{
+              'Content-Type':'application/json',
+              ...(token ? { 'Authorization': 'Bearer ' + token } : {}),
+            },
+            body: JSON.stringify({ years, stepDays }),
+          });
+          const j = await r.json().catch(()=>null);
+          if(!r.ok || !j || !j.ok) throw new Error('backfill_failed');
+          if(j.done){
+            blogSetStatus('Backfill complete.', true);
+          } else {
+            blogSetStatus('Backfill generated.', true);
+          }
+          const p = j.post;
+          if(p && p.slug){
+            fields.blogLast.innerHTML = `Latest: <a href="/blogs/${p.slug}" style="text-decoration:underline;">${p.title || p.slug}</a>`;
+          }
+          await blogLoadStatus();
+        }catch{
+          blogSetStatus('Backfill failed. Check AI_API_KEY + KV.', false);
+        }
+      }
+
+      fields.btnBlogGenerate.addEventListener('click', blogGenerateNext);
+      fields.btnBlogBackfill.addEventListener('click', blogBackfillNext);
+      fields.btnBlogRefresh.addEventListener('click', blogLoadStatus);
+
       load();
+      blogLoadStatus();
     })();
   </script>
 </body>
