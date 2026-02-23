@@ -1,0 +1,305 @@
+<!-- =========================================================
+PURESTAY • Dialer Training • Remote Setter Training (GHL Custom HTML Block)
+Notes:
+- Single-file embed (HTML + CSS + JS)
+- Progress tracking + certificate generation via Google Apps Script endpoint
+========================================================= -->
+<div id="ps-remote" class="ps-wrap js-bleed">
+  <!-- Gate -->
+  <section id="ps-gate" class="card">
+    <img src="https://storage.googleapis.com/msgsndr/TPwxGisIBKbxlbrOoolh/media/68b27005e7747007c0dd1464.svg" alt="PureStay" class="brand">
+    <h2 class="h">Enter Remote Setter Training</h2>
+    <p class="p">Use your name and email. We save your progress so you can come back anytime.</p>
+    <div class="grid">
+      <input id="ps-name" class="input" type="text" placeholder="Full name">
+      <input id="ps-email" class="input" type="email" placeholder="Email">
+      <button id="ps-enter" class="btn primary">Enter</button>
+    </div>
+    <div id="ps-gate-msg" class="err"></div>
+  </section>
+
+  <!-- Stepper -->
+  <section id="ps-app" class="app" hidden>
+    <header class="hdr">
+      <img src="https://storage.googleapis.com/msgsndr/TPwxGisIBKbxlbrOoolh/media/68b27005e7747007c0dd1464.svg" alt="PureStay" class="brand brand--sm">
+      <div id="ps-progress" class="progress"></div>
+    </header>
+
+    <div id="ps-step" class="step"></div>
+
+    <footer class="nav">
+      <button id="ps-back" class="btn ghost">Back</button>
+      <div class="spacer"></div>
+      <button id="ps-complete" class="btn ok">Mark complete</button>
+      <button id="ps-next" class="btn primary" disabled>Next</button>
+    </footer>
+  </section>
+</div>
+
+<style>
+  :root{ --ps-gold:#CEA43C; --ps-maroon:#73261F; --ps-ink:#111; --ps-ghost:#fff; --ps-bg:#0c0706; --ps-card:#ffffff; --ps-muted:#6b6b6b; --ps-ring:#e6e2da; }
+  #ps-remote, #ps-remote * { box-sizing: border-box; }
+
+  /* Edge to edge background container */
+  .ps-wrap{
+    min-height:100vh;
+    padding:20px clamp(10px,2.2vw,20px) 56px;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial;
+    color:#111;
+    background:
+      radial-gradient(1200px 600px at 10% -10%, rgba(206,164,60,0.18), transparent 60%),
+      radial-gradient(900px 700px at 110% 20%, rgba(115,38,31,0.35), transparent 60%),
+      linear-gradient(180deg, #1a0d0b, #0c0706 60%);
+  }
+
+  /* Cards stay constrained for readability */
+  .card{
+    max-width:1200px; margin:16px auto; padding:18px clamp(14px,2.8vw,28px);
+    background:#fff; border:1px solid #efebe3; border-radius:16px;
+    box-shadow:0 8px 30px rgba(0,0,0,.08);
+  }
+  .brand{ height:64px; width:auto; display:block; margin:4px auto 10px; }
+  .brand--sm{ height:44px; margin:0; }
+  .h{ margin:6px 0 6px; font-size:22px; text-align:center; }
+  .p{ margin:0 0 16px; text-align:center; color:#333; }
+  .grid{ display:grid; grid-template-columns:1.2fr 1.2fr auto; gap:10px; align-items:center; }
+  .input{ width:100%; padding:12px 12px; border-radius:12px; font-size:16px; border:1px solid #e8e2d8; outline:none; }
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 16px; border-radius:12px; font-weight:700; font-size:14px; cursor:pointer; border:1px solid #d9d2c7; background:#fff; color:#111;
+  }
+  .btn.primary{ background:linear-gradient(180deg, #fff, #efefef); }
+  .btn.ghost{ background:#fff; }
+  .btn.ok{ background:#0b6b2b; color:#fff; border-color:#0b6b2b; }
+  .btn[disabled]{ opacity:.55; cursor:not-allowed; }
+  .err{ color:#a40000; font-size:13px; margin-top:10px; text-align:center; }
+
+  .app{ max-width:1200px; margin:10px auto 0; }
+  .hdr{ display:flex; align-items:center; gap:12px; justify-content:space-between; margin-bottom:10px; }
+  .progress{ font-size:14px; color:#fff; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.24); padding:8px 12px; border-radius:999px; }
+  .step{ background:#fff; border:1px solid #efebe3; border-radius:16px; padding:18px clamp(14px,2.8vw,28px); box-shadow:0 8px 30px rgba(0,0,0,.08); }
+  .step h2{ margin:0 0 8px; font-size:20px; }
+  .step p{ margin:0 0 12px; color:#333; }
+
+  .video{ position:relative; width:100%; padding-top:56.25%; border-radius:12px; overflow:hidden; background:#000; margin:8px 0 10px; }
+  .video iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; }
+
+  .nav{ display:flex; align-items:center; gap:10px; margin-top:10px; }
+  .spacer{ flex:1; }
+
+  @media (max-width:980px){
+    .grid{ grid-template-columns: 1fr; }
+    .progress{ font-size:13px; }
+    .btn{ padding:12px 14px; }
+    .step h2{ font-size:18px; }
+  }
+</style>
+
+<script>
+(function(){
+  const API = 'https://script.google.com/macros/s/AKfycbximxNlAdyqsbf9rNfdP0qOxBYoTPxXNCx2sUrc9j-qQw2_Xevp53dk-fWlPBHApaWN/exec';
+
+  // Edge to edge bleed inside GHL containers
+  function applyBleed(){
+    const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+    document.querySelectorAll('.js-bleed').forEach(el=>{
+      el.style.marginLeft = el.style.marginRight = el.style.width = '';
+      const r = el.getBoundingClientRect();
+      el.style.marginLeft  = (-r.left) + 'px';
+      el.style.marginRight = (-(vw - r.right)) + 'px';
+      el.style.width       = vw + 'px';
+    });
+  }
+  applyBleed(); window.addEventListener('resize', applyBleed);
+
+  // Linear modules
+  const MODULES = [
+    { slug:'welcome',            title:'Welcome / Role Overview',                                desc:'Sets expectations, daily rhythm, and what good looks like.',                             videos:['https://www.loom.com/embed/595e6fd3221243aab40bcbf695b3d081'] },
+    { slug:'north-star',         title:'North Star',                                              desc:'Why PureStay exists and how setters move the needle.',                                  videos:['https://www.loom.com/embed/970bd614691d47ca81990fc591379bc3'] },
+    { slug:'what-we-sell',       title:'What We Actually Sell',                                   desc:'The value behind the offer, not a feature list.',                                       videos:['https://www.loom.com/embed/ce04608727a14b139b17d2447efc4faf'] },
+    { slug:'sales-language',     title:'Sales Language',                                          desc:'Words that land and tone that keeps control.',                                           videos:['https://www.loom.com/embed/99ccd1bf9bf4468d8f07fc0fa29fa560'] },
+    { slug:'know-prospect',      title:'Getting to Know Your Prospects',                          desc:'How properties think, what they care about, and what they ignore.',                     videos:['https://www.loom.com/embed/b04551a053a24a8c9fec933cc2d7f4bc'] },
+    { slug:'understand-prospect',title:'Understanding Prospects',                                 desc:'Signals of fit, budget reality, and decision paths.',                                    videos:['https://www.loom.com/embed/a11750e7cdc2412cba025e957bf524d1'] },
+    { slug:'package-breakdown',  title:'Package Breakdown',                                       desc:'How properties make money and where ROI shows up.',                                      videos:['https://www.loom.com/embed/fa2de9dcda6b4e32b7d676516e7de12b'] },
+    { slug:'senior-living',      title:'Senior Living Landscape',                                 desc:'Notes for senior living conversations and constraints.',                                 videos:['https://www.loom.com/embed/473598218f984b68be48794b10b75e80'] },
+    { slug:'vs-apartment-life',  title:'PureStay vs Apartment Life',                              desc:'Contrast cleanly without sounding defensive.',                                           videos:['https://www.loom.com/embed/4ddf6068f0474d7897027c53bfc2a994'] },
+    { slug:'vs-withme',          title:'WithMe vs PureStay',                                      desc:'Where we win and where we pass.',                                                        videos:['https://www.loom.com/embed/48f8ff0fd2b643e2b59d7edcbc22d1c8'] },
+    { slug:'vs-framechangers',   title:'FrameChangers vs PureStay',                               desc:'Angles that matter in the first 60 seconds.',                                            videos:['https://www.loom.com/embed/45cb7455c8384baa9ddc63ee39afdc4f'] },
+    { slug:'framing',            title:'Framing the Conversation',                                desc:'Opener, calm control, and the move into discovery.',                                     videos:['https://www.loom.com/embed/761701574c8d4c98936fb65210783bcc'] },
+    { slug:'case-study',         title:'Case Study',                                              desc:'A clear story you can retell on calls with the right beats.',                           videos:['https://www.loom.com/embed/e6dd876bb9d24710a45ca6e70c70fe22'] },
+    { slug:'crm',                title:'Lead System and CRM',                                     desc:'Where leads live, how to log calls, notes that help closers.',                          videos:['https://www.loom.com/embed/f6728e2d8c884a799520bd5858c545f8'] },
+    { slug:'ai-at-work',         title:'AI in the Workplace',                                     desc:'Use AI to drill. Do not outsource the job to it.',                                       videos:['https://www.loom.com/embed/51cfed35f8f941adadcb8b600e5228e9'] },
+    { slug:'ai-roleplay',        title:'AI Roleplay',                                             desc:'Fast reps on objections without waiting for a partner.',                                 videos:['https://www.loom.com/embed/1fff4aafad5c4bc3a4229574036ddd5b'] },
+    { slug:'handle-pushback',    title:'Handle Pushback and Ask Better Questions',                desc:'The stalls you will hear and how to keep the call alive.',                               videos:['https://www.loom.com/embed/c4e6dab362c542479530f1c2e720e508'] },
+    { slug:'qualify-discovery',  title:'Qualifying Discovery Calls',                              desc:'What qualified means here and the handoff checklist.',                                   videos:['https://www.loom.com/embed/cd473bb93c5844d7b8ee31c921e899ae'] },
+    { slug:'certification',      title:'Phone Certification',                                     desc:'Enter your name and date to generate your certificate PDF.',                             videos:[] }
+  ];
+
+  // State
+  let state = { email:null, name:null, idx:0, completed:new Set() };
+
+  // Elements
+  const $ = sel => document.querySelector(sel);
+  const gate = $('#ps-gate'), app = $('#ps-app'), step = $('#ps-step'), msg = $('#ps-gate-msg');
+  const btnEnter = $('#ps-enter'), inputName = $('#ps-name'), inputEmail = $('#ps-email');
+  const btnBack = $('#ps-back'), btnComplete = $('#ps-complete'), btnNext = $('#ps-next');
+  const progress = $('#ps-progress');
+
+  // Helpers
+  const device = () => (window.matchMedia && window.matchMedia('(pointer:coarse)').matches) ? 'mobile' : (window.innerWidth<720?'mobile':'desktop');
+  const emailOk = s => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s||''));
+  function escapeHtml(s){ return String(s||'').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+  function escapeAttr(s){ return String(s||'').replace(/"/g,'&quot;'); }
+
+  // CORS safe POST
+  async function post(route, payload){
+    const params = new URLSearchParams({ route });
+    Object.entries(payload || {}).forEach(([k,v])=>{ if (v!==undefined && v!==null) params.append(k, String(v)); });
+    const res = await fetch(API, { method:'POST', body: params });
+    return res.json();
+  }
+
+  // Date normalize and PDF blob helpers
+  function toISODate(val){
+    if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+    const d = new Date(val);
+    return isNaN(d) ? '' : d.toISOString().slice(0,10);
+  }
+  function b64toBlob(b64, type){
+    const bin = atob(b64);
+    const u8  = new Uint8Array(bin.length);
+    for (let i=0;i<bin.length;i++) u8[i] = bin.charCodeAt(i);
+    return new Blob([u8], { type });
+  }
+
+  // Gate
+  btnEnter.addEventListener('click', async ()=>{
+    const full_name = inputName.value.trim();
+    const email = (inputEmail.value||'').trim().toLowerCase();
+    if (!emailOk(email)){ msg.textContent = 'Enter a valid email.'; return; }
+    msg.textContent = '';
+    try{
+      const resp = await post('enter', { full_name, email, user_agent:navigator.userAgent, source:'ghl' });
+      if (!resp || !resp.ok){ msg.textContent = 'Could not enter. Check access settings on the script.'; return; }
+      state.email = email; state.name = full_name;
+
+      const prog = await post('progress', { email });
+      if (prog && prog.ok && Array.isArray(prog.items)){
+        prog.items.forEach(it=>{ if (it.action==='completed') state.completed.add(it.module_slug); });
+        for (let i=0;i<MODULES.length;i++){ if (!state.completed.has(MODULES[i].slug)){ state.idx = i; break; } }
+      }
+
+      gate.hidden = true; app.hidden = false;
+      render();
+      track('opened');
+    }catch(e){
+      msg.textContent = 'Network blocked. Try again.';
+    }
+  });
+
+  // Nav
+  btnBack.addEventListener('click', ()=>{
+    if (state.idx>0){ state.idx -= 1; render(); track('opened'); }
+  });
+
+  btnComplete.addEventListener('click', async ()=>{
+    const m = MODULES[state.idx];
+    if (m.slug === 'certification'){
+      const cname = ($('#cert-name').value || state.name || '').trim();
+      const cdateISO = toISODate($('#cert-date').value);
+      if (!cname){ alert('Enter your name.'); return; }
+      if (!cdateISO){ alert('Pick a valid date.'); return; }
+      try{
+        const r = await post('certificate', { full_name:cname, email:state.email, date_iso:cdateISO });
+        if (r && r.ok && r.pdf_base64){
+          const blob = b64toBlob(r.pdf_base64, 'application/pdf');
+          const url  = URL.createObjectURL(blob);
+          const a    = document.createElement('a');
+          a.href = url;
+          a.download = r.filename || 'PureStay-Certification.pdf';
+          document.body.appendChild(a);
+          a.click();
+          URL.revokeObjectURL(url);
+          state.completed.add('certification');
+          render();
+        } else {
+          alert('Could not generate certificate. Try again.');
+        }
+      }catch(e){
+        alert('Network error. Try again.');
+      }
+      return;
+    }
+    await track('completed');
+    state.completed.add(m.slug);
+    render();
+  });
+
+  btnNext.addEventListener('click', ()=>{
+    if (state.idx < MODULES.length-1){
+      state.idx += 1;
+      render();
+      track('opened');
+    }
+  });
+
+  function setProgress(){
+    const total = MODULES.length - 1;
+    const done = Array.from(state.completed).filter(s => s !== 'certification').length;
+    const allDone = done >= total;
+    progress.textContent = allDone ? 'All modules completed. Certification unlocked.' : `${done} of ${total} modules completed`;
+  }
+
+  async function track(action){
+    const m = MODULES[state.idx];
+    await post('track', {
+      email: state.email,
+      module_slug: m.slug,
+      module_title: m.title,
+      action,
+      device: device(),
+      session_id: ''
+    });
+  }
+
+  function render(){
+    setProgress();
+    const m = MODULES[state.idx];
+    const isDone = state.completed.has(m.slug);
+    const isCert = m.slug === 'certification';
+
+    btnBack.disabled = state.idx === 0;
+    btnNext.disabled = !isDone || state.idx === MODULES.length-1;
+
+    btnComplete.textContent = isCert ? 'Generate certificate' : (isDone ? 'Completed' : 'Mark complete');
+    btnComplete.disabled = isCert ? false : isDone;
+
+    step.innerHTML = `
+      <h2>${escapeHtml(m.title)}</h2>
+      ${m.desc ? `<p>${escapeHtml(m.desc)}</p>` : ''}
+      ${isCert ? renderCertForm() : renderVideos(m.videos)}
+    `;
+  }
+
+  function renderVideos(urls){
+    return urls.map(u => `
+      <div class="video">
+        <iframe src="${u}?hide_owner=true&hide_share=true" allowfullscreen allow="autoplay; fullscreen; picture-in-picture"></iframe>
+      </div>
+    `).join('');
+  }
+
+  function renderCertForm(){
+    const today = new Date().toISOString().slice(0,10);
+    const prefill = state.name || '';
+    return `
+      <div class="card" style="border-color:#e8e2d8; margin:8px 0 0;">
+        <p style="margin:0 0 10px;">Enter your name and pick today’s date. Then click Generate certificate to download your PDF.</p>
+        <div class="grid" style="grid-template-columns:1.2fr 1fr auto;">
+          <input id="cert-name" class="input" type="text" placeholder="Full name" value="${escapeAttr(prefill)}">
+          <input id="cert-date" class="input" type="date" value="${today}">
+        </div>
+      </div>
+    `;
+  }
+})();
+</script>

@@ -1,0 +1,706 @@
+<!-- =========================================================
+PURESTAY • Marketing Site block
+Patch 2025-10-08-t:
+- Mobile hero video centered and resized without black surround
+  • On ≤820px: flex-center container; video is block, margin:auto,
+    width:100%, height:auto; overlay hidden. Desktop unchanged.
+- Keeps all prior fixes: See More modal, packages layout, contact full-bleed.
+========================================================= -->
+<section id="ps" class="ps" aria-label="PureStay — Resident Retention">
+
+  <!-- Preconnects + Fonts -->
+  <link rel="preconnect" href="https://storage.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;800&family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===== TOKENS ===== */
+    .ps, .ps * { box-sizing: border-box; }
+    .ps{
+      --ink:#0e0d0c; --bg:#ffffff;
+      --maroon:#7A2E26; --maroon-700:#66271f;
+      --gold:#C79A3B; --gold-700:#B78A2F;
+      --muted:#f7f4f0; --border:#e7e1da;
+      --ring:rgba(199,154,59,.38);
+      --card:#fff; --card-fg:#1b1816;
+      --shadow:0 14px 38px rgba(0,0,0,.10);
+      --shadow-strong:0 28px 80px rgba(122,46,38,.28);
+      --container:1180px; --gut-d:32px; --gut-t:22px; --gut-m:16px;
+      --ry-d:72px; --ry-t:52px; --ry-m:36px;
+      color:var(--ink); background:var(--bg);
+      font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      line-height:1.48; letter-spacing:.2px;
+    }
+    .ps .container{max-width:var(--container);margin:0 auto;padding:0 var(--gut-d);}
+    .ps .section{padding:var(--ry-d) 0;}
+    .ps .center{text-align:center;}
+    .ps h1,.ps h2,.ps h3{margin:0 0 10px 0;color:#141312;}
+    .ps h1{font-family:Fraunces,ui-serif,Georgia,serif;font-weight:800;font-size:clamp(38px,6.4vw,64px);line-height:1.04;}
+    .ps h2{font-family:Fraunces,ui-serif,Georgia,serif;font-weight:800;font-size:clamp(26px,3.8vw,42px);line-height:1.1;}
+    .ps h3{font-weight:900;font-size:clamp(18px,2.2vw,22px);}
+    .ps p{margin:0 0 12px;color:#2b2927;}
+    .ps a{color:inherit}
+
+    .ps .on-white { color: var(--maroon); }
+
+    .ps .eyebrow{
+      display:inline-block;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      font-size:12px;
+      padding:10px 14px;
+      border-radius:999px;
+      background:rgba(255,255,255,.9);
+      border:1px solid var(--border);
+      box-shadow:0 10px 28px rgba(0,0,0,.08);
+    }
+
+    /* Reveal (matches other repo patterns) */
+    .ps [data-reveal]{opacity:0;transform:translateY(24px);transition:transform .6s ease, opacity .6s ease;}
+    .ps [data-reveal].in{opacity:1;transform:none;}
+
+    .ps .btn{appearance:none;border:1px solid transparent;background:var(--maroon);color:#fff;font-weight:900;letter-spacing:.2px;border-radius:12px;padding:12px 16px;cursor:pointer;box-shadow:var(--shadow);transition:transform .15s ease, box-shadow .15s ease, background .15s ease;}
+    .ps .btn:hover{transform:translateY(-1px);box-shadow:0 18px 44px rgba(122,46,38,.24);background:var(--maroon-700);}
+    .ps .btn:focus-visible{outline:none;box-shadow:0 0 0 3px var(--ring);}
+    .ps .btn.light{background:#fff;color:var(--maroon);border-color:#fff;}
+    .ps .btn.gold{background:var(--gold);color:var(--maroon);border-color:transparent;}
+    .ps .btn.gold:hover{background:var(--gold-700);}
+    .ps .btn{float:none;}
+
+    .ps .card{background:var(--card);color:var(--card-fg);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);}
+
+    .ps .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+    .ps .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+    .ps .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;}
+
+    /* HEADER */
+    .ps .topbar{position:sticky;top:0;left:0;right:0;width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);z-index:60;
+      backdrop-filter:saturate(180%) blur(10px);background:linear-gradient(180deg,rgba(255,255,255,.88),rgba(255,255,255,.75));
+      border-bottom:1px solid rgba(0,0,0,.06);}
+    .ps .nav{max-width:var(--container);margin:0 auto;padding:8px var(--gut-d);display:flex;align-items:center;justify-content:space-between;}
+    .ps .brand{display:flex;align-items:center;gap:12px;}
+    .ps .brand img{height:68px;width:auto;display:block;filter:drop-shadow(0 1px 0 rgba(255,255,255,.6));}
+    .ps .menu{display:flex;align-items:center;gap:26px;}
+    .ps .menu a{color:#3a2f2c;text-decoration:none;font-weight:900;letter-spacing:.02em;padding:10px 12px;border-radius:12px;display:inline-block;position:relative;transition:transform .15s ease, box-shadow .15s ease;}
+    .ps .menu a:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.10);}
+    .ps .menu a:focus-visible{outline:none;box-shadow:0 0 0 3px var(--ring);}
+
+    /* HERO */
+    .ps .hero-bleed{position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;width:100vw;}
+    .ps .hero{position:relative;min-height:100dvh;display:grid;align-items:center;overflow:hidden;}
+    .ps .hero video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;}
+    .ps .hero .overlay{position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.35),rgba(0,0,0,.25));pointer-events:none;}
+    .ps .hero .poster{position:absolute;inset:0;display:grid;place-items:center;background:#fff;transition:opacity .35s ease;}
+    .ps .hero .poster .logo{height:92px;width:auto;opacity:.95;filter:drop-shadow(0 2px 0 rgba(0,0,0,.1));animation:float 2.6s ease-in-out infinite;}
+    @keyframes float{0%{transform:translateY(0)}50%{transform:translateY(-6px)}100%{transform:translateY(0)}}
+
+    /* EXPLAINER */
+    .ps .explainer.section{min-height:100dvh;display:flex;align-items:center;}
+    .ps .explainer .card{padding:28px 26px;min-height:360px;perspective:900px;transform-style:preserve-3d;transition:transform .25s ease, box-shadow .25s ease, filter .25s ease;}
+    .ps .explainer .card:hover{transform:translateY(-8px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));box-shadow:var(--shadow-strong);filter:saturate(1.02);}
+    .ps .explainer .card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 80% at 20% -10%, rgba(255,255,255,.24), transparent 40%),radial-gradient(120% 80% at 110% 120%, rgba(0,0,0,.10), transparent 40%);mix-blend-mode:soft-light;}
+    .ps .explainer .left{position:relative;background:linear-gradient(180deg, var(--gold), #E8D18F);border-color:#d8b356;color:var(--maroon-700);}
+    .ps .explainer .left h2{color:var(--maroon-700);text-shadow:0 1px 0 rgba(231,208,140,.6);}
+    .ps .explainer .left p{color:var(--maroon-700);text-shadow:0 1px 0 rgba(233,214,150,.5);}
+    .ps .explainer .right{position:relative;background:linear-gradient(180deg, #7A2E26, #5b211b);border-color:#5b211b;color:#fff;}
+    .ps .explainer .right h2{color:#fff;text-shadow:0 1px 0 rgba(199,154,59,.35);}
+    .ps .explainer .right p{color:#fff;text-shadow:0 1px 0 rgba(199,154,59,.28);}
+    .ps .explainer h2{font-size:clamp(28px,4.2vw,46px);}
+    .ps .explainer p{font-size:clamp(15px,1.4vw,18px);font-weight:600;}
+    .ps .tilt{transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));}
+
+    /* STEPS */
+    .ps .steps.section{min-height:100dvh;display:flex;align-items:center;}
+    .ps .steps .card{
+      position:relative;background:linear-gradient(180deg,#7A2E26,#5b211b);color:#fff;border-color:#5b211b;
+      padding:24px;min-height:170px;box-shadow:0 18px 48px rgba(122,46,38,.25);
+      transition:transform .2s ease, box-shadow .2s ease, filter .2s ease;
+    }
+    .ps .steps .card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(90% 60% at 20% -10%, rgba(255,255,255,.18), transparent 40%);mix-blend-mode:soft-light;}
+    .ps .steps .card:hover{transform:translateY(-6px);box-shadow:0 26px 64px rgba(122,46,38,.32);filter:saturate(1.02);}
+    .ps .steps .card h3,.ps .steps .card p{color:#fff;}
+    .ps .steps a{color:var(--gold);font-weight:800;text-decoration:underline;}
+
+    /* COMPLIANCE BANNER */
+    .ps .compliance-bleed{position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;width:100vw;padding:18px 0;background:linear-gradient(180deg,#fff,#fbf8f2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+    .ps .logos-rail{max-width:var(--container);margin:0 auto;padding:0 var(--gut-d);}
+    .ps .logos-track{display:flex;gap:min(6vw,64px);align-items:center;justify-content:space-between;min-width:200%;animation:slide 26s linear infinite;}
+    .ps .logos-wrap{overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);}
+    .ps .logos-item{flex:0 0 auto;display:flex;align-items:center;justify-content:center;}
+    .ps .logos-item img{height:30px;width:auto;opacity:.98;filter:grayscale(.05);}
+    @keyframes slide{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+    /* RESULTS / TICKER + TILES */
+    .ps .ticker .card{
+      background:#fff;color:var(--maroon);border-color:var(--border);
+      box-shadow:0 16px 40px rgba(0,0,0,.10);padding:32px 26px;
+      display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;
+    }
+    .ps .ticker .big{color:var(--maroon);text-shadow:none;font-family:Fraunces;font-weight:800;font-size:clamp(30px,4.6vw,46px);line-height:1.08;text-align:center;}
+    .ps .loss-line1{display:block;}
+    .ps .loss-line2{display:block;white-space:nowrap;}
+    .ps #lossLive{display:inline-block;margin-right:2px;}
+    .ps .loss-dot{display:inline-block;}
+    .ps .ticker p{color:#5d221c;text-align:center;max-width:60ch;margin:0 auto;}
+    .ps .center-cta{display:flex;justify-content:center;align-items:center;width:100%;}
+    .ps .center-cta .btn{display:inline-block;margin:0 auto;align-self:center !important;float:none !important;}
+
+    .ps .results-title{ color: var(--maroon); margin:18px 0 6px; }
+
+    .ps .tiles{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:10px;}
+    .ps .tile{
+      padding:22px;background:linear-gradient(180deg, var(--gold), #e8d18f);
+      border:1px solid #d9b254;color:var(--maroon);
+      border-radius:16px;box-shadow:0 18px 46px rgba(199,154,59,.22);
+      cursor:pointer;transition:transform .2s ease, box-shadow .2s ease, filter .2s ease;
+    }
+    .ps .tile:hover{transform:translateY(-6px);box-shadow:0 26px 64px rgba(199,154,59,.32);filter:saturate(1.03);}
+    .ps .tile h3{margin:0;color:var(--maroon);}
+    .ps .tile .cta{margin-top:12px;}
+    .ps .tile .cta .btn{padding:10px 14px}
+    .ps .tile .cta .btn.light{border:1px solid rgba(122,46,38,.22)}
+
+    /* ===== MODAL ===== */
+    .ps .modal{position:fixed;inset:0;z-index:9999;display:none;}
+    .ps .modal.active{display:block;}
+    .ps .modal .scrim{position:absolute;inset:0;background:rgba(0,0,0,.42);}
+    .ps .modal .sheet{position:absolute;left:50%;top:6dvh;transform:translateX(-50%);width:min(980px,94vw);max-height:88dvh;background:#fff;border-radius:18px;box-shadow:0 30px 90px rgba(0,0,0,.35);display:flex;flex-direction:column;}
+    .ps .modal .head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);}
+    .ps .modal .body{padding:16px;overflow:auto;}
+    .ps .close{appearance:none;border:1px solid var(--border);background:#fff;border-radius:10px;padding:8px 12px;font-weight:900;cursor:pointer;}
+
+    /* ===== PACKAGES ===== */
+    .ps .packages .eyebrow { color:var(--maroon); background:#fff; border:1px solid var(--border); }
+    .ps .packages h2 { color:var(--maroon); font-size:clamp(34px,5.6vw,56px); }
+    .ps .pkgs{ display:grid; grid-template-columns:repeat(3,1fr); gap:22px; margin-top:16px; }
+    .ps .pkg-card{
+      text-align:center;
+      background:linear-gradient(180deg,#7A2E26,#5b211b);
+      color:#fff;
+      border:1px solid #5b211b;
+      border-radius:28px;
+      padding:22px 18px 24px;
+      box-shadow:0 26px 80px rgba(122,46,38,.22);
+    }
+    .ps .pkg-title{
+      font-family:Fraunces,ui-serif,Georgia,serif;
+      font-weight:800;
+      font-size:clamp(28px,3.8vw,44px);
+      color:#fff;
+      margin-bottom:8px;
+    }
+    .ps .pkg--core .pkg-title{ text-transform:uppercase; }
+    .ps .pkg-badge{
+      display:inline-block;
+      background:var(--gold);
+      color:#3b2a20;
+      padding:10px 18px;
+      border-radius:999px;
+      font-weight:900;
+      letter-spacing:.02em;
+      margin:6px 0 10px;
+    }
+    .ps .pkg-price{
+      font-family:Fraunces,ui-serif,Georgia,serif;
+      font-weight:800;
+      font-size:clamp(18px,2.6vw,24px);
+      color:#fff;
+      margin:8px 0 14px;
+    }
+    .ps .pkg-feats{ list-style:none; padding:0; margin:0 0 16px; }
+    .ps .pkg-feats li{
+      color:#E6C981; font-weight:800;
+      font-size:clamp(16px,2.4vw,22px);
+      line-height:1.28; margin:10px 0;
+    }
+    .ps .pkg-cta .btn.gold{ border-radius:14px; padding:12px 22px; font-weight:900; }
+
+    /* ===== CONTACT (full-bleed) ===== */
+    .ps #contact{
+      position:relative; left:50%; right:50%; margin-left:-50vw; margin-right:-50vw; width:100vw;
+      background:#7A2E26; color:#fff; border-top:1px solid rgba(0,0,0,.05); border-bottom:1px solid rgba(0,0,0,.05);
+      padding:var(--ry-d) 0;
+    }
+    .ps #contact .contact-inner{ max-width:var(--container); margin:0 auto; padding:0 var(--gut-d); }
+    .ps #contact h2, .ps #contact h3{ color:#fff; }
+    .ps #contact p, .ps #contact a, .ps #contact small{ color:#fff; }
+    .ps #contact a{ text-decoration:underline; }
+    .ps #contact .wrap{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:18px; margin-top:14px; }
+    .ps #contact .card{ background:transparent; color:#fff;
+      border:1px solid rgba(255,255,255,.18); border-radius:16px; box-shadow:0 18px 46px rgba(0,0,0,.12); padding:18px; }
+    .ps #contact .field{ margin-top:10px; }
+    .ps #contact .field label{ display:block; font-weight:900; letter-spacing:.02em; margin:0 0 6px; color:#F3ECE4; }
+    .ps #contact input, .ps #contact textarea{
+      width:100%; padding:12px 14px; border-radius:12px;
+      border:1px solid rgba(255,255,255,.28);
+      background:#F4EDE3; color:#321c18; outline:none;
+    }
+    .ps #contact textarea{ min-height:120px; resize:vertical; }
+    .ps #contact input:focus, .ps #contact textarea:focus{
+      border-color:#E2C784; box-shadow:0 0 0 3px rgba(199,154,59,.35);
+    }
+    .ps #contact .btn{ background:var(--gold); color:#3b2a20; border-color:transparent; }
+    .ps #contact .btn:hover{ background:var(--gold-700); }
+    .ps #contact .footerline{ text-align:center; margin-top:18px; }
+    .ps #contact .footerline a{ color:#fff; text-decoration:underline; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width:1100px){
+      .ps .container{padding:0 var(--gut-t);}
+      .ps .section{padding:var(--ry-t) 0;}
+      .ps .grid-2{grid-template-columns:1fr;}
+      .ps .grid-3{grid-template-columns:1fr 1fr;}
+      .ps .pkgs{ grid-template-columns:1fr; }
+      .ps #contact .contact-inner{ padding:0 var(--gut-t); }
+      .ps #contact .wrap{ grid-template-columns:1fr; }
+    }
+    @media (max-width:820px){
+      .ps .container{padding:0 var(--gut-m);}
+      .ps .section{padding:var(--ry-m) 0;}
+      .ps .grid-3,.ps .grid-4,.ps .tiles{grid-template-columns:1fr;}
+      .ps #contact .contact-inner{ padding:0 var(--gut-m); }
+
+      /* MOBILE HERO: center the full video, no black surround */
+      .ps .hero{
+        min-height:auto;
+        display:flex;               /* center child */
+        align-items:center;
+        justify-content:center;
+        overflow:hidden;
+      }
+      .ps .hero video{
+        position:static;            /* no absolute fill */
+        display:block;
+        width:100%;                 /* responsive width */
+        height:auto;                /* keep aspect ratio */
+        margin:0 auto;              /* center if narrower */
+        object-fit:contain;         /* show entire frame */
+        object-position:center center;
+        background:transparent;
+      }
+      .ps .hero .overlay{ display:none; } /* remove dark overlay on mobile */
+    }
+    @media (prefers-reduced-motion:reduce){
+      .ps [data-reveal]{transition:none!important;transform:none!important;opacity:1!important;}
+      .ps .logos-track{animation:none!important;}
+    }
+  </style>
+
+  <!-- ===== HEADER ===== -->
+  <header class="topbar" role="banner">
+    <nav class="nav" aria-label="Primary">
+      <a class="brand" href="https://www.purestaync.com/" target="_self" aria-label="PureStay Home">
+        <img src="https://storage.googleapis.com/msgsndr/TPwxGisIBKbxlbrOoolh/media/684b78c9869388f61b129f51.png" alt="PureStay logo">
+      </a>
+      <div class="menu">
+        <a href="https://purestaync.com/discover" target="_self" rel="noopener">Discover</a>
+        <a href="#contact" data-scroll>Contact Us</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ===== HERO ===== -->
+  <div class="hero-bleed">
+    <section class="hero" aria-label="Welcome video">
+      <video id="heroVid"
+             playsinline webkit-playsinline muted autoplay preload="auto"
+             controlslist="nodownload noplaybackrate" disablepictureinpicture
+             aria-hidden="true">
+        <source src="brand/belong%20where%20you%20live.%20(2).mp4" type="video/mp4">
+      </video>
+      <div class="overlay" aria-hidden="true"></div>
+      <div class="poster" id="heroPoster">
+        <img class="logo" alt="PureStay" src="https://storage.googleapis.com/msgsndr/TPwxGisIBKbxlbrOoolh/media/684b78c9869388f61b129f51.png">
+      </div>
+    </section>
+  </div>
+
+  <!-- ===== EXPLAINER ===== -->
+  <section id="explainer" class="section explainer" aria-labelledby="exp-title">
+    <div class="container">
+      <div class="grid-2">
+        <article class="card left tilt" data-reveal>
+          <h2 id="exp-title">What is PureStay?</h2>
+          <p>We are a tenant retention solutions company. We believe the place residents choose to live should feel like home, and we make that belief real in the following ways.</p>
+          <p>We host events that embrace your residents specifically and consistently. We market your property’s culture, not just amenities. We relieve staff burnout by handling execution end to end. Our goal is to make your job easier and your residents’ lives better.</p>
+        </article>
+        <article class="card right tilt" data-reveal>
+          <h2>Why PureStay?</h2>
+          <p>Bringing PureStay to your property tells residents and staff, “I care about you.” PureStay is tens of employees, all wrapped into one and dedicated to your property’s success.</p>
+          <p>We see renewal and occupancy numbers as happy tenants, empty units as opportunity, and growth as the only option. When you work with PureStay, you make your life easier while boosting property revenue and creating memories that last.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== STEPS ===== -->
+  <section id="steps" class="section steps" aria-labelledby="steps-title">
+    <div class="container">
+      <div class="center">
+        <span class="eyebrow on-white" data-reveal>How it works</span>
+        <h2 id="steps-title" class="on-white" data-reveal style="margin-top:10px;">Plan → Activate → Report</h2>
+      </div>
+      <div class="grid-2" style="margin-top:16px;">
+        <article class="card" data-reveal>
+          <h3>Step One</h3>
+          <p>Either <a href="https://purestaync.com/discover#book" target="_self" rel="noopener">Book a Call</a> or fill out the <a href="https://purestaync.com/discover#form" target="_self" rel="noopener">Discovery Form</a>. This is how we learn your property, your residents, the event space, and your goals.</p>
+        </article>
+        <article class="card" data-reveal>
+          <h3>Step Two</h3>
+          <p>After discovery, we draft your first activations, confirm logistics, and prepare marketing touchpoints and resident sign-ins.</p>
+        </article>
+      </div>
+      <div class="grid-2" style="margin-top:16px;">
+        <article class="card" data-reveal>
+          <h3>Step Three</h3>
+          <p>You approve the setup once. From there it is on us. We set up, host, and clean up. Staff does not lift a finger. We capture each event to re-engage residents next time and to show your culture.</p>
+        </article>
+        <article class="card" data-reveal>
+          <h3>Step Four</h3>
+          <p>Sit back, relax, and watch your retention and occupancy numbers flourish. Keep up with our activity via your custom PureStay Portal for the latest event recaps, reviews that boost your Google Business profile, 3rd party listings, and overall reputation.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== COMPLIANCE BANNER ===== -->
+  <section class="compliance-bleed" aria-label="Approved and compliant">
+    <div class="logos-rail">
+      <div class="logos-wrap" data-reveal>
+        <div class="logos-track" aria-hidden="true">
+          <div class="logos-item"><img src="https://storage.googleapis.com/msgsndr/TPwxGisIBKbxlbrOoolh/media/68acb253e91d969fff90bb2a.jpeg" alt="Michaels Companies"></div>
+          <div class="logos-item"><img src="https://storage.googleapis.com/msgsndr/TPwxGisIBKbxlbrOoolh/media/68acb1a7a7e598118684fad8.png" alt="TAA"></div>
+          <div class="logos-item"><img src="https://storage.googleapis.com/msgsndr/TPwxGisIBKbxlbrOoolh/media/68acb1a7baaed6616983f4bf.jpeg" alt="Drucker & Falk"></div>
+          <div class="logos-item"><img src="https://storage.googleapis.com/msgsndr/TPwxGisIBKbxlbrOoolh/media/68acb1a7a7e598a58484fad7.webp" alt="Greystar"></div>
+          <div class="logos-item" aria-hidden="true"><img src="" alt=""></div>
+          <div class="logos-item" aria-hidden="true"><img src="" alt=""></div>
+          <div class="logos-item" aria-hidden="true"><img src="" alt=""></div>
+          <div class="logos-item" aria-hidden="true"><img src="" alt=""></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== RESULTS + TICKER ===== -->
+  <section id="results" class="section results" aria-labelledby="res-title">
+    <div class="container">
+      <div class="card ticker" data-reveal>
+        <h2 id="res-title" class="big on-white" style="margin-top:0;">
+          <span class="loss-line1">Since you landed, your property has lost</span>
+          <span class="loss-line2"><span id="lossLive">$0.00</span><span class="loss-dot">.</span></span>
+        </h2>
+        <p>Based on typical turnover cost and vacancy drag for properties like yours.</p>
+        <div class="center-cta">
+          <button class="btn gold" id="btn-estimate" type="button">Estimate My Loss</button>
+        </div>
+      </div>
+
+      <h2 class="results-title on-white" data-reveal>What do other properties like about PureStay?</h2>
+
+      <div class="tiles" id="tiles">
+        <article class="tile" data-modal="savings" data-reveal>
+          <h3>Projected savings $85,050</h3>
+          <div class="cta">
+            <button class="btn light" data-modal-btn="savings" type="button">See More</button>
+          </div>
+        </article>
+        <article class="tile" data-modal="renewals" data-reveal>
+          <h3>“Renewals lifted and reputation started to move.”</h3>
+          <div class="cta">
+            <button class="btn light" data-modal-btn="renewals" type="button">See More</button>
+          </div>
+        </article>
+        <article class="tile" data-modal="turnover" data-reveal>
+          <h3>Turnover drop from 41% to 33%</h3>
+          <div class="cta">
+            <button class="btn light" data-modal-btn="turnover" type="button">See More</button>
+          </div>
+        </article>
+        <article class="tile" data-modal="portfolio" data-reveal>
+          <h3>Portfolio launch in 60 days</h3>
+          <div class="cta">
+            <button class="btn light" data-modal-btn="portfolio" type="button">See More</button>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PACKAGES ===== -->
+  <section id="packages" class="section packages" aria-labelledby="packages-title">
+    <div class="container">
+      <div class="center">
+        <span class="eyebrow on-white" data-reveal>Packages</span>
+        <h2 id="packages-title" class="on-white" data-reveal style="margin-top:10px;">Pick the system that fits</h2>
+      </div>
+
+      <div class="pkgs">
+        <article class="pkg-card pkg--core" data-reveal>
+          <div class="pkg-title">CORE</div>
+          <div class="pkg-badge">Best for lease-ups</div>
+          <div class="pkg-price">From $1,000 / month</div>
+          <ul class="pkg-feats">
+            <li>Monthly events</li>
+            <li>Consistent reporting</li>
+            <li>Review boost campaigns</li>
+            <li>Full demographic analysis for events and marketing</li>
+          </ul>
+          <div class="pkg-cta">
+            <a class="btn gold" href="https://purestaync.com/core" target="_blank" rel="noopener">Details</a>
+          </div>
+        </article>
+
+        <article class="pkg-card" data-reveal>
+          <div class="pkg-title">Culture Shift</div>
+          <div class="pkg-badge">For when you already have stable numbers</div>
+          <div class="pkg-price">From $1,500 / month</div>
+          <ul class="pkg-feats">
+            <li>Multiple upgraded monthly events</li>
+            <li>Content plan &amp; marketing options</li>
+            <li>Monthly summary + insights</li>
+          </ul>
+          <div class="pkg-cta">
+            <a class="btn gold" href="https://purestaync.com/culture-shift" target="_blank" rel="noopener">Details</a>
+          </div>
+        </article>
+
+        <article class="pkg-card" data-reveal>
+          <div class="pkg-title">Signature Stay</div>
+          <div class="pkg-badge">Highest ROI</div>
+          <div class="pkg-price">From $2,000 / month</div>
+          <ul class="pkg-feats">
+            <li>High-production content</li>
+            <li>Targeted marketing that increases occupancy &amp; holds</li>
+            <li>Dedicated property team</li>
+            <li>and more...</li>
+          </ul>
+          <div class="pkg-cta">
+            <a class="btn gold" href="https://purestaync.com/signature-stay" target="_blank" rel="noopener">Details</a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CONTACT (full-bleed) ===== -->
+  <section id="contact" class="section" aria-labelledby="contact-title">
+    <div class="contact-inner">
+      <div class="center">
+        <h2 id="contact-title" data-reveal style="color:#fff;">Contact Us</h2>
+      </div>
+
+      <div class="wrap">
+        <div class="card" data-reveal>
+          <h3>Email</h3>
+          <p><a href="mailto:contact@purestaync.com">contact@purestaync.com</a></p>
+          <div class="field">
+            <label for="subj">Subject</label>
+            <input id="subj" type="text" placeholder="Subject...">
+          </div>
+          <div class="field">
+            <label for="msg">What’s on your mind?</label>
+            <textarea id="msg" placeholder="Write your message..."></textarea>
+          </div>
+          <button class="btn" id="mailtoSend" type="button" style="margin-top:10px;">Send</button>
+        </div>
+
+        <div class="card" data-reveal>
+          <h3>Phone</h3>
+          <p><a href="tel:+19803507381">980-350-7381</a></p>
+          <p>Call or text any time.</p>
+          <p>For Sales: Dial 1</p>
+          <p>For Event Staff: Dial 2</p>
+          <p>For Directory: Dial 5</p>
+        </div>
+
+        <div class="card" data-reveal>
+          <h3>Discover</h3>
+          <p>Book a discovery call with a retention expert.</p>
+          <a class="btn" href="https://purestaync.com/discover" target="_self" rel="noopener" style="margin-top:10px;">Book a Call</a>
+        </div>
+      </div>
+
+      <div class="footerline">
+        <small>© <span id="yr"></span> PureStay</small>
+        · <a href="https://privacy.purestaync.com/privacy-policy" target="_blank" rel="noopener">Privacy</a>
+        · <a href="https://terms.purestaync.com/terms-of-service" target="_blank" rel="noopener">Terms</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SCHEMA ===== -->
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"Organization","name":"PureStay","url":"https://www.purestaync.com/","logo":"https://storage.googleapis.com/msgsndr/TPwxGisIBKbxlbrOoolh/media/684b78c9869388f61b129f51.png","contactPoint":[{"@type":"ContactPoint","telephone":"+1-980-350-7381","contactType":"sales","email":"contact@purestaync.com","areaServed":"US"}]}
+  </script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"LocalBusiness","name":"PureStay Resident Retention","image":"https://storage.googleapis.com/msgsndr/TPwxGisIBKbxlbrOoolh/media/684b78c9869388f61b129f51.png","url":"https://www.purestaync.com/","areaServed":{"@type":"AdministrativeArea","name":"North Carolina"},"serviceArea":[{"@type":"City","name":"Charlotte"},{"@type":"City","name":"Raleigh"},{"@type":"City","name":"Durham"},{"@type":"City","name":"Greensboro"},{"@type":"City","name":"Winston-Salem"},{"@type":"City","name":"Cary"},{"@type":"City","name":"Chapel Hill"},{"@type":"City","name":"Wilmington"},{"@type":"City","name":"Asheville"},{"@type":"City","name":"Fayetteville"},{"@type":"City","name":"Concord"},{"@type":"City","name":"Gastonia"},{"@type":"City","name":"Huntersville"},{"@type":"City","name":"Greenville"},{"@type":"City","name":"Jacksonville"}]}
+  </script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"ItemList","itemListElement":[
+    {"@type":"Product","name":"Core","category":"Resident Retention Program","brand":{"@type":"Brand","name":"PureStay"},"offers":{"@type":"Offer","price":"1000","priceCurrency":"USD"}},
+    {"@type":"Product","name":"Culture Shift","category":"Resident Retention Program","brand":{"@type":"Brand","name":"PureStay"},"offers":{"@type":"Offer","price":"1500","priceCurrency":"USD"}},
+    {"@type":"Product","name":"Signature Stay","category":"Resident Retention Program","brand":{"@type":"Brand","name":"PureStay"},"offers":{"@type":"Offer","price":"2000","priceCurrency":"USD"}}
+  ]}
+  </script>
+
+  <!-- ===== SCRIPTS ===== -->
+  <script>
+  (function(){
+    const $  = (s,ctx=document)=>ctx.querySelector(s);
+    const $$ = (s,ctx=document)=>Array.from(ctx.querySelectorAll(s));
+    const fmt$ = v => "$"+(Math.round(v*100)/100).toLocaleString(undefined,{minimumFractionDigits:2});
+    $("#yr").textContent = new Date().getFullYear();
+
+    /* Smooth scroll */
+    $$('[data-scroll]').forEach(a=>{
+      a.addEventListener('click', e=>{
+        const href = a.getAttribute('href');
+        if(href && href.startsWith('#')){
+          e.preventDefault();
+          document.querySelector(href).scrollIntoView({behavior:'smooth'});
+        }
+      });
+    });
+
+    /* HERO video auto-scroll after 48s if idle */
+    const vid = $('#heroVid'); const poster = $('#heroPoster');
+    let userInteracted=false, autoScrolled=false, playedTimes=0;
+    function hidePoster(){ if(poster){ poster.style.opacity='0'; setTimeout(()=> poster.style.display='none', 380); } }
+    function scheduleAutoScroll(){
+      if(autoScrolled) return;
+      setTimeout(()=>{
+        if(userInteracted || autoScrolled) return;
+        const next = $('#explainer'); if(next){ next.scrollIntoView({behavior:'smooth', block:'start'}); autoScrolled = true; }
+      }, 48000);
+    }
+    vid?.addEventListener('loadeddata', ()=>{ hidePoster(); scheduleAutoScroll(); vid.play().catch(()=>{}); });
+    vid?.addEventListener('canplay', ()=>{ vid.play().catch(()=>{}); });
+    vid?.addEventListener('ended', ()=>{ playedTimes++; });
+    if(vid){
+      const vIO = new IntersectionObserver(es=>{
+        es.forEach(e=>{
+          if(e.isIntersecting){
+            if(vid.paused && playedTimes < 2){ vid.currentTime = 0; vid.play().catch(()=>{}); }
+          } else {
+            if(!vid.paused){ vid.pause(); }
+          }
+        });
+      },{threshold:.5});
+      vIO.observe(vid);
+    }
+    ['wheel','touchstart','keydown','scroll'].forEach(evt=> window.addEventListener(evt, ()=>{ userInteracted = true; }, {passive:true}));
+
+    /* Reveal on scroll */
+    const io=new IntersectionObserver(entries=>{
+      entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }});
+    },{threshold:.25});
+    $$('#ps [data-reveal]').forEach(n=>io.observe(n));
+
+    /* Tilt for explainer cards */
+    $$('.tilt').forEach(card=>{
+      card.addEventListener('mousemove',(e)=>{
+        const r=card.getBoundingClientRect();
+        const x=(e.clientX - r.left)/r.width, y=(e.clientY - r.top)/r.height;
+        card.style.setProperty('--ry', ((x-.5)*6)+'deg');
+        card.style.setProperty('--rx', ((.5-y)*6)+'deg');
+      });
+      card.addEventListener('mouseleave',()=>{ card.style.setProperty('--ry','0deg'); card.style.setProperty('--rx','0deg'); });
+    });
+
+    /* Loss ticker */
+    const monthly = 36701; const perSecond = monthly / (30*24*3600); const SPEED = 4.0;
+    const start = performance.now(); const lossEl = $('#lossLive');
+    (function tick(){ const elapsed = (performance.now() - start)/1000; lossEl.textContent = fmt$(perSecond * SPEED * elapsed); requestAnimationFrame(tick); })();
+    $('#btn-estimate')?.addEventListener('click', ()=> window.open('https://www.purestaync.com/retention-impact','_blank'));
+
+    /* Modal shell */
+    const modal = document.createElement('div');
+    modal.className = 'modal'; modal.id = 'res-modal';
+    modal.innerHTML = `
+      <div class="scrim" data-close></div>
+      <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mdl-title">
+        <div class="head">
+          <div id="mdl-title" style="font-weight:900;">Details</div>
+          <button class="close" data-close type="button">Close</button>
+        </div>
+        <div class="body" id="mdl-body"></div>
+      </div>`;
+    (document.getElementById('ps') || document.body).appendChild(modal);
+
+    function openModal(title, html){
+      $('#mdl-title').textContent = title || 'Details';
+      $('#mdl-body').innerHTML = html || '<p>Details coming soon.</p>';
+      modal.classList.add('active');
+      document.documentElement.style.overflow = 'hidden';
+    }
+    function closeModal(){ modal.classList.remove('active'); document.documentElement.style.overflow = ''; }
+    modal.addEventListener('click', e=>{ if(e.target.hasAttribute('data-close') || e.target.classList.contains('scrim')) closeModal(); });
+    document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+    /* Modal content */
+    const content = {
+      savings: `
+        <div class="grid-2">
+          <div class="card" style="padding:14px;"><h3>Turnover</h3><p>34% → 27%</p></div>
+          <div class="card" style="padding:14px;"><h3>Projected savings</h3><p>$85,050</p></div>
+          <div class="card" style="padding:14px;"><h3>Program cost</h3><p>$28,740 yearly</p></div>
+          <div class="card" style="padding:14px;"><h3>Resident note</h3><p>Residents show up. Staff time stays low.</p></div>
+        </div>`,
+      renewals: `
+        <div class="grid-2">
+          <div class="card" style="padding:14px;"><h3>Reviews</h3><p>3.2 → 3.7 in 45 days</p></div>
+          <div class="card" style="padding:14px;"><h3>Shareable clips</h3><p>Short videos travel across resident circles.</p></div>
+          <div class="card" style="padding:14px;"><h3>Attendance</h3><p>Stabilized within two activations.</p></div>
+          <div class="card" style="padding:14px;"><h3>Quote</h3><p>“Renewals lifted and reputation started to move.”</p></div>`,
+      turnover: `
+        <div class="grid-2">
+          <div class="card" style="padding:14px;"><h3>Baseline</h3><p>41% annual turnover</p></div>
+          <div class="card" style="padding:14px;"><h3>After 60 days</h3><p>33% projected trend</p></div>
+          <div class="card" style="padding:14px;"><h3>Drivers</h3><p>Local events, shareable content, review lift.</p></div>
+          <div class="card" style="padding:14px;"><h3>Follow up</h3><p>Month two includes targeted re-engagement.</p></div>`,
+      portfolio: `
+        <div class="grid-2">
+          <div class="card" style="padding:14px;"><h3>Launch speed</h3><p>4 properties in 60 days</p></div>
+          <div class="card" style="padding:14px;"><h3>Staff lift</h3><p>Zero. We run setup, hosting, and clean up.</p></div>
+          <div class="card" style="padding:14px;"><h3>Reporting</h3><p>Monthly summary with highlights and next steps.</p></div>
+          <div class="card" style="padding:14px;"><h3>Outcome</h3><p>Consistent attendance and visible culture.</p></div>`
+    };
+
+    /* Robust click handling for builders */
+    document.addEventListener('click', function(e){
+      const btn = e.target.closest && e.target.closest('[data-modal-btn]');
+      if(!btn) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const key = btn.getAttribute('data-modal-btn');
+      const title = btn.closest('.tile')?.querySelector('h3')?.textContent.trim() || 'Details';
+      openModal(title, content[key]);
+    }, true);
+
+    $$('.tiles [data-modal-btn]').forEach(b=>{
+      b.addEventListener('click', ev=>{
+        ev.preventDefault(); ev.stopPropagation();
+        const key = b.getAttribute('data-modal-btn');
+        const title = b.closest('.tile')?.querySelector('h3')?.textContent.trim() || 'Details';
+        openModal(title, content[key]);
+      }, {passive:false});
+    });
+
+    /* Keyboard open on Enter for whole cards */
+    $$('.tile').forEach(t=>{
+      t.setAttribute('tabindex','0');
+      t.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ const k=t.getAttribute('data-modal'); const title=t.querySelector('h3')?.textContent.trim(); if(k) openModal(title, content[k]); } });
+    });
+
+    /* Contact mailto builder */
+    $('#mailtoSend')?.addEventListener('click', ()=>{
+      const subj = encodeURIComponent(($('#subj').value||'').trim());
+      const body = encodeURIComponent(($('#msg').value||'').trim() + '\n\n— Sent from PureStay Website');
+      const href = `mailto:contact@purestaync.com?subject=${subj}&body=${body}`;
+      window.location.href = href;
+    });
+  })();
+  </script>
+</section>
