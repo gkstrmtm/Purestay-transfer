@@ -143,10 +143,10 @@
       <section class="card" id="authCard">
         <div class="hd">
           <h2>Sign in</h2>
-          <span class="badge" id="cfgBadge">Config</span>
+          <span class="badge ok" id="cfgBadge">Server auth</span>
         </div>
         <div class="bd">
-          <div class="small muted">Portal uses Supabase Auth. If config is missing, set SUPABASE_URL and SUPABASE_ANON_KEY in your environment.</div>
+          <div class="small muted">Sign in uses server auth. No browser Supabase keys required.</div>
           <div style="height:12px"></div>
           <div class="two">
             <div>
@@ -161,7 +161,7 @@
           <div style="height:12px"></div>
           <div class="row">
             <button id="loginBtn" class="btn">Sign in</button>
-            <span class="small muted">Config comes from env (no backend step).</span>
+            <span class="small muted">Uses your Supabase Auth users.</span>
           </div>
           <div style="height:12px"></div>
           <div id="authMsg" class="err"></div>
@@ -470,7 +470,6 @@
     </section>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const $ = (id) => document.getElementById(id);
 
@@ -487,8 +486,7 @@
     ];
 
     const state = {
-      sb: null,
-      cfg: null,
+      token: '',
       me: null,
       activeTab: 'overview',
       leads: [],
@@ -533,8 +531,7 @@
     }
 
     async function api(path, { method='GET', body=null } = {}){
-      const { data } = await state.sb.auth.getSession();
-      const token = data?.session?.access_token || '';
+      const token = String(state.token || '').trim();
       if (!token) throw new Error('not_signed_in');
 
       const r = await fetch(path, {
@@ -551,9 +548,8 @@
     }
 
     async function refreshMe(){
-      const { data } = await state.sb.auth.getSession();
-      const session = data?.session;
-      if (!session){
+      const token = String(state.token || '').trim();
+      if (!token){
         state.me = null;
         setSessionPill();
         $('logoutBtn').classList.add('hide');
@@ -567,8 +563,21 @@
         return;
       }
 
-      const me = await api('/api/portal/me');
-      state.me = me;
+      try {
+        const me = await api('/api/portal/me');
+        state.me = me;
+      } catch (e) {
+        // Token likely expired or invalid
+        state.token = '';
+        localStorage.removeItem('portal_access_token');
+        state.me = null;
+        setSessionPill();
+        $('authCard').classList.remove('hide');
+        $('logoutBtn').classList.add('hide');
+        $('refreshBtn').classList.add('hide');
+        $('authMsg').textContent = 'Session expired. Please sign in again.';
+        return;
+      }
 
       $('logoutBtn').classList.remove('hide');
       $('refreshBtn').classList.remove('hide');
@@ -933,27 +942,8 @@
       $('authMsg').textContent = '';
       $('authOk').textContent = '';
 
-      // Load config from /api/portal/config (public, env-backed)
-      const cfg = await fetch('/api/portal/config').then(r => r.json()).catch(() => null);
-      state.cfg = cfg || null;
-
-      const url = String(cfg?.supabaseUrl || '').trim();
-      const key = String(cfg?.supabaseAnonKey || '').trim();
-
-      if (!url || !key){
-        $('cfgBadge').textContent = 'Missing';
-        $('cfgBadge').className = 'badge warn';
-        $('authMsg').textContent = 'Missing portal env vars. Set SUPABASE_URL and SUPABASE_ANON_KEY in Vercel (or your local .env).';
-        $('loginBtn').disabled = true;
-        return;
-      }
-
-      $('cfgBadge').textContent = 'OK';
-      $('cfgBadge').className = 'badge ok';
-
-      state.sb = window.supabase.createClient(url, key);
-      state.sb.auth.onAuthStateChange(() => refreshMe().catch(() => {}));
-
+      // Restore prior session token if present.
+      state.token = localStorage.getItem('portal_access_token') || '';
       await refreshMe();
     }
 
@@ -961,11 +951,24 @@
       $('authMsg').textContent = '';
       $('authOk').textContent = '';
       try{
-        if (!state.sb) throw new Error('portal_not_configured');
         const email = $('email').value.trim();
         const password = $('password').value;
-        const r = await state.sb.auth.signInWithPassword({ email, password });
-        if (r.error) throw new Error(r.error.message || 'login_failed');
+
+        const r = await fetch('/api/portal/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const j = await r.json().catch(() => null);
+        if (!j || !j.ok) throw new Error(j?.error || ('http_' + r.status));
+
+        const token = String(j?.session?.access_token || '').trim();
+        if (!token) throw new Error('login_failed');
+
+        state.token = token;
+        localStorage.setItem('portal_access_token', token);
+
         $('authOk').textContent = 'Signed in.';
         await refreshMe();
       } catch(e){
@@ -974,8 +977,8 @@
     });
 
     $('logoutBtn').addEventListener('click', async () => {
-      if (!state.sb) return;
-      await state.sb.auth.signOut();
+      state.token = '';
+      localStorage.removeItem('portal_access_token');
       await refreshMe();
     });
 

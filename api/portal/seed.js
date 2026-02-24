@@ -1,5 +1,5 @@
-const { sendJson, handleCors, bearerToken, readJson } = require('../../lib/vercelApi');
-const { supabaseAdmin } = require('../../lib/portalAuth');
+const { sendJson, handleCors, readJson } = require('../../lib/vercelApi');
+const { supabaseAdmin, requirePortalSession, isManager } = require('../../lib/portalAuth');
 
 const DEFAULT_ROLES = [
   'dialer',
@@ -25,14 +25,22 @@ module.exports = async (req, res) => {
   if (handleCors(req, res, { methods: ['POST', 'OPTIONS'] })) return;
   if (req.method !== 'POST') return sendJson(res, 405, { ok: false, error: 'method_not_allowed' });
 
-  const seedToken = process.env.PORTAL_SEED_TOKEN || '';
-  if (!seedToken) return sendJson(res, 503, { ok: false, error: 'missing_portal_seed_token' });
-
-  const token = bearerToken(req);
-  if (token !== seedToken) return sendJson(res, 401, { ok: false, error: 'unauthorized' });
-
   const sb = supabaseAdmin();
   if (!sb) return sendJson(res, 503, { ok: false, error: 'missing_supabase_service_role' });
+
+  // Bootstrap mode: allow seeding only if no profiles exist yet.
+  // Otherwise require a manager session.
+  const { count, error: cErr } = await sb
+    .from('portal_profiles')
+    .select('user_id', { count: 'exact', head: true });
+  if (cErr) return sendJson(res, 500, { ok: false, error: 'seed_bootstrap_check_failed' });
+
+  const bootstrap = Number(count || 0) === 0;
+  if (!bootstrap) {
+    const s = await requirePortalSession(req);
+    if (!s.ok) return sendJson(res, s.status || 401, { ok: false, error: s.error });
+    if (!isManager(s.profile)) return sendJson(res, 403, { ok: false, error: 'forbidden' });
+  }
 
   const body = await readJson(req);
   const password = String(body?.password || process.env.PORTAL_DEMO_PASSWORD || 'PurestayDemo!234');
@@ -86,6 +94,7 @@ module.exports = async (req, res) => {
 
   return sendJson(res, 200, {
     ok: true,
+    bootstrap,
     domain,
     passwordHint: 'Use the password you supplied to this endpoint.',
     users: results,
