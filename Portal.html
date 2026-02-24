@@ -763,16 +763,15 @@
       const title = {
         overview: 'Overview',
         leads: 'Leads',
-        calls: 'Calls',
+        calls: 'Dialer',
         closer: 'Closer',
         events: 'Events',
         payments: 'Payments',
-        docs: 'Docs',
         manager: 'Manager'
       }[tab] || 'Overview';
       $('viewTitle').textContent = title;
 
-      const views = ['Overview','Leads','Calls','Closer','Events','Payments','Docs','Manager'];
+      const views = ['Overview','Leads','Calls','Closer','Events','Payments','Manager'];
       for (const v of views) $('view'+v).classList.add('hide');
       $('view' + title).classList.remove('hide');
 
@@ -850,7 +849,7 @@
 
       // Dialers/setters need call logging.
       if (['dialer','in_person_setter','remote_setter','closer','account_manager','event_coordinator'].includes(role) || isManager) {
-        navItems.push({ id:'calls', label:'Calls' });
+        navItems.push({ id:'calls', label:'Dialer' });
       }
 
       // Closer/account manager workflows.
@@ -864,7 +863,6 @@
       }
 
       navItems.push({ id:'payments', label:'Payments' });
-      navItems.push({ id:'docs', label:'Docs' });
       if (isManager) navItems.push({ id:'manager', label:'Manager' });
 
       $('nav').innerHTML = navItems
@@ -876,7 +874,6 @@
       }
 
       // Manager-only controls
-      $('docsAdmin').classList.toggle('hide', me.profile.role !== 'manager');
       $('newEventToggle').classList.toggle('hide', !(me.profile.role === 'manager' || me.profile.role === 'event_coordinator'));
 
       // Overview
@@ -1509,9 +1506,6 @@
     on('closeRecapBtn', 'click', () => setSelectedEvent(null));
 
     on('loadPayoutsBtn', 'click', () => loadPayouts().catch(() => {}));
-
-    on('loadDocsBtn', 'click', () => loadDocs().catch(() => {}));
-    on('createDocBtn', 'click', () => createDoc().catch(() => {}));
 
     on('loadUsersBtn', 'click', () => loadUsers().catch(() => {}));
 
