@@ -49,13 +49,30 @@ module.exports = async (req, res) => {
   if (cErr) return sendJson(res, 500, { ok: false, error: 'seed_bootstrap_check_failed' });
 
   const bootstrap = Number(count || 0) === 0;
-  if (!bootstrap) {
-    const s = await requirePortalSession(req);
-    if (!s.ok) return sendJson(res, s.status || 401, { ok: false, error: s.error });
-    if (!isManager(s.profile)) return sendJson(res, 403, { ok: false, error: 'forbidden' });
-  }
 
   const body = await readJson(req);
+
+  if (!bootstrap) {
+    // Prefer bearer-token auth.
+    const s = await requirePortalSession(req);
+    if (s.ok) {
+      if (!isManager(s.profile)) return sendJson(res, 403, { ok: false, error: 'forbidden' });
+    } else {
+      // Fallback: allow reseed if the request includes manager credentials.
+      const email = String(body?.email || '').trim().toLowerCase();
+      const password = String(body?.password || '').trim();
+      if (!email || !password) return sendJson(res, 401, { ok: false, error: 'missing_bearer_token' });
+
+      const login = await sb.auth.signInWithPassword({ email, password });
+      const user = login?.data?.user || null;
+      if (login?.error || !user) return sendJson(res, 401, { ok: false, error: 'invalid_login' });
+
+      const localPart = String(email.split('@')[0] || '').toLowerCase();
+      const metaRole = user?.user_metadata?.role;
+      const isMgr = String(metaRole || '').toLowerCase() === 'manager' || localPart === 'manager';
+      if (!isMgr) return sendJson(res, 403, { ok: false, error: 'forbidden' });
+    }
+  }
   const password = String(body?.password || process.env.PORTAL_DEMO_PASSWORD || 'PurestayDemo!234');
   const domain = String(body?.domain || 'demo.purestaync.com');
   const roles = Array.isArray(body?.roles) ? body.roles : DEFAULT_ROLES;

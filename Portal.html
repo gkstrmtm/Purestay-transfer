@@ -1082,10 +1082,12 @@
       $('authOk').textContent = '';
       $('seedMsg').textContent = '';
       try{
+        const email = $('email').value.trim();
+        const password = $('password').value;
         const r = await fetch('/api/portal/seed', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({}),
+          body: JSON.stringify({ email, password }),
         });
 
         const j = await r.json().catch(() => null);
@@ -1093,6 +1095,7 @@
         if (!j.ok) {
           const msg = String(j?.error || ('http_' + r.status));
           const det = String(j?.detail || '').trim();
+          if (msg === 'missing_bearer_token') throw new Error('Sign in as manager to seed.');
           throw new Error(det ? (msg + ': ' + det) : msg);
         }
         $('seedMsg').textContent = renderSeedResult(j);
