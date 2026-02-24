@@ -13,6 +13,10 @@ const ALLOWED_ROLES = [
   'manager',
 ];
 
+function cleanStr(v, maxLen) {
+  return String(v || '').trim().slice(0, maxLen);
+}
+
 function titleCase(s) {
   return String(s || '')
     .split(/[_\-\s]+/g)
@@ -49,10 +53,6 @@ function normalizeRole(roleLike) {
   return 'dialer';
 }
 
-function cleanStr(v, maxLen) {
-  return String(v || '').trim().slice(0, maxLen);
-}
-
 module.exports = async (req, res) => {
   if (handleCors(req, res, { methods: ['POST', 'OPTIONS'] })) return;
   if (req.method !== 'POST') return sendJson(res, 405, { ok: false, error: 'method_not_allowed' });
@@ -65,65 +65,43 @@ module.exports = async (req, res) => {
 
   const email = cleanStr(body.email, 320).toLowerCase();
   const password = cleanStr(body.password, 200);
+  const fullName = cleanStr(body.fullName, 120);
 
   if (!email || !password) return sendJson(res, 422, { ok: false, error: 'missing_credentials' });
+  if (!isAllowedEmail(email)) return sendJson(res, 403, { ok: false, error: 'email_not_allowed' });
 
-  const r = await sb.auth.signInWithPassword({ email, password });
-  if (r.error || !r.data?.session || !r.data?.user) {
-    return sendJson(res, 401, { ok: false, error: 'invalid_login' });
+  // Always lowest privilege by default.
+  const role = normalizeRole('dialer');
+
+  // Create the user (if it already exists, we will fall back to login).
+  const created = await sb.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { role },
+  });
+
+  let userId = created?.data?.user?.id || '';
+
+  if (!userId) {
+    // If already exists, list and find it.
+    const listed = await sb.auth.admin.listUsers({ page: 1, perPage: 200 });
+    const found = (listed?.data?.users || []).find((u) => String(u.email || '').toLowerCase() === email.toLowerCase());
+    userId = found?.id || '';
+    if (!userId) return sendJson(res, 400, { ok: false, error: 'signup_failed' });
   }
 
-  // Ensure the user exists in portal_profiles (auto-provision for allowed emails).
-  const userId = r.data.user.id;
-  const { data: prof, error: pErr } = await sb
+  const { error: upsertErr } = await sb
     .from('portal_profiles')
-    .select('user_id, role, full_name, created_at')
-    .eq('user_id', userId)
-    .limit(1);
+    .upsert({ user_id: userId, role, full_name: fullName || titleCase(role) }, { onConflict: 'user_id' });
+  if (upsertErr) return sendJson(res, 500, { ok: false, error: 'profile_provision_failed' });
 
-  if (pErr) return sendJson(res, 500, { ok: false, error: 'profile_lookup_failed' });
-  const profile = Array.isArray(prof) ? prof[0] : null;
-
-  if (!profile) {
-    if (!isAllowedEmail(email)) return sendJson(res, 403, { ok: false, error: 'profile_missing' });
-
-    const metaRole = r.data.user.user_metadata?.role;
-    const localPart = String(email.split('@')[0] || '').trim().toLowerCase();
-    const role = normalizeRole(metaRole || localPart);
-    const fullName = titleCase(role);
-
-    const { error: upsertErr } = await sb
-      .from('portal_profiles')
-      .upsert({ user_id: userId, role, full_name: fullName }, { onConflict: 'user_id' });
-    if (upsertErr) return sendJson(res, 500, { ok: false, error: 'profile_provision_failed' });
-
-    const { data: prof2, error: pErr2 } = await sb
-      .from('portal_profiles')
-      .select('user_id, role, full_name, created_at')
-      .eq('user_id', userId)
-      .limit(1);
-    if (pErr2) return sendJson(res, 500, { ok: false, error: 'profile_lookup_failed' });
-    const profile2 = Array.isArray(prof2) ? prof2[0] : null;
-    if (!profile2) return sendJson(res, 403, { ok: false, error: 'profile_missing' });
-
+  // Sign them in and return a session token.
+  const r = await sb.auth.signInWithPassword({ email, password });
+  if (r.error || !r.data?.session || !r.data?.user) {
     return sendJson(res, 200, {
       ok: true,
-      session: {
-        access_token: r.data.session.access_token,
-        refresh_token: r.data.session.refresh_token,
-        expires_at: r.data.session.expires_at,
-        expires_in: r.data.session.expires_in,
-        token_type: r.data.session.token_type,
-      },
-      user: {
-        id: r.data.user.id,
-        email: r.data.user.email || '',
-      },
-      profile: {
-        role: profile2.role,
-        fullName: profile2.full_name || '',
-        createdAt: profile2.created_at,
-      },
+      needsLogin: true,
     });
   }
 
@@ -141,9 +119,8 @@ module.exports = async (req, res) => {
       email: r.data.user.email || '',
     },
     profile: {
-      role: profile.role,
-      fullName: profile.full_name || '',
-      createdAt: profile.created_at,
+      role,
+      fullName: fullName || titleCase(role),
     },
   });
 };

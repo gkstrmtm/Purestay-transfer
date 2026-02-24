@@ -54,12 +54,12 @@
     }
 
     .authCard{
-      width: min(520px, 100%);
+      width: min(720px, 100%);
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      padding: 22px;
+      padding: 26px;
     }
 
     .authTop{display:flex; align-items:center; gap:14px;}
@@ -203,9 +203,9 @@
         </div>
       </div>
       <div style="height:12px"></div>
-      <div class="row" style="justify-content:space-between;">
+      <div class="row" style="justify-content:flex-start; gap:10px;">
         <button id="loginBtn" class="btn">Sign in</button>
-        <div class="small muted">PureStay internal</div>
+        <button id="signupBtn" class="btn secondary" type="button">Create account</button>
       </div>
       <div style="height:12px"></div>
       <div id="authMsg" class="err"></div>
@@ -1016,6 +1016,35 @@
         localStorage.setItem('portal_access_token', token);
 
         $('authOk').textContent = 'Signed in.';
+        await refreshMe();
+      } catch(e){
+        $('authMsg').textContent = String(e.message || e);
+      }
+    });
+
+    on('signupBtn', 'click', async () => {
+      $('authMsg').textContent = '';
+      $('authOk').textContent = '';
+      try{
+        const email = $('email').value.trim();
+        const password = $('password').value;
+
+        const r = await fetch('/api/portal/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const j = await r.json().catch(() => null);
+        if (!j || !j.ok) throw new Error(j?.error || ('http_' + r.status));
+
+        const token = String(j?.session?.access_token || '').trim();
+        if (!token) throw new Error('signup_failed');
+
+        state.token = token;
+        localStorage.setItem('portal_access_token', token);
+
+        $('authOk').textContent = 'Account created.';
         await refreshMe();
       } catch(e){
         $('authMsg').textContent = String(e.message || e);
