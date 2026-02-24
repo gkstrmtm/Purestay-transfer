@@ -1,0 +1,1008 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PureStay Portal</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <style>
+    :root{
+      --bg:#0b1220;
+      --card:#0f1a2e;
+      --card2:#0b1426;
+      --text:#e7eefc;
+      --muted:#a7b4d2;
+      --line:rgba(255,255,255,.10);
+      --brand:#7dd3fc;
+      --ok:#34d399;
+      --warn:#fbbf24;
+      --bad:#fb7185;
+      --btn:#1d4ed8;
+      --btn2:#0ea5e9;
+      --shadow: 0 18px 50px rgba(0,0,0,.45);
+      --radius: 16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1100px 700px at 15% -10%, rgba(29,78,216,.35), transparent 60%),
+                  radial-gradient(900px 600px at 90% 0%, rgba(14,165,233,.25), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      min-height:100vh;
+    }
+    a{color:var(--brand); text-decoration:none}
+    a:hover{text-decoration:underline}
+
+    .wrap{max-width:1100px; margin:0 auto; padding:24px;}
+    header{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:16px;
+      padding:16px 20px;
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(15,26,46,.75);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+    .brand{display:flex; align-items:center; gap:12px;}
+    .logo{
+      width:38px; height:38px; border-radius: 12px;
+      background: linear-gradient(135deg, rgba(125,211,252,1), rgba(29,78,216,1));
+      box-shadow: 0 10px 30px rgba(125,211,252,.18);
+    }
+    .brand h1{font-size:16px; margin:0; letter-spacing:.4px}
+    .brand .sub{font-size:12px; color:var(--muted)}
+
+    .pill{font-family: var(--mono); font-size:12px; color:var(--muted); border:1px solid var(--line); padding:6px 10px; border-radius:999px;}
+
+    .btn{
+      appearance:none; border:0;
+      background: linear-gradient(135deg, rgba(29,78,216,1), rgba(14,165,233,1));
+      color:white; padding:10px 14px; border-radius: 12px;
+      font-weight:600; cursor:pointer;
+    }
+    .btn.secondary{
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--text);
+    }
+    .btn:disabled{opacity:.6; cursor:not-allowed}
+
+    .grid{display:grid; gap:16px; grid-template-columns: 1.05fr .95fr; margin-top:16px;}
+    @media (max-width: 900px){ .grid{grid-template-columns:1fr;} }
+
+    .card{
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(15,26,46,.65);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+      overflow:hidden;
+    }
+    .card .hd{padding:14px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:12px;}
+    .card .hd h2{margin:0; font-size:14px; letter-spacing:.2px}
+    .card .bd{padding:16px;}
+
+    .muted{color:var(--muted)}
+    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+
+    label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px;}
+    input, select, textarea{
+      width:100%;
+      background: rgba(11,20,38,.8);
+      color: var(--text);
+      border:1px solid var(--line);
+      border-radius: 12px;
+      padding:10px 12px;
+      outline:none;
+    }
+    textarea{min-height: 120px; resize: vertical;}
+    .two{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
+    @media (max-width: 520px){ .two{grid-template-columns:1fr;} }
+
+    .tabs{display:flex; gap:8px; flex-wrap:wrap;}
+    .tab{padding:8px 10px; border:1px solid var(--line); border-radius:999px; background: rgba(11,20,38,.35); cursor:pointer; font-size:12px; color:var(--muted);}
+    .tab.active{background: rgba(125,211,252,.12); color:var(--text); border-color: rgba(125,211,252,.35);}
+
+    table{width:100%; border-collapse: collapse; font-size:13px;}
+    th, td{padding:10px 8px; border-bottom:1px solid var(--line); vertical-align:top;}
+    th{color:var(--muted); font-weight:600; text-align:left; font-size:12px;}
+
+    .badge{font-family: var(--mono); font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid var(--line); color:var(--muted)}
+    .badge.ok{border-color: rgba(52,211,153,.35); color: rgba(52,211,153,1)}
+    .badge.warn{border-color: rgba(251,191,36,.35); color: rgba(251,191,36,1)}
+
+    .err{color: var(--bad); font-family: var(--mono); font-size:12px; white-space: pre-wrap;}
+    .ok{color: var(--ok); font-family: var(--mono); font-size:12px; white-space: pre-wrap;}
+
+    .hide{display:none !important;}
+
+    .small{font-size:12px;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>PureStay Portal</h1>
+          <div class="sub">Dispatch, leads, and role dashboards</div>
+        </div>
+      </div>
+      <div class="row">
+        <div id="sessionPill" class="pill">Not signed in</div>
+        <button id="logoutBtn" class="btn secondary hide">Logout</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card" id="authCard">
+        <div class="hd">
+          <h2>Sign in</h2>
+          <span class="badge" id="cfgBadge">Config</span>
+        </div>
+        <div class="bd">
+          <div class="small muted">Portal uses Supabase Auth. If config is missing, set SUPABASE_URL and SUPABASE_ANON_KEY in your environment.</div>
+          <div style="height:12px"></div>
+          <div class="two">
+            <div>
+              <label>Email</label>
+              <input id="email" type="email" autocomplete="email" placeholder="you@company.com" />
+            </div>
+            <div>
+              <label>Password</label>
+              <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
+            </div>
+          </div>
+          <div style="height:12px"></div>
+          <div class="row">
+            <button id="loginBtn" class="btn">Sign in</button>
+            <span class="small muted">Config comes from env (no backend step).</span>
+          </div>
+          <div style="height:12px"></div>
+          <div id="authMsg" class="err"></div>
+          <div id="authOk" class="ok"></div>
+        </div>
+      </section>
+
+      <section class="card" id="quickCard">
+        <div class="hd"><h2>Quick actions</h2></div>
+        <div class="bd">
+          <div class="row" style="justify-content:space-between;">
+            <div>
+              <div class="muted small">Role</div>
+              <div id="roleLine" style="font-weight:700; margin-top:4px;">—</div>
+            </div>
+            <div>
+              <div class="muted small">User</div>
+              <div id="userLine" style="font-weight:700; margin-top:4px;">—</div>
+            </div>
+          </div>
+          <div style="height:12px"></div>
+          <div class="tabs" id="tabs"></div>
+          <div style="height:12px"></div>
+          <div class="small muted">This is a functional starter portal. Next iterations can expand forms and dispatch logic per role.</div>
+        </div>
+      </section>
+    </div>
+
+    <section class="card" id="appCard">
+      <div class="hd">
+        <h2 id="viewTitle">Overview</h2>
+        <div class="row">
+          <span class="badge" id="viewBadge">ready</span>
+          <button id="refreshBtn" class="btn secondary hide">Refresh</button>
+        </div>
+      </div>
+      <div class="bd">
+        <div id="viewOverview">
+          <div class="muted">Sign in to view your dashboard.</div>
+        </div>
+
+        <div id="viewLeads" class="hide">
+          <div class="row" style="justify-content:space-between; gap:12px;">
+            <div class="row" style="flex: 1;">
+              <input id="leadQ" placeholder="Search name, property, email, phone" style="max-width:420px" />
+              <select id="leadStatus" style="max-width:200px">
+                <option value="">All statuses</option>
+                <option value="new">new</option>
+                <option value="working">working</option>
+                <option value="booked">booked</option>
+                <option value="won">won</option>
+                <option value="lost">lost</option>
+              </select>
+              <button id="loadLeadsBtn" class="btn secondary">Load</button>
+            </div>
+            <button id="newLeadToggle" class="btn secondary">New lead</button>
+          </div>
+
+          <div id="newLeadBox" class="card" style="margin-top:14px; background: rgba(11,20,38,.35);" hidden>
+            <div class="bd">
+              <div class="two">
+                <div><label>First name</label><input id="nlFirst" /></div>
+                <div><label>Last name</label><input id="nlLast" /></div>
+              </div>
+              <div class="two" style="margin-top:10px;">
+                <div><label>Phone</label><input id="nlPhone" /></div>
+                <div><label>Email</label><input id="nlEmail" type="email" /></div>
+              </div>
+              <div class="two" style="margin-top:10px;">
+                <div><label>Property / Community</label><input id="nlProp" /></div>
+                <div><label>City, State</label><input id="nlCityState" placeholder="Raleigh, NC" /></div>
+              </div>
+              <div style="margin-top:10px;">
+                <label>Notes</label>
+                <textarea id="nlNotes" placeholder="What did we learn? Any context for the next touch?"></textarea>
+              </div>
+              <div class="row" style="margin-top:10px;">
+                <button id="createLeadBtn" class="btn">Create lead</button>
+                <div id="createLeadMsg" class="err"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="height:14px"></div>
+          <div id="leadsMsg" class="err"></div>
+          <div style="overflow:auto; border:1px solid var(--line); border-radius: 12px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Property</th>
+                  <th>City</th>
+                  <th>Status</th>
+                  <th>Assigned</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="leadsTbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="viewCalls" class="hide">
+          <div class="muted small">Log a call outcome and generate a custom follow-up.</div>
+          <div style="height:12px"></div>
+          <div class="card" style="background: rgba(11,20,38,.35);">
+            <div class="bd">
+              <div class="row" style="justify-content:space-between;">
+                <div>
+                  <div class="muted small">Selected lead</div>
+                  <div id="selectedLeadLine" style="font-weight:700; margin-top:4px;">None</div>
+                </div>
+                <button id="pickFromLeads" class="btn secondary">Pick from Leads</button>
+              </div>
+              <div style="height:10px"></div>
+              <div class="two">
+                <div>
+                  <label>Outcome</label>
+                  <select id="callOutcome">
+                    <option value="">Select…</option>
+                    <option>no_answer</option>
+                    <option>left_voicemail</option>
+                    <option>not_interested</option>
+                    <option>call_back</option>
+                    <option>booked_meeting</option>
+                    <option>qualified_handoff</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Next status (optional)</label>
+                  <select id="callLeadStatus">
+                    <option value="">No change</option>
+                    <option>working</option>
+                    <option>booked</option>
+                    <option>won</option>
+                    <option>lost</option>
+                  </select>
+                </div>
+              </div>
+              <div style="margin-top:10px;">
+                <label>Notes</label>
+                <textarea id="callNotes" placeholder="Short, factual notes."></textarea>
+              </div>
+              <div class="row" style="margin-top:10px;">
+                <button id="logCallBtn" class="btn">Log call</button>
+                <button id="aiFollowupBtn" class="btn secondary">AI follow-up</button>
+                <div id="callMsg" class="err"></div>
+              </div>
+              <div id="followupBox" class="card hide" style="margin-top:12px; background: rgba(11,20,38,.35);">
+                <div class="bd">
+                  <div class="muted small">Generated follow-up</div>
+                  <div style="height:8px"></div>
+                  <div><label>Email subject</label><input id="fuSubject" /></div>
+                  <div style="margin-top:10px;"><label>Email body</label><textarea id="fuEmail"></textarea></div>
+                  <div style="margin-top:10px;"><label>SMS</label><textarea id="fuSms"></textarea></div>
+                  <div style="margin-top:10px;"><label>Next step</label><input id="fuNext" /></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="viewEvents" class="hide">
+          <div class="row" style="justify-content:space-between; gap:12px;">
+            <div class="row">
+              <select id="eventStatus" style="max-width:220px">
+                <option value="">All statuses</option>
+                <option value="open">open</option>
+                <option value="assigned">assigned</option>
+                <option value="completed">completed</option>
+                <option value="canceled">canceled</option>
+              </select>
+              <button id="loadEventsBtn" class="btn secondary">Load</button>
+            </div>
+            <button id="newEventToggle" class="btn secondary hide">New event</button>
+          </div>
+
+          <div id="newEventBox" class="card" style="margin-top:14px; background: rgba(11,20,38,.35);" hidden>
+            <div class="bd">
+              <div class="two">
+                <div><label>Title</label><input id="neTitle" placeholder="Property event" /></div>
+                <div><label>Date</label><input id="neDate" type="date" /></div>
+              </div>
+              <div class="two" style="margin-top:10px;">
+                <div><label>City</label><input id="neCity" /></div>
+                <div><label>State</label><input id="neState" placeholder="NC" /></div>
+              </div>
+              <div style="margin-top:10px;">
+                <label>Notes</label>
+                <textarea id="neNotes"></textarea>
+              </div>
+              <div class="row" style="margin-top:10px;">
+                <button id="createEventBtn" class="btn">Create event</button>
+                <div id="createEventMsg" class="err"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="height:14px"></div>
+          <div id="eventsMsg" class="err"></div>
+          <div style="overflow:auto; border:1px solid var(--line); border-radius: 12px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Date</th>
+                  <th>Title</th>
+                  <th>City</th>
+                  <th>Status</th>
+                  <th>Assigned</th>
+                </tr>
+              </thead>
+              <tbody id="eventsTbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="viewPayments" class="hide">
+          <div class="row" style="justify-content:space-between;">
+            <div class="muted small">Payouts are pulled from portal payouts records.</div>
+            <button id="loadPayoutsBtn" class="btn secondary">Load</button>
+          </div>
+          <div style="height:14px"></div>
+          <div id="payoutsMsg" class="err"></div>
+          <div style="overflow:auto; border:1px solid var(--line); border-radius: 12px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody id="payoutsTbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="viewDocs" class="hide">
+          <div class="row" style="justify-content:space-between;">
+            <div class="muted small">SOPs and internal docs. Manager can import CSV by pasting it.</div>
+            <button id="loadDocsBtn" class="btn secondary">Load</button>
+          </div>
+          <div id="docsAdmin" class="card hide" style="margin-top:14px; background: rgba(11,20,38,.35);">
+            <div class="bd">
+              <div class="two">
+                <div><label>Title</label><input id="docTitle" placeholder="Event Coordinator SOP" /></div>
+                <div><label>Audience role (blank = all)</label><input id="docAudience" placeholder="event_coordinator" /></div>
+              </div>
+              <div style="margin-top:10px;">
+                <label>CSV or text content</label>
+                <textarea id="docContent" placeholder="Paste CSV here…"></textarea>
+              </div>
+              <div class="row" style="margin-top:10px;">
+                <button id="createDocBtn" class="btn">Save doc</button>
+                <div id="createDocMsg" class="err"></div>
+              </div>
+            </div>
+          </div>
+          <div style="height:14px"></div>
+          <div id="docsMsg" class="err"></div>
+          <div id="docsList"></div>
+        </div>
+
+        <div id="viewManager" class="hide">
+          <div class="row" style="justify-content:space-between;">
+            <div>
+              <div class="muted small">Manager view</div>
+              <div style="font-weight:700; margin-top:4px;">Role access matrix + users</div>
+            </div>
+            <button id="loadUsersBtn" class="btn secondary">Load users</button>
+          </div>
+          <div style="height:12px"></div>
+          <div class="card" style="background: rgba(11,20,38,.35);">
+            <div class="bd">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Role</th>
+                    <th>Can see</th>
+                  </tr>
+                </thead>
+                <tbody id="roleMatrix"></tbody>
+              </table>
+            </div>
+          </div>
+          <div style="height:14px"></div>
+          <div id="usersMsg" class="err"></div>
+          <div style="overflow:auto; border:1px solid var(--line); border-radius: 12px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>User ID</th>
+                </tr>
+              </thead>
+              <tbody id="usersTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    const ROLE_MATRIX = [
+      { role: 'dialer', canSee: 'Leads assigned to dialer, log call outcomes, AI follow-up' },
+      { role: 'in_person_setter', canSee: 'Leads assigned to in_person_setter, log outcomes, follow-ups' },
+      { role: 'remote_setter', canSee: 'Leads assigned to remote_setter, log outcomes, follow-ups' },
+      { role: 'closer', canSee: 'Leads assigned to closer, AI research, close workflows (next)' },
+      { role: 'event_host', canSee: 'Assigned events + submit recaps (next)' },
+      { role: 'media_team', canSee: 'Assigned events + media/recap submissions' },
+      { role: 'account_manager', canSee: 'Leads assigned to account_manager + AI research' },
+      { role: 'event_coordinator', canSee: 'Create/dispatch events + manage assignments' },
+      { role: 'manager', canSee: 'Everything' },
+    ];
+
+    const state = {
+      sb: null,
+      cfg: null,
+      me: null,
+      activeTab: 'overview',
+      leads: [],
+      selectedLead: null,
+    };
+
+    function setBadge(kind, text){
+      const b = $('viewBadge');
+      b.textContent = text;
+      b.className = 'badge ' + (kind || '');
+    }
+
+    function setTab(tab){
+      state.activeTab = tab;
+      const title = {
+        overview: 'Overview',
+        leads: 'Leads',
+        calls: 'Calls',
+        events: 'Events',
+        payments: 'Payments',
+        docs: 'Docs',
+        manager: 'Manager'
+      }[tab] || 'Overview';
+      $('viewTitle').textContent = title;
+
+      const views = ['Overview','Leads','Calls','Events','Payments','Docs','Manager'];
+      for (const v of views) $('view'+v).classList.add('hide');
+      $('view' + title).classList.remove('hide');
+
+      for (const el of document.querySelectorAll('.tab')) el.classList.toggle('active', el.dataset.tab === tab);
+
+      if (tab === 'leads') loadLeads().catch(()=>{});
+      if (tab === 'events') loadEvents().catch(()=>{});
+    }
+
+    function setSessionPill(){
+      if (!state.me){
+        $('sessionPill').textContent = 'Not signed in';
+        return;
+      }
+      $('sessionPill').textContent = state.me.profile.role + ' • ' + (state.me.user.email || '');
+    }
+
+    async function api(path, { method='GET', body=null } = {}){
+      const { data } = await state.sb.auth.getSession();
+      const token = data?.session?.access_token || '';
+      if (!token) throw new Error('not_signed_in');
+
+      const r = await fetch(path, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      const j = await r.json().catch(() => null);
+      if (!j || !j.ok) throw new Error(j?.error || ('http_' + r.status));
+      return j;
+    }
+
+    async function refreshMe(){
+      const { data } = await state.sb.auth.getSession();
+      const session = data?.session;
+      if (!session){
+        state.me = null;
+        setSessionPill();
+        $('logoutBtn').classList.add('hide');
+        $('refreshBtn').classList.add('hide');
+        $('authCard').classList.remove('hide');
+        $('roleLine').textContent = '—';
+        $('userLine').textContent = '—';
+        $('tabs').innerHTML = '';
+        $('viewOverview').innerHTML = '<div class="muted">Sign in to view your dashboard.</div>';
+        setTab('overview');
+        return;
+      }
+
+      const me = await api('/api/portal/me');
+      state.me = me;
+
+      $('logoutBtn').classList.remove('hide');
+      $('refreshBtn').classList.remove('hide');
+      $('authCard').classList.add('hide');
+
+      $('roleLine').textContent = me.profile.role;
+      $('userLine').textContent = me.user.email;
+      setSessionPill();
+
+      const tabs = [
+        { id:'overview', label:'Overview' },
+        { id:'leads', label:'Leads' },
+        { id:'calls', label:'Calls' },
+        { id:'events', label:'Events' },
+        { id:'payments', label:'Payments' },
+        { id:'docs', label:'Docs' },
+      ];
+      if (me.profile.role === 'manager') tabs.push({ id:'manager', label:'Manager' });
+
+      $('tabs').innerHTML = tabs.map((t) => `<div class="tab" role="button" tabindex="0" data-tab="${t.id}">${t.label}</div>`).join('');
+      for (const el of document.querySelectorAll('.tab')){
+        el.addEventListener('click', () => setTab(el.dataset.tab));
+        el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') setTab(el.dataset.tab); });
+      }
+
+      // Manager-only controls
+      $('docsAdmin').classList.toggle('hide', me.profile.role !== 'manager');
+      $('newEventToggle').classList.toggle('hide', !(me.profile.role === 'manager' || me.profile.role === 'event_coordinator'));
+
+      // Overview
+      $('viewOverview').innerHTML = `
+        <div class="row" style="justify-content:space-between;">
+          <div>
+            <div class="muted small">Signed in as</div>
+            <div style="font-weight:800; margin-top:4px;">${me.user.email}</div>
+            <div class="muted small" style="margin-top:6px;">Role: <span class="badge ok">${me.profile.role}</span></div>
+          </div>
+          <div>
+            <div class="muted small">Tip</div>
+            <div class="small">Use Leads to pick a lead, then Calls for outcomes + AI follow-up.</div>
+          </div>
+        </div>
+      `;
+
+      // Populate manager role matrix
+      const rm = $('roleMatrix');
+      rm.innerHTML = ROLE_MATRIX.map((r) => `<tr><td><span class="badge">${r.role}</span></td><td>${r.canSee}</td></tr>`).join('');
+
+      setTab(state.activeTab || 'overview');
+    }
+
+    function fmtMoney(cents){
+      const n = Number(cents || 0) / 100;
+      return n.toLocaleString(undefined, { style:'currency', currency:'USD' });
+    }
+
+    async function loadLeads(){
+      setBadge('warn', 'loading');
+      $('leadsMsg').textContent = '';
+
+      const q = $('leadQ').value.trim();
+      const status = $('leadStatus').value;
+      const qs = new URLSearchParams();
+      if (q) qs.set('q', q);
+      if (status) qs.set('status', status);
+      qs.set('limit', '120');
+
+      try{
+        const j = await api('/api/portal/leads?' + qs.toString());
+        state.leads = j.leads || [];
+
+        const tb = $('leadsTbody');
+        tb.innerHTML = state.leads.map((l) => {
+          const name = [l.first_name, l.last_name].filter(Boolean).join(' ') || '(no name)';
+          const prop = l.property_name || l.company || '';
+          const city = [l.city, l.state].filter(Boolean).join(', ');
+          const asg = l.assigned_role || '';
+          return `
+            <tr>
+              <td><span class="badge">${l.id}</span></td>
+              <td>${name}</td>
+              <td>${prop}</td>
+              <td class="muted">${city}</td>
+              <td><span class="badge">${l.status}</span></td>
+              <td class="muted">${asg}</td>
+              <td><button class="btn secondary small" data-pick="${l.id}">Select</button></td>
+            </tr>
+          `;
+        }).join('');
+
+        for (const btn of tb.querySelectorAll('button[data-pick]')){
+          btn.addEventListener('click', () => {
+            const id = Number(btn.dataset.pick);
+            state.selectedLead = state.leads.find((x) => Number(x.id) === id) || null;
+            $('selectedLeadLine').textContent = state.selectedLead
+              ? `#${state.selectedLead.id} • ${(state.selectedLead.first_name||'').trim()} ${(state.selectedLead.last_name||'').trim()}`.trim()
+              : 'None';
+            setTab('calls');
+          });
+        }
+
+        setBadge('ok', 'loaded');
+      } catch(e){
+        $('leadsMsg').textContent = String(e.message || e);
+        setBadge('warn', 'error');
+      }
+    }
+
+    async function createLead(){
+      $('createLeadMsg').textContent = '';
+      const cityState = $('nlCityState').value.trim();
+      let city = cityState, st = '';
+      if (cityState.includes(',')){
+        const parts = cityState.split(',');
+        city = (parts[0] || '').trim();
+        st = (parts[1] || '').trim();
+      }
+
+      try{
+        await api('/api/portal/leads', {
+          method: 'POST',
+          body: {
+            firstName: $('nlFirst').value,
+            lastName: $('nlLast').value,
+            phone: $('nlPhone').value,
+            email: $('nlEmail').value,
+            propertyName: $('nlProp').value,
+            city,
+            state: st,
+            notes: $('nlNotes').value,
+            status: 'new',
+          }
+        });
+        $('newLeadBox').hidden = true;
+        await loadLeads();
+      } catch(e){
+        $('createLeadMsg').textContent = String(e.message || e);
+      }
+    }
+
+    async function logCall(){
+      $('callMsg').textContent = '';
+      if (!state.selectedLead) return $('callMsg').textContent = 'Select a lead first (from Leads tab).';
+
+      const outcome = $('callOutcome').value;
+      if (!outcome) return $('callMsg').textContent = 'Pick an outcome.';
+
+      try{
+        await api('/api/portal/calls', {
+          method: 'POST',
+          body: {
+            leadId: state.selectedLead.id,
+            outcome,
+            notes: $('callNotes').value,
+          }
+        });
+
+        const nextStatus = $('callLeadStatus').value;
+        if (nextStatus){
+          await api('/api/portal/leads', { method:'PATCH', body: { id: state.selectedLead.id, status: nextStatus } });
+        }
+
+        $('callMsg').textContent = '';
+        setBadge('ok', 'saved');
+      } catch(e){
+        $('callMsg').textContent = String(e.message || e);
+        setBadge('warn', 'error');
+      }
+    }
+
+    async function aiFollowup(){
+      $('callMsg').textContent = '';
+      $('followupBox').classList.add('hide');
+
+      if (!state.selectedLead) return $('callMsg').textContent = 'Select a lead first (from Leads tab).';
+      const outcome = $('callOutcome').value;
+
+      setBadge('warn', 'thinking');
+      try{
+        const j = await api('/api/portal/ai/followup', {
+          method: 'POST',
+          body: {
+            leadId: state.selectedLead.id,
+            outcome,
+            notes: $('callNotes').value,
+          }
+        });
+
+        const fu = j.followup || {};
+        $('fuSubject').value = fu.emailSubject || '';
+        $('fuEmail').value = fu.emailBody || '';
+        $('fuSms').value = fu.sms || '';
+        $('fuNext').value = fu.nextStep || '';
+        $('followupBox').classList.remove('hide');
+
+        setBadge('ok', 'ready');
+      } catch(e){
+        $('callMsg').textContent = String(e.message || e);
+        setBadge('warn', 'error');
+      }
+    }
+
+    async function loadEvents(){
+      setBadge('warn', 'loading');
+      $('eventsMsg').textContent = '';
+      const status = $('eventStatus').value;
+      const qs = new URLSearchParams();
+      if (status) qs.set('status', status);
+      qs.set('limit', '120');
+
+      try{
+        const j = await api('/api/portal/events?' + qs.toString());
+        const events = j.events || [];
+
+        $('eventsTbody').innerHTML = events.map((ev) => {
+          const date = ev.event_date || '';
+          const city = [ev.city, ev.state].filter(Boolean).join(', ');
+          const asg = ev.assigned_role || '';
+          return `
+            <tr>
+              <td><span class="badge">${ev.id}</span></td>
+              <td class="muted">${date}</td>
+              <td>${ev.title || ''}</td>
+              <td class="muted">${city}</td>
+              <td><span class="badge">${ev.status}</span></td>
+              <td class="muted">${asg}</td>
+            </tr>
+          `;
+        }).join('');
+
+        setBadge('ok', 'loaded');
+      } catch(e){
+        $('eventsMsg').textContent = String(e.message || e);
+        setBadge('warn', 'error');
+      }
+    }
+
+    async function createEvent(){
+      $('createEventMsg').textContent = '';
+      try{
+        await api('/api/portal/events', {
+          method: 'POST',
+          body: {
+            title: $('neTitle').value,
+            eventDate: $('neDate').value,
+            city: $('neCity').value,
+            state: $('neState').value,
+            notes: $('neNotes').value,
+            status: 'open',
+            assignedRole: 'event_host',
+          }
+        });
+        $('newEventBox').hidden = true;
+        await loadEvents();
+      } catch(e){
+        $('createEventMsg').textContent = String(e.message || e);
+      }
+    }
+
+    async function loadPayouts(){
+      setBadge('warn', 'loading');
+      $('payoutsMsg').textContent = '';
+      try{
+        const j = await api('/api/portal/payouts?limit=120');
+        const payouts = j.payouts || [];
+        $('payoutsTbody').innerHTML = payouts.map((p) => `
+          <tr>
+            <td class="muted">${(p.created_at || '').slice(0,10)}</td>
+            <td>${fmtMoney(p.amount_cents)}</td>
+            <td><span class="badge">${p.status}</span></td>
+            <td class="muted">${p.description || ''}</td>
+          </tr>
+        `).join('');
+        setBadge('ok', 'loaded');
+      } catch(e){
+        $('payoutsMsg').textContent = String(e.message || e);
+        setBadge('warn', 'error');
+      }
+    }
+
+    async function loadDocs(){
+      setBadge('warn', 'loading');
+      $('docsMsg').textContent = '';
+      try{
+        const j = await api('/api/portal/docs?limit=80');
+        const docs = j.docs || [];
+        $('docsList').innerHTML = docs.map((d) => {
+          const role = d.audience_role ? `<span class="badge">${d.audience_role}</span>` : `<span class="badge ok">all</span>`;
+          const content = (d.content || '').slice(0, 2000);
+          return `
+            <div class="card" style="background: rgba(11,20,38,.35); margin-bottom:12px;">
+              <div class="bd">
+                <div class="row" style="justify-content:space-between;">
+                  <div style="font-weight:800;">${d.title}</div>
+                  ${role}
+                </div>
+                <div style="height:10px"></div>
+                <pre style="white-space:pre-wrap; margin:0; font-family: var(--mono); font-size:12px; color: var(--text);">${escapeHtml(content)}</pre>
+              </div>
+            </div>
+          `;
+        }).join('') || '<div class="muted">No docs yet.</div>';
+        setBadge('ok', 'loaded');
+      } catch(e){
+        $('docsMsg').textContent = String(e.message || e);
+        setBadge('warn', 'error');
+      }
+    }
+
+    async function createDoc(){
+      $('createDocMsg').textContent = '';
+      try{
+        await api('/api/portal/docs', {
+          method: 'POST',
+          body: {
+            title: $('docTitle').value,
+            audienceRole: $('docAudience').value,
+            content: $('docContent').value,
+            source: 'manual_paste',
+            meta: { format: 'csv_or_text' }
+          }
+        });
+        $('docTitle').value = '';
+        $('docAudience').value = '';
+        $('docContent').value = '';
+        await loadDocs();
+      } catch(e){
+        $('createDocMsg').textContent = String(e.message || e);
+      }
+    }
+
+    async function loadUsers(){
+      $('usersMsg').textContent = '';
+      setBadge('warn', 'loading');
+      try{
+        const j = await api('/api/portal/users');
+        $('usersTbody').innerHTML = (j.users || []).map((u) => `
+          <tr>
+            <td>${u.fullName || ''}</td>
+            <td class="muted">${u.email || ''}</td>
+            <td><span class="badge">${u.role}</span></td>
+            <td class="muted" style="font-family:var(--mono); font-size:12px;">${u.userId}</td>
+          </tr>
+        `).join('');
+        setBadge('ok', 'loaded');
+      } catch(e){
+        $('usersMsg').textContent = String(e.message || e);
+        setBadge('warn', 'error');
+      }
+    }
+
+    function escapeHtml(s){
+      return String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    async function boot(){
+      $('authMsg').textContent = '';
+      $('authOk').textContent = '';
+
+      // Load config from /api/portal/config (public, env-backed)
+      const cfg = await fetch('/api/portal/config').then(r => r.json()).catch(() => null);
+      state.cfg = cfg || null;
+
+      const url = String(cfg?.supabaseUrl || '').trim();
+      const key = String(cfg?.supabaseAnonKey || '').trim();
+
+      if (!url || !key){
+        $('cfgBadge').textContent = 'Missing';
+        $('cfgBadge').className = 'badge warn';
+        $('authMsg').textContent = 'Missing portal env vars. Set SUPABASE_URL and SUPABASE_ANON_KEY in Vercel (or your local .env).';
+        $('loginBtn').disabled = true;
+        return;
+      }
+
+      $('cfgBadge').textContent = 'OK';
+      $('cfgBadge').className = 'badge ok';
+
+      state.sb = window.supabase.createClient(url, key);
+      state.sb.auth.onAuthStateChange(() => refreshMe().catch(() => {}));
+
+      await refreshMe();
+    }
+
+    $('loginBtn').addEventListener('click', async () => {
+      $('authMsg').textContent = '';
+      $('authOk').textContent = '';
+      try{
+        if (!state.sb) throw new Error('portal_not_configured');
+        const email = $('email').value.trim();
+        const password = $('password').value;
+        const r = await state.sb.auth.signInWithPassword({ email, password });
+        if (r.error) throw new Error(r.error.message || 'login_failed');
+        $('authOk').textContent = 'Signed in.';
+        await refreshMe();
+      } catch(e){
+        $('authMsg').textContent = String(e.message || e);
+      }
+    });
+
+    $('logoutBtn').addEventListener('click', async () => {
+      if (!state.sb) return;
+      await state.sb.auth.signOut();
+      await refreshMe();
+    });
+
+    $('refreshBtn').addEventListener('click', () => refreshMe().catch(() => {}));
+
+    $('loadLeadsBtn').addEventListener('click', () => loadLeads().catch(() => {}));
+    $('newLeadToggle').addEventListener('click', () => { $('newLeadBox').hidden = !$('newLeadBox').hidden; });
+    $('createLeadBtn').addEventListener('click', () => createLead().catch(() => {}));
+
+    $('pickFromLeads').addEventListener('click', () => setTab('leads'));
+    $('logCallBtn').addEventListener('click', () => logCall().catch(() => {}));
+    $('aiFollowupBtn').addEventListener('click', () => aiFollowup().catch(() => {}));
+
+    $('loadEventsBtn').addEventListener('click', () => loadEvents().catch(() => {}));
+    $('newEventToggle').addEventListener('click', () => { $('newEventBox').hidden = !$('newEventBox').hidden; });
+    $('createEventBtn').addEventListener('click', () => createEvent().catch(() => {}));
+
+    $('loadPayoutsBtn').addEventListener('click', () => loadPayouts().catch(() => {}));
+
+    $('loadDocsBtn').addEventListener('click', () => loadDocs().catch(() => {}));
+    $('createDocBtn').addEventListener('click', () => createDoc().catch(() => {}));
+
+    $('loadUsersBtn').addEventListener('click', () => loadUsers().catch(() => {}));
+
+    boot().catch((e) => {
+      $('authMsg').textContent = String(e.message || e);
+    });
+  </script>
+</body>
+</html>

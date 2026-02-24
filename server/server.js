@@ -222,6 +222,8 @@ const server = http.createServer(async (req, res) => {
 
     '/backend': '/Backend.html',
     '/admin': '/Backend.html',
+
+    '/portal': '/Portal.html',
   };
 
   if (REWRITE_MAP[pathname]) pathname = REWRITE_MAP[pathname];
@@ -229,6 +231,20 @@ const server = http.createServer(async (req, res) => {
   // --- API ---
   if (pathname === '/api/health') {
     return json(res, 200, { ok: true, now: new Date().toISOString() });
+  }
+
+  // --- Portal API (local dev router) ---
+  if (pathname === '/api/portal' || pathname.startsWith('/api/portal/')) {
+    const rel = pathname.replace(/^\/api\/portal\/?/, '');
+    const safe = rel && !rel.includes('..');
+    const modPath = safe && rel ? `../api/portal/${rel}` : '../api/portal/me';
+    try {
+      // eslint-disable-next-line global-require
+      const handler = require(modPath);
+      return handler(req, res);
+    } catch {
+      return json(res, 404, { ok: false, error: 'not_found' });
+    }
   }
 
   // --- Blogs + sitemap ---
