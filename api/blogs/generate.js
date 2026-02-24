@@ -1,6 +1,6 @@
 const { sendJson, handleCors, bearerToken, readJson } = require('../../lib/vercelApi');
 const { getSiteUrl, putPost } = require('../../lib/blogs');
-const { hasKvEnv } = require('../../lib/storage');
+const { hasStorageEnv } = require('../../lib/storage');
 const { scheduledMeta, intervalDays, startDateAligned, sequenceForDate } = require('../../lib/blogSchedule');
 const { generateBlogPost } = require('../../lib/aiBlog');
 
@@ -24,8 +24,8 @@ module.exports = async (req, res) => {
   const auth = await requireAdminIfConfigured(req);
   if (!auth.ok) return sendJson(res, 401, { ok: false, error: 'unauthorized' });
 
-  if (!hasKvEnv()) {
-    return sendJson(res, 400, { ok: false, error: 'kv_required' });
+  if (!hasStorageEnv()) {
+    return sendJson(res, 400, { ok: false, error: 'storage_required', hint: 'Configure Supabase (SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY) or Vercel KV to persist posts.' });
   }
 
   const payload = await readJson(req);
@@ -64,7 +64,7 @@ module.exports = async (req, res) => {
   };
 
   const stored = await putPost(post);
-  if (!stored) return sendJson(res, 503, { ok: false, error: 'kv_store_failed', slug: meta.slug });
+  if (!stored) return sendJson(res, 503, { ok: false, error: 'store_failed', slug: meta.slug });
 
   return sendJson(res, 200, { ok: true, stored: true, slug: meta.slug, url: `${siteUrl}/blogs/${meta.slug}`, ...(auth.warning ? { warning: auth.warning } : {}) });
 };

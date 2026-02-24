@@ -1,6 +1,6 @@
 const { handleCors } = require('../../lib/vercelApi');
 const { listPosts, getPost, getSiteUrl, isoDateOnly } = require('../../lib/blogs');
-const { hasKvEnv } = require('../../lib/storage');
+const { hasStorageEnv } = require('../../lib/storage');
 
 function sendHtml(res, status, html) {
   res.statusCode = status;
@@ -390,7 +390,7 @@ module.exports = async (req, res) => {
   const slug = String(url.searchParams.get('slug') || '').trim();
   const siteUrl = getSiteUrl(req);
 
-  const kvEnabled = hasKvEnv();
+  const storageEnabled = hasStorageEnv();
 
   if (!slug) {
     // Index page: KV-backed list only.
@@ -399,12 +399,12 @@ module.exports = async (req, res) => {
     const limit = perPage;
     const offset = (page - 1) * perPage;
 
-    const listing = kvEnabled ? await listPosts({ limit, offset }) : { posts: [], total: 0 };
-    setEdgeCache(res, kvEnabled ? 60 * 60 : 60 * 5);
+    const listing = storageEnabled ? await listPosts({ limit, offset }) : { posts: [], total: 0 };
+    setEdgeCache(res, storageEnabled ? 60 * 60 : 60 * 5);
     return sendHtml(res, 200, renderIndex({ siteUrl, posts: listing.posts, total: listing.total, page, perPage }));
   }
 
-  if (!kvEnabled) {
+  if (!storageEnabled) {
     const html = pageShell({
       title: 'Not Found | PureStay Blogs',
       description: 'This blog post does not exist.',

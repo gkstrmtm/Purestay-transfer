@@ -1,5 +1,5 @@
 const { sendJson, handleCors, bearerToken } = require('../../lib/vercelApi');
-const { hasKvEnv } = require('../../lib/storage');
+const { hasStorageEnv } = require('../../lib/storage');
 const { deleteAllPosts } = require('../../lib/blogs');
 
 async function requireAdminIfConfigured(req) {
@@ -18,8 +18,8 @@ module.exports = async (req, res) => {
   const auth = await requireAdminIfConfigured(req);
   if (!auth.ok) return sendJson(res, 401, { ok: false, error: 'unauthorized' });
 
-  if (!hasKvEnv()) {
-    return sendJson(res, 400, { ok: false, error: 'kv_required' });
+  if (!hasStorageEnv()) {
+    return sendJson(res, 400, { ok: false, error: 'storage_required', hint: 'Configure Supabase (SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY) or Vercel KV to delete persisted posts.' });
   }
 
   const r = await deleteAllPosts();

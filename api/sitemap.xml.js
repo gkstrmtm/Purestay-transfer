@@ -1,5 +1,5 @@
 const { listPosts, getSiteUrl } = require('../lib/blogs');
-const { hasKvEnv } = require('../lib/storage');
+const { hasStorageEnv } = require('../lib/storage');
 const { listScheduled } = require('../lib/blogSchedule');
 
 function sendXml(res, status, xml) {
@@ -25,7 +25,7 @@ function iso(d) {
 module.exports = async (req, res) => {
   const siteUrl = getSiteUrl(req);
   let posts = [];
-  if (hasKvEnv()) {
+  if (hasStorageEnv()) {
     const data = await listPosts({ limit: 500, offset: 0 });
     posts = data.posts || [];
   }

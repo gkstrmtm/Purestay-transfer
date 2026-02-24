@@ -1,6 +1,6 @@
 const { sendJson, handleCors, bearerToken } = require('../../lib/vercelApi');
 const { getState, listPosts } = require('../../lib/blogs');
-const { hasKvEnv } = require('../../lib/storage');
+const { hasKvEnv, hasSupabaseEnv, hasStorageEnv } = require('../../lib/storage');
 
 module.exports = async (req, res) => {
   if (handleCors(req, res, { methods: ['GET', 'OPTIONS'] })) return;
@@ -12,12 +12,12 @@ module.exports = async (req, res) => {
   const token = bearerToken(req) || (req.url ? new URL(req.url, 'http://localhost').searchParams.get('token') : '') || '';
   if (isProtected && token !== adminToken) return sendJson(res, 401, { ok: false, error: 'unauthorized' });
 
-  if (hasKvEnv()) {
+  if (hasStorageEnv()) {
     const state = await getState();
     const listing = await listPosts({ limit: 1, offset: 0 });
     return sendJson(res, 200, {
       ok: true,
-      mode: 'kv',
+      mode: hasSupabaseEnv() ? 'supabase' : (hasKvEnv() ? 'kv' : 'unknown'),
       state,
       latest: listing.posts?.[0] || null,
       total: listing.total || 0,
@@ -27,7 +27,7 @@ module.exports = async (req, res) => {
   return sendJson(res, 200, {
     ok: true,
     mode: 'disabled',
-    reason: 'kv_required',
+    reason: 'storage_required',
     latest: null,
     total: 0,
   });
