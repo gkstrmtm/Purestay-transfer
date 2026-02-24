@@ -14,6 +14,7 @@
     { "source": "/ECtoolkit.html", "destination": "/ec-toolkit", "permanent": true },
     { "source": "/eventcc.html", "destination": "/eventcc", "permanent": true },
     { "source": "/budgetcal.html", "destination": "/budget-calculator", "permanent": true }
+    ,{ "source": "/OurPackages.html", "destination": "/our-packages", "permanent": true }
   ],
   "rewrites": [
     { "source": "/", "destination": "/Home.html" },
@@ -27,6 +28,8 @@
     { "source": "/core", "destination": "/Core.html" },
     { "source": "/culture-shift", "destination": "/CultureShift.html" },
     { "source": "/signature-stay", "destination": "/SignatureStay.html" },
+
+    { "source": "/our-packages", "destination": "/OurPackages.html" },
 
   { "source": "/blogs", "destination": "/api/blogs/page" },
   { "source": "/blogs/:slug", "destination": "/api/blogs/page?slug=:slug" },

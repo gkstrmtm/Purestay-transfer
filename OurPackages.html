@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PureStay • Packages</title>
+  <meta name="description" content="Compare PureStay packages for resident retention experiences: Core, Culture Shift, and Signature Stay." />
+  <link rel="icon" href="brand/purestay_exact_SVG.svg" type="image/svg+xml">
+</head>
+
+<body style="margin:0">
+  <!-- PURESTAY • Packages Page -->
+  <div id="ps-packages">
+
+    <style>
+      #ps-packages, #ps-packages * { box-sizing:border-box; }
+      #ps-packages { all: initial; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Helvetica, Arial; display:block; color:#fff; }
+      #ps-packages a { color:inherit; }
+
+      :root{
+        --ps-gold:#CEA43C;
+        --ps-maroon:#73261F;
+      }
+
+      /* ---------- SHELL & BACKGROUND (edge-to-edge) ---------- */
+      .ps-shell{ position:relative; }
+      .ps-shell .bg{
+        position:absolute; inset:0; z-index:0;
+        background:
+          radial-gradient(1200px 600px at 10% -10%, rgba(206,164,60,.35), transparent 60%),
+          radial-gradient(900px 700px at 110% 20%, rgba(115,38,31,.55), transparent 60%),
+          linear-gradient(180deg, #1a0d0b, #0c0706 60%);
+      }
+      .hero, .wrap, .footer { position:relative; z-index:1; }
+
+      /* ---------- HERO ---------- */
+      .hero{ min-height:92vh; overflow:hidden; background:transparent; }
+      .heroTop{
+        position:absolute; inset:0 0 auto 0;
+        display:flex; align-items:flex-start; justify-content:space-between;
+        padding:18px clamp(16px,4vw,48px); z-index:5;
+        background:linear-gradient(to bottom, rgba(0,0,0,.38), rgba(0,0,0,0));
+      }
+      .brand a{ display:inline-block; }
+      .logo{ height:160px; width:auto; filter:drop-shadow(0 2px 8px rgba(0,0,0,.5)); }
+      @media (max-width:760px){ .logo{ height:120px; } }
+
+      .homeBtn{
+        color:#111; background:#fff; font-size:14px; padding:11px 16px; border-radius:999px;
+        border:1px solid rgba(0,0,0,.22);
+        box-shadow:0 6px 18px rgba(0,0,0,.22), 0 0 0 3px rgba(255,255,255,.35) inset;
+        transition:transform .15s, box-shadow .15s; margin-top:8px;
+        text-decoration:none;
+      }
+      .homeBtn:hover{ transform:translateY(-1px); box-shadow:0 10px 26px rgba(0,0,0,.28), 0 0 0 3px rgba(255,255,255,.55) inset; }
+
+      .orbs{ position:absolute; inset:0; pointer-events:none; filter:blur(30px) saturate(115%); }
+      .orb{ position:absolute; width:260px; height:260px; border-radius:50%;
+            background:radial-gradient(circle at 35% 35%, rgba(255,255,255,.85), rgba(255,255,255,.05) 60%), linear-gradient(135deg, var(--ps-gold), rgba(206,164,60,.25));
+            opacity:.1; mix-blend-mode:screen; animation:drift 18s ease-in-out infinite alternate; }
+      .orb--2{ width:340px; height:340px; background:radial-gradient(circle at 60% 40%, rgba(255,255,255,.8), rgba(255,255,255,.05) 60%), linear-gradient(135deg, #ffb178, var(--ps-gold)); animation-duration:22s; left:65%; top:10%; opacity:.12; }
+      .orb--3{ width:280px; height:280px; background:radial-gradient(circle at 40% 60%, rgba(255,255,255,.9), rgba(255,255,255,.05) 60%), linear-gradient(135deg, #e27b62, var(--ps-maroon)); animation-duration:26s; left:15%; bottom:-6%; opacity:.1; }
+      @keyframes drift{0%{transform:translate(-10%,-10%) scale(1);}100%{transform:translate(6%,12%) scale(1.2);}}
+
+      .stage{
+        position:relative; z-index:4; display:grid; place-items:center; text-align:center;
+        padding: clamp(220px, 27vh, 300px) 20px 120px; max-width:1200px; margin:0 auto;
+      }
+      .kicker{
+        display:inline-grid; place-items:center; font-size:clamp(12px,1.3vw,14px); letter-spacing:.08em; text-transform:uppercase;
+        padding:9px 14px; border-radius:999px; color:#111;
+        background:linear-gradient(90deg, var(--ps-gold), #ffd98c);
+        box-shadow:inset 0 0 0 1px rgba(17,17,17,.12), 0 8px 30px rgba(206,164,60,.25);
+      }
+      .h1{
+        margin:18px 0 0; font-weight:800; font-size:clamp(34px,6.6vw,72px); line-height:1.03; letter-spacing:-0.01em;
+        background:linear-gradient(180deg, #fff, #eaeaea); -webkit-background-clip:text; background-clip:text; color:transparent;
+        text-wrap:balance; text-shadow:0 2px 36px rgba(0,0,0,.55);
+      }
+      .swap{ display:inline-block; position:relative; vertical-align:baseline; transition:width .24s ease; }
+      .swap-text{ display:inline-block; color:#ffffff; text-shadow:0 2px 36px rgba(0,0,0,.55); }
+      .swap-text.enter{ opacity:0; transform:translateY(8px); transition:opacity .24s, transform .24s; }
+      .swap-text.show{ opacity:1; transform:none; transition:opacity .24s, transform .24s; }
+
+      .sub{ margin-top:14px; font-size:clamp(16px,2.2vw,22px); color:#f2eee8; opacity:.96; text-wrap:pretty; }
+      .proof{ display:flex; flex-wrap:wrap; gap:14px; justify-content:center; margin-top:22px; }
+      .chip{ display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:12px; background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.18); font-size:14px; color:#fff; }
+      .chip svg{ width:16px; height:16px; }
+      .ctaPrimary{ margin-top:28px; display:inline-flex; align-items:center; gap:10px; padding:14px 22px; border-radius:14px;
+        background:linear-gradient(180deg,#fff,#efefef); color:#121212; font-weight:700; font-size:clamp(14px,2.2vw,16px);
+        box-shadow:0 10px 30px rgba(255,255,255,.15), 0 16px 60px rgba(206,164,60,.25);
+        text-decoration:none;
+      }
+
+      /* ---------- CONTENT ---------- */
+      .wrap{ max-width:1160px; margin:0 auto; padding:0 clamp(16px,4vw,24px) 80px; }
+      .grid{ display:grid; gap:20px; grid-template-columns:repeat(12,1fr); margin-top:-60px; }
+      .col-4{ grid-column:span 12; } @media (min-width:900px){ .col-4{ grid-column:span 4; } }
+
+      .card{
+        background:#fff; color:#111; border-radius:18px; padding:22px; box-shadow:
+          0 1px 2px rgba(0,0,0,.06),
+          0 12px 28px rgba(0,0,0,.10),
+          0 40px 80px rgba(115,38,31,.10);
+        border:1px solid #eee;
+        transition:transform .2s ease, box-shadow .2s ease;
+      }
+      .card:hover{ transform:translateY(-4px); box-shadow:
+          0 12px 26px rgba(0,0,0,.12),
+          0 50px 120px rgba(115,38,31,.18);
+      }
+
+      .badge{ display:inline-flex; align-items:center; gap:8px; font-size:12px; font-weight:700; letter-spacing:.02em; color:#111;
+        background:linear-gradient(90deg, var(--ps-gold), #ffd98c); padding:6px 10px; border-radius:999px; }
+      .plan{ margin:12px 0 6px; font-size:22px; font-weight:800; letter-spacing:-0.02em; }
+      .price{ color:#474747; font-size:14px; margin-bottom:14px; }
+      .hr{ height:1px; background:#eee; margin:16px 0; }
+      ul.features{ list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+      .feature{ display:grid; grid-template-columns:22px 1fr; gap:10px; align-items:start; }
+      .check{ width:20px; height:20px; border-radius:6px; background:#f4f1e8; border:1px solid #eadfbf; display:grid; place-items:center; }
+      .check svg{ width:12px; height:12px; fill:#3f3f3f; }
+
+      .btnRow{ display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; }
+      .btnPrimary{ display:inline-flex; align-items:center; gap:10px; padding:12px 18px; border-radius:14px;
+        background:linear-gradient(180deg,#fff,#efefef); color:#121212; font-weight:700; box-shadow:0 10px 30px rgba(255,255,255,.15), 0 16px 60px rgba(206,164,60,.18);
+        text-decoration:none;
+      }
+      .btnGhost{ display:inline-flex; align-items:center; gap:10px; padding:12px 18px; border-radius:14px; background:#f7f7f7; color:#111; border:1px solid #e6e6e8;
+        text-decoration:none;
+      }
+
+      /* Footer band */
+      .footer{ margin:36px auto 0; padding:18px; max-width:1160px;
+               display:flex; gap:16px; flex-wrap:wrap; align-items:center; justify-content:space-between; }
+      .foot-copy{ color:#efeae2; font-size:14px; opacity:.9; }
+    </style>
+
+    <section class="ps-shell js-bleed" aria-label="PureStay Packages">
+      <div class="bg" aria-hidden="true"></div>
+
+      <!-- HERO -->
+      <section class="hero">
+        <div class="orbs" aria-hidden="true">
+          <span class="orb" style="left:-6%; top:8%"></span>
+          <span class="orb orb--2"></span>
+          <span class="orb orb--3"></span>
+        </div>
+
+        <div class="heroTop">
+          <div class="brand">
+            <a href="https://www.purestaync.com/" aria-label="PureStay Home">
+              <img class="logo" src="https://storage.googleapis.com/msgsndr/TPwxGisIBKbxlbrOoolh/media/68b27005e7747007c0dd1464.svg" alt="PureStay" />
+            </a>
+          </div>
+          <a class="homeBtn" href="https://www.purestaync.com/">Home</a>
+        </div>
+
+        <div class="stage">
+          <span class="kicker">Pick a plan. See exactly what’s included.</span>
+
+          <h1 class="h1">
+            Resident culture that lifts
+            <span class="swap" aria-live="polite" aria-atomic="true">
+              <span id="swap-text" class="swap-text show">renewals.</span>
+            </span>
+          </h1>
+
+          <p class="sub">Done-for-you resident experiences that build community and help your team retain great tenants.</p>
+
+          <div class="proof" role="list" aria-label="Why PureStay">
+            <div class="chip" role="listitem">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              On-site experiences
+            </div>
+            <div class="chip" role="listitem">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="#fff" stroke-width="2"/></svg>
+              Media available
+            </div>
+            <div class="chip" role="listitem">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 8v8m4-4H8" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+              Built for ROI
+            </div>
+          </div>
+
+          <a class="ctaPrimary" href="#packages">See packages</a>
+        </div>
+      </section>
+
+      <!-- PACKAGES -->
+      <div class="wrap">
+        <section id="packages" class="grid" aria-label="PureStay Packages">
+          <!-- CORE -->
+          <article class="card col-4">
+            <span class="badge">Core Package</span>
+            <h3 class="plan">Baseline Retention Experience</h3>
+            <div class="price">From $1,000 per month</div>
+            <div class="hr"></div>
+            <ul class="features">
+              <li class="feature"><span class="check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.2 9.2a1 1 0 0 1-1.4 0L3.7 10.3a1 1 0 1 1 1.4-1.4l5 5 8.5-8.5a1 1 0 0 1 1.7.3z"/></svg></span><span>One event per month, resident appreciation or seasonal format</span></li>
+              <li class="feature"><span class="check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.2 9.2a1 1 0 0 1-1.4 0L3.7 10.3a1 1 0 1 1 1.4-1.4l5 5 8.5-8.5a1 1 0 0 1 1.7.3z"/></svg></span><span>Full planning and on site execution by a PureStay host</span></li>
+              <li class="feature"><span class="check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.2 9.2a1 1 0 0 1-1.4 0L3.7 10.3a1 1 0 1 1 1.4-1.4l5 5 8.5-8.5a1 1 0 0 1 1.7.3z"/></svg></span><span>Basic branded materials, QR feedback cards, standard signage</span></li>
+              <li class="feature"><span class="check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.2 9.2a1 1 0 0 1-1.4 0L3.7 10.3a1 1 0 1 1 1.4-1.4l5 5 8.5-8.5a1 1 0 0 1 1.7.3z"/></svg></span><span>Post event recap packet with attendance and engagement highlights</span></li>
+            </ul>
+            <div class="btnRow">
+              <a href="https://purestaync.com/discovery" class="btnPrimary">Select Core Package</a>
+              <a href="https://purestaync.com/core" class="btnGhost">View Details</a>
+            </div>
+          </article>
+
+          <!-- CULTURE SHIFT -->
+          <article class="card col-4">
+            <span class="badge">Culture Shift</span>
+            <h3 class="plan">Enhanced Experience with Light Marketing</h3>
+            <div class="price">From $2,000 per month</div>
+            <div class="hr"></div>
+            <ul class="features">
+              <li class="feature"><span class="check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.2 9.2a1 1 0 0 1-1.4 0L3.7 10.3a1 1 0 1 1 1.4-1.4l5 5 8.5-8.5a1 1 0 0 1 1.7.3z"/></svg></span><span>Two events per month, balanced mix of high energy and seasonal formats</span></li>
+              <li class="feature"><span class="check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.2 9.2a1 1 0 0 1-1.4 0L3.7 10.3a1 1 0 1 1 1.4-1.4l5 5 8.5-8.5a1 1 0 0 1 1.7.3z"/></svg></span><span>End to end coordination and on site hosting by the PureStay team</span></li>
+              <li class="feature"><span class="check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.2 9.2a1 1 0 0 1-1.4 0L3.7 10.3a1 1 0 1 1 1.4-1.4l5 5 8.5-8.5a1 1 0 0 1 1.7.3z"/></svg></span><span>Upgraded branded materials and premium giveaways where appropriate</span></li>
+              <li class="feature"><span class="check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.2 9.2a1 1 0 0 1-1.4 0L3.7 10.3a1 1 0 1 1 1.4-1.4l5 5 8.5-8.5a1 1 0 0 1 1.7.3z"/></svg></span><span>Light marketing content, ten to fifteen photos per event for property use</span></li>
+              <li class="feature"><span class="check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.2 9.2a1 1 0 0 1-1.4 0L3.7 10.3a1 1 0 1 1 1.4-1.4l5 5 8.5-8.5a1 1 0 0 1 1.7.3z"/></svg></span><span>Post event recaps for both events with resident feedback summaries</span></li>
+            </ul>
+            <div class="btnRow">
+              <a href="https://purestaync.com/discovery" class="btnPrimary">Select Culture Shift</a>
+              <a href="https://purestaync.com/culture-shift" class="btnGhost">View Details</a>
+            </div>
+          </article>
+
+          <!-- SIGNATURE STAY -->
+          <article class="card col-4">
+            <span class="badge">Signature Stay</span>
+            <h3 class="plan">Premium Events with Media and Marketing</h3>
+            <div class="price">From $3,000 per month</div>
+            <div class="hr"></div>
+            <ul class="features">
+              <li class="feature"><span class="check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.2 9.2a1 1 0 0 1-1.4 0L3.7 10.3a1 1 0 1 1 1.4-1.4l5 5 8.5-8.5a1 1 0 0 1 1.7.3z"/></svg></span><span>Two or more premium events per month, elevated formats and higher end production</span></li>
+              <li class="feature"><span class="check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.2 9.2a1 1 0 0 1-1.4 0L3.7 10.3a1 1 0 1 1 1.4-1.4l5 5 8.5-8.5a1 1 0 0 1 1.7.3z"/></svg></span><span>On site media team, professional photography and short form video per event</span></li>
+              <li class="feature"><span class="check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.2 9.2a1 1 0 1 1 1.4-1.4l5 5 8.5-8.5a1 1 0 0 1 1.7.3z"/></svg></span><span>Edited digital assets for leasing campaigns and social promotion</span></li>
+              <li class="feature"><span class="check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.2 9.2a1 1 0 0 1-1.4 0L3.7 10.3a1 1 0 1 1 1.4-1.4l5 5 8.5-8.5a1 1 0 0 1 1.7.3z"/></svg></span><span>Targeted marketing guidance for content distribution and reach</span></li>
+              <li class="feature"><span class="check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.3 5.7a1 1 0 0 1 0 1.4l-9.2 9.2a1 1 0 0 1-1.4 0L3.7 10.3a1 1 0 1 1 1.4-1.4l5 5 8.5-8.5a1 1 0 0 1 1.7.3z"/></svg></span><span>Recap packets with engagement data and a brief impact summary</span></li>
+            </ul>
+            <div class="btnRow">
+              <a href="https://purestaync.com/discovery" class="btnPrimary">Select Signature Stay</a>
+              <a href="https://purestaync.com/signature-stay" class="btnGhost">View Details</a>
+            </div>
+          </article>
+        </section>
+
+        <footer class="footer">
+          <div class="foot-copy">Ready to activate your resident culture plan?</div>
+          <a href="https://api.leadconnectorhq.com/widget/booking/mrHEOrJ2HigWjdcjHcvP" class="ctaPrimary">Book a discovery call</a>
+        </footer>
+      </div>
+    </section>
+
+    <script>
+      (function(){
+        function applyBleed(){
+          const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+          document.querySelectorAll('.js-bleed').forEach(el=>{
+            el.style.marginLeft = el.style.marginRight = el.style.width = '';
+            const r = el.getBoundingClientRect();
+            el.style.marginLeft  = (-r.left) + 'px';
+            el.style.marginRight = (-(vw - r.right)) + 'px';
+            el.style.width       = vw + 'px';
+          });
+        }
+        applyBleed();
+        window.addEventListener('resize', applyBleed);
+
+        const target = document.getElementById('swap-text');
+        const container = target && target.parentElement;
+        const words = ["renewals.","engagement.","community.","occupancy.","profit."];
+        let i = 0, widths = {};
+
+        function cacheWidths(){
+          if(!target || !container) return;
+          const cs = getComputedStyle(target);
+          const probe = document.createElement('span');
+          probe.style.cssText = `position:absolute; visibility:hidden; white-space:nowrap; font-weight:${cs.fontWeight}; font-size:${cs.fontSize}; line-height:${cs.lineHeight}; letter-spacing:-0.01em; font-family:${cs.fontFamily};`;
+          document.body.appendChild(probe);
+          words.forEach(w => { probe.textContent = w; widths[w] = probe.getBoundingClientRect().width; });
+          document.body.removeChild(probe);
+          container.style.width = Math.ceil(widths[words[0]] || target.getBoundingClientRect().width) + 'px';
+        }
+
+        function nextWord(){
+          i = (i + 1) % words.length;
+          const next = words[i];
+          if(widths[next]) container.style.width = Math.ceil(widths[next]) + 'px';
+          target.classList.remove('show'); target.classList.add('enter');
+          setTimeout(()=>{ target.textContent = next; target.classList.remove('enter'); target.classList.add('show'); }, 220);
+        }
+
+        if('fonts' in document){ document.fonts.ready.then(cacheWidths); } else { setTimeout(cacheWidths, 300); }
+        window.addEventListener('resize', cacheWidths);
+        if(!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)){
+          setInterval(nextWord, 1100);
+        }
+      })();
+    </script>
+
+  </div>
+</body>
+</html>

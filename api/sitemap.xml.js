@@ -33,6 +33,7 @@ module.exports = async (req, res) => {
   const staticUrls = [
     { loc: `${siteUrl}/`, lastmod: '' },
     { loc: `${siteUrl}/discovery`, lastmod: '' },
+    { loc: `${siteUrl}/our-packages`, lastmod: '' },
     { loc: `${siteUrl}/core`, lastmod: '' },
     { loc: `${siteUrl}/culture-shift`, lastmod: '' },
     { loc: `${siteUrl}/signature-stay`, lastmod: '' },
