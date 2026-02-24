@@ -206,12 +206,10 @@
       <div class="row" style="justify-content:flex-start; gap:10px;">
         <button id="loginBtn" class="btn">Sign in</button>
         <button id="signupBtn" class="btn secondary" type="button">Create account</button>
-        <button id="seedBtn" class="btn secondary" type="button">Seed demo users</button>
       </div>
       <div style="height:12px"></div>
       <div id="authMsg" class="err"></div>
       <div id="authOk" class="ok"></div>
-      <div id="seedMsg" class="ok"></div>
     </div>
   </div>
 
@@ -372,6 +370,121 @@
           </div>
         </div>
 
+        <div id="viewCloser" class="hide">
+          <div class="card" style="background: #fff;">
+            <div class="bd">
+              <div class="row" style="justify-content:space-between;">
+                <div>
+                  <div class="muted small">Selected lead</div>
+                  <div id="closerSelectedLead" style="font-weight:700; margin-top:4px;">None</div>
+                </div>
+                <button id="closerPickLead" class="btn secondary">Pick from Leads</button>
+              </div>
+
+              <div style="height:12px"></div>
+
+              <div class="card" style="background:#fff; border-color: rgba(199,154,59,.35);">
+                <div class="bd">
+                  <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
+                    <div>
+                      <div style="font-weight:900;">AI Research</div>
+                      <div class="muted small">Call prep from lead details</div>
+                    </div>
+                    <button id="aiResearchBtn" class="btn secondary">Generate</button>
+                  </div>
+                  <div style="height:10px"></div>
+                  <div><label>Optional question</label><input id="researchQ" placeholder="What should I ask on discovery?" /></div>
+                  <div style="height:10px"></div>
+                  <div id="researchMsg" class="err"></div>
+                  <div id="researchBox" class="card hide" style="margin-top:12px; background:#fff;">
+                    <div class="bd">
+                      <div><label>Summary</label><textarea id="researchSummary"></textarea></div>
+                      <div style="margin-top:10px;"><label>Talking points</label><textarea id="researchTalking"></textarea></div>
+                      <div style="margin-top:10px;"><label>Likely objections</label><textarea id="researchObjections"></textarea></div>
+                      <div style="margin-top:10px;"><label>Next steps</label><textarea id="researchNext"></textarea></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="height:14px"></div>
+
+              <div class="card" style="background:#fff;">
+                <div class="bd">
+                  <div style="font-weight:900;">Close or Disposition</div>
+                  <div style="height:10px"></div>
+
+                  <div class="two">
+                    <div>
+                      <label>Disposition</label>
+                      <select id="closeDisposition">
+                        <option value="follow_up">follow_up</option>
+                        <option value="won">won</option>
+                        <option value="lost">lost</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label>Closed on (if won)</label>
+                      <input id="closeDate" type="date" />
+                    </div>
+                  </div>
+
+                  <div class="two" style="margin-top:10px;">
+                    <div>
+                      <label>Package tier</label>
+                      <select id="closePackage">
+                        <option value="">Select…</option>
+                        <option value="tier_1">tier_1 ($1000)</option>
+                        <option value="tier_2">tier_2 ($2000)</option>
+                        <option value="tier_3">tier_3 ($3000)</option>
+                        <option value="custom">custom</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label>Package price (USD)</label>
+                      <input id="closePackagePrice" type="number" min="0" step="0.01" placeholder="1000" />
+                    </div>
+                  </div>
+
+                  <div class="two" style="margin-top:10px;">
+                    <div>
+                      <label>Initial payment (USD)</label>
+                      <input id="closeInitial" type="number" min="0" step="0.01" placeholder="0" />
+                    </div>
+                    <div>
+                      <label>Term length (months)</label>
+                      <input id="closeTerm" type="number" min="1" step="1" placeholder="6" />
+                    </div>
+                  </div>
+
+                  <div class="two" style="margin-top:10px;">
+                    <div>
+                      <label>Monthly pricing (USD)</label>
+                      <input id="closeMonthly" type="number" min="0" step="0.01" placeholder="0" />
+                    </div>
+                    <div>
+                      <label>Contract send date (optional)</label>
+                      <input id="closeContractSend" type="date" />
+                    </div>
+                  </div>
+
+                  <div style="margin-top:10px;">
+                    <label>Notes / next steps</label>
+                    <textarea id="closeNotes" placeholder="Next steps, follow-up date, key details."></textarea>
+                  </div>
+
+                  <div class="row" style="margin-top:10px;">
+                    <button id="closeSubmitBtn" class="btn">Submit</button>
+                    <button id="closeQuoteBtn" class="btn secondary" type="button">Fill tier price</button>
+                    <div id="closeMsg" class="err"></div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
         <div id="viewEvents" class="hide">
           <div class="row" style="justify-content:space-between; gap:12px;">
             <div class="row">
@@ -420,10 +533,87 @@
                   <th>City</th>
                   <th>Status</th>
                   <th>Assigned</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody id="eventsTbody"></tbody>
             </table>
+          </div>
+
+          <div id="eventRecapWrap" class="card hide" style="margin-top:14px; background:#fff;">
+            <div class="bd">
+              <div class="row" style="justify-content:space-between;">
+                <div>
+                  <div class="muted small">Selected event</div>
+                  <div id="selectedEventLine" style="font-weight:900; margin-top:4px;">None</div>
+                </div>
+                <button id="closeRecapBtn" class="btn secondary" type="button">Close</button>
+              </div>
+
+              <div style="height:12px"></div>
+
+              <div class="two">
+                <div>
+                  <label>Attendance estimate</label>
+                  <input id="recapAttendance" type="number" min="0" step="1" placeholder="0" />
+                </div>
+                <div>
+                  <label>How it went</label>
+                  <select id="recapRating">
+                    <option value="">Select…</option>
+                    <option>excellent</option>
+                    <option>good</option>
+                    <option>ok</option>
+                    <option>poor</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="two" style="margin-top:10px;">
+                <div>
+                  <label>Issues reported</label>
+                  <select id="recapIssues">
+                    <option value="">Select…</option>
+                    <option value="no">no</option>
+                    <option value="yes">yes</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Photos uploaded</label>
+                  <select id="recapPhotos">
+                    <option value="">Select…</option>
+                    <option value="yes">yes</option>
+                    <option value="no">no</option>
+                    <option value="pending">pending</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style="margin-top:10px;">
+                <label>Issues details (if any)</label>
+                <textarea id="recapIssuesDetails"></textarea>
+              </div>
+
+              <div style="margin-top:10px;">
+                <label>Host notes</label>
+                <textarea id="recapNotes"></textarea>
+              </div>
+
+              <div style="margin-top:10px;">
+                <label>Media links (one per line)</label>
+                <textarea id="recapMedia" placeholder="https://...\nhttps://..."></textarea>
+              </div>
+
+              <div class="row" style="margin-top:10px;">
+                <button id="submitRecapBtn" class="btn">Submit recap</button>
+                <div id="recapMsg" class="err"></div>
+              </div>
+
+              <div style="height:14px"></div>
+              <div class="muted small" style="font-weight:900;">Recent recaps</div>
+              <div style="height:8px"></div>
+              <div id="recapsList"></div>
+            </div>
           </div>
         </div>
 
@@ -520,6 +710,24 @@
   </div>
 
   <script>
+    (function stripCloudflareChallengeParams(){
+      try{
+        const u = new URL(window.location.href);
+        let changed = false;
+        for (const k of Array.from(u.searchParams.keys())){
+          if (k.startsWith('__cf_chl_') || k.startsWith('cf_chl_')) {
+            u.searchParams.delete(k);
+            changed = true;
+          }
+        }
+        if (changed) {
+          const qs = u.searchParams.toString();
+          const next = u.pathname + (qs ? ('?' + qs) : '') + (u.hash || '');
+          window.history.replaceState({}, '', next);
+        }
+      } catch(_e) {}
+    })();
+
     const $ = (id) => document.getElementById(id);
 
     const ROLE_MATRIX = [
@@ -540,6 +748,8 @@
       activeTab: 'overview',
       leads: [],
       selectedLead: null,
+      events: [],
+      selectedEvent: null,
     };
 
     function setBadge(kind, text){
@@ -554,6 +764,7 @@
         overview: 'Overview',
         leads: 'Leads',
         calls: 'Calls',
+        closer: 'Closer',
         events: 'Events',
         payments: 'Payments',
         docs: 'Docs',
@@ -561,7 +772,7 @@
       }[tab] || 'Overview';
       $('viewTitle').textContent = title;
 
-      const views = ['Overview','Leads','Calls','Events','Payments','Docs','Manager'];
+      const views = ['Overview','Leads','Calls','Closer','Events','Payments','Docs','Manager'];
       for (const v of views) $('view'+v).classList.add('hide');
       $('view' + title).classList.remove('hide');
 
@@ -632,12 +843,29 @@
       const navItems = [
         { id:'overview', label:'Overview' },
         { id:'leads', label:'Leads' },
-        { id:'calls', label:'Calls' },
-        { id:'events', label:'Events' },
-        { id:'payments', label:'Payments' },
-        { id:'docs', label:'Docs' },
       ];
-      if (me.profile.role === 'manager') navItems.push({ id:'manager', label:'Manager' });
+
+      const role = String(me.profile.role || '');
+      const isManager = role === 'manager';
+
+      // Dialers/setters need call logging.
+      if (['dialer','in_person_setter','remote_setter','closer','account_manager','event_coordinator'].includes(role) || isManager) {
+        navItems.push({ id:'calls', label:'Calls' });
+      }
+
+      // Closer/account manager workflows.
+      if (['closer','account_manager'].includes(role) || isManager) {
+        navItems.push({ id:'closer', label:'Closer' });
+      }
+
+      // Events workflows.
+      if (['event_host','media_team','event_coordinator'].includes(role) || isManager) {
+        navItems.push({ id:'events', label:'Events' });
+      }
+
+      navItems.push({ id:'payments', label:'Payments' });
+      navItems.push({ id:'docs', label:'Docs' });
+      if (isManager) navItems.push({ id:'manager', label:'Manager' });
 
       $('nav').innerHTML = navItems
         .map((t) => `<button class="navBtn" type="button" data-tab="${t.id}">${t.label}</button>`)
@@ -670,6 +898,164 @@
       rm.innerHTML = ROLE_MATRIX.map((r) => `<tr><td><span class="badge">${r.role}</span></td><td>${r.canSee}</td></tr>`).join('');
 
       setTab(state.activeTab || 'overview');
+    }
+
+    function requireSelectedLead(where){
+      if (!state.selectedLead || !state.selectedLead.id) {
+        const msg = where ? (where + ': select a lead first') : 'select a lead first';
+        throw new Error(msg);
+      }
+      return state.selectedLead;
+    }
+
+    function setSelectedLeadLine(){
+      const l = state.selectedLead;
+      const line = l
+        ? `#${l.id} • ${[l.first_name, l.last_name].filter(Boolean).join(' ').trim()} • ${l.property_name || l.company || ''}`.trim()
+        : 'None';
+      if ($('selectedLeadLine')) $('selectedLeadLine').textContent = line;
+      if ($('closerSelectedLead')) $('closerSelectedLead').textContent = line;
+    }
+
+    async function aiResearch(){
+      $('researchMsg').textContent = '';
+      $('researchBox').classList.add('hide');
+      try{
+        const lead = requireSelectedLead('AI research');
+        const question = $('researchQ').value.trim();
+        const j = await api('/api/portal/ai/research', {
+          method: 'POST',
+          body: { leadId: lead.id, question },
+        });
+        const r = j.research || {};
+        $('researchSummary').value = String(r.summary || '');
+        $('researchTalking').value = Array.isArray(r.talkingPoints) ? r.talkingPoints.join('\n') : '';
+        $('researchObjections').value = Array.isArray(r.likelyObjections) ? r.likelyObjections.join('\n') : '';
+        $('researchNext').value = Array.isArray(r.nextSteps) ? r.nextSteps.join('\n') : '';
+        $('researchBox').classList.remove('hide');
+      } catch(e){
+        $('researchMsg').textContent = String(e.message || e);
+      }
+    }
+
+    function fillTierPrice(){
+      const tier = String($('closePackage').value || '');
+      const map = { tier_1: 1000, tier_2: 2000, tier_3: 3000 };
+      const v = map[tier];
+      if (v) $('closePackagePrice').value = String(v);
+    }
+
+    async function submitClose(){
+      $('closeMsg').textContent = '';
+      try{
+        const lead = requireSelectedLead('Close');
+
+        const disposition = String($('closeDisposition').value || 'follow_up');
+        const payload = {
+          disposition,
+          closedOn: $('closeDate').value || null,
+          packageTier: $('closePackage').value || null,
+          packagePrice: Number($('closePackagePrice').value || 0),
+          initialPayment: Number($('closeInitial').value || 0),
+          termMonths: Number($('closeTerm').value || 0),
+          monthlyPricing: Number($('closeMonthly').value || 0),
+          contractSendDate: $('closeContractSend').value || null,
+          notes: $('closeNotes').value || '',
+        };
+
+        const nextStatus = disposition === 'won' ? 'won' : (disposition === 'lost' ? 'lost' : 'working');
+
+        await api('/api/portal/close', {
+          method: 'POST',
+          body: { leadId: lead.id, status: nextStatus, payload },
+        });
+
+        $('closeMsg').textContent = '';
+        setBadge('ok', 'submitted');
+      } catch(e){
+        $('closeMsg').textContent = String(e.message || e);
+      }
+    }
+
+    function setSelectedEvent(eventObj){
+      state.selectedEvent = eventObj || null;
+      const e = state.selectedEvent;
+      $('selectedEventLine').textContent = e ? `#${e.id} • ${e.title || ''} • ${(e.event_date || '')}`.trim() : 'None';
+      $('eventRecapWrap').classList.toggle('hide', !e);
+      if (e) loadRecaps(e.id).catch(()=>{});
+    }
+
+    async function loadRecaps(eventId){
+      $('recapMsg').textContent = '';
+      $('recapsList').textContent = '';
+      try{
+        const j = await api('/api/portal/event_recaps?eventId=' + encodeURIComponent(String(eventId)));
+        const recaps = j.recaps || [];
+        if (!recaps.length) {
+          $('recapsList').innerHTML = '<div class="muted small">No recaps yet.</div>';
+          return;
+        }
+        $('recapsList').innerHTML = recaps.map((r) => {
+          const p = r.payload || {};
+          const media = Array.isArray(r.media_urls) ? r.media_urls : [];
+          const meta = [
+            p.attendanceEstimate != null ? ('attendance ' + p.attendanceEstimate) : '',
+            p.rating ? ('rating ' + p.rating) : '',
+            p.photosUploaded ? ('photos ' + p.photosUploaded) : '',
+          ].filter(Boolean).join(' • ');
+          const mediaHtml = media.length ? (`<div class="small" style="margin-top:8px;">${media.map((u) => `<div><a href="${escapeHtml(u)}" target="_blank" rel="noopener">${escapeHtml(u)}</a></div>`).join('')}</div>`) : '';
+          return `
+            <div class="card" style="background:#fff; margin-bottom:10px;">
+              <div class="bd">
+                <div class="muted small">${escapeHtml(r.created_at || '')}</div>
+                ${meta ? `<div class="muted small" style="margin-top:4px;">${escapeHtml(meta)}</div>` : ''}
+                ${r.recap ? `<div style="margin-top:8px; white-space:pre-wrap;">${escapeHtml(r.recap)}</div>` : ''}
+                ${mediaHtml}
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch(e){
+        $('recapMsg').textContent = String(e.message || e);
+      }
+    }
+
+    async function submitRecap(){
+      $('recapMsg').textContent = '';
+      try{
+        const e = state.selectedEvent;
+        if (!e || !e.id) throw new Error('select an event');
+
+        const mediaUrls = String($('recapMedia').value || '')
+          .split('\n')
+          .map((x) => x.trim())
+          .filter(Boolean)
+          .slice(0, 30);
+
+        const payload = {
+          attendanceEstimate: $('recapAttendance').value ? Number($('recapAttendance').value) : null,
+          rating: $('recapRating').value || null,
+          issuesReported: $('recapIssues').value || null,
+          issuesDetails: $('recapIssuesDetails').value || '',
+          photosUploaded: $('recapPhotos').value || null,
+          hostNotes: $('recapNotes').value || '',
+        };
+
+        await api('/api/portal/event_recaps', {
+          method: 'POST',
+          body: {
+            eventId: e.id,
+            recap: payload.hostNotes || payload.issuesDetails || '',
+            mediaUrls,
+            payload,
+          },
+        });
+
+        $('recapMsg').textContent = '';
+        await loadRecaps(e.id);
+      } catch(e){
+        $('recapMsg').textContent = String(e.message || e);
+      }
     }
 
     function fmtMoney(cents){
@@ -715,9 +1101,7 @@
           btn.addEventListener('click', () => {
             const id = Number(btn.dataset.pick);
             state.selectedLead = state.leads.find((x) => Number(x.id) === id) || null;
-            $('selectedLeadLine').textContent = state.selectedLead
-              ? `#${state.selectedLead.id} • ${(state.selectedLead.first_name||'').trim()} ${(state.selectedLead.last_name||'').trim()}`.trim()
-              : 'None';
+            setSelectedLeadLine();
             setTab('calls');
           });
         }
@@ -826,6 +1210,10 @@
     async function loadEvents(){
       setBadge('warn', 'loading');
       $('eventsMsg').textContent = '';
+
+      // Reset selection when reloading the list.
+      setSelectedEvent(null);
+
       const status = $('eventStatus').value;
       const qs = new URLSearchParams();
       if (status) qs.set('status', status);
@@ -833,23 +1221,55 @@
 
       try{
         const j = await api('/api/portal/events?' + qs.toString());
-        const events = j.events || [];
+        state.events = j.events || [];
 
-        $('eventsTbody').innerHTML = events.map((ev) => {
+        const tb = $('eventsTbody');
+        tb.innerHTML = state.events.map((ev) => {
           const date = ev.event_date || '';
           const city = [ev.city, ev.state].filter(Boolean).join(', ');
           const asg = ev.assigned_role || '';
+          const selectBtn = `<button class="btn secondary small" data-pick-event="${ev.id}">Select</button>`;
+
+          const myRole = String(state.me?.profile?.role || '');
+          const canAccept = !ev.assigned_user_id && asg && (myRole === 'manager' || myRole === asg) && String(ev.status || 'open') === 'open';
+          const acceptBtn = canAccept ? `<button class="btn small" data-accept-event="${ev.id}">Accept</button>` : '';
+
           return `
             <tr>
               <td><span class="badge">${ev.id}</span></td>
               <td class="muted">${date}</td>
-              <td>${ev.title || ''}</td>
-              <td class="muted">${city}</td>
-              <td><span class="badge">${ev.status}</span></td>
+              <td>${escapeHtml(ev.title || '')}</td>
+              <td class="muted">${escapeHtml(city)}</td>
+              <td><span class="badge">${escapeHtml(ev.status || '')}</span></td>
               <td class="muted">${asg}</td>
+              <td>${selectBtn} ${acceptBtn}</td>
             </tr>
           `;
         }).join('');
+
+        for (const btn of tb.querySelectorAll('button[data-pick-event]')){
+          btn.addEventListener('click', () => {
+            const id = Number(btn.dataset.pickEvent);
+            const ev = state.events.find((x) => Number(x.id) === id) || null;
+            setSelectedEvent(ev);
+          });
+        }
+
+        for (const btn of tb.querySelectorAll('button[data-accept-event]')){
+          btn.addEventListener('click', async () => {
+            $('eventsMsg').textContent = '';
+            try{
+              const id = Number(btn.dataset.acceptEvent);
+              await api('/api/portal/events', {
+                method: 'PATCH',
+                body: { id, assignedUserId: state.me.user.id, status: 'assigned' },
+              });
+              await loadEvents();
+            } catch(e){
+              $('eventsMsg').textContent = String(e.message || e);
+            }
+          });
+        }
 
         setBadge('ok', 'loaded');
       } catch(e){
@@ -989,7 +1409,6 @@
     async function boot(){
       $('authMsg').textContent = '';
       $('authOk').textContent = '';
-      $('seedMsg').textContent = '';
 
       // Restore prior session token if present.
       state.token = localStorage.getItem('portal_access_token') || '';
@@ -999,7 +1418,6 @@
     on('loginBtn', 'click', async () => {
       $('authMsg').textContent = '';
       $('authOk').textContent = '';
-      $('seedMsg').textContent = '';
       try{
         const email = $('email').value.trim();
         const password = $('password').value;
@@ -1033,7 +1451,6 @@
     on('signupBtn', 'click', async () => {
       $('authMsg').textContent = '';
       $('authOk').textContent = '';
-      $('seedMsg').textContent = '';
       try{
         const email = $('email').value.trim();
         const password = $('password').value;
@@ -1064,45 +1481,6 @@
       }
     });
 
-    function renderSeedResult(j){
-      const users = Array.isArray(j?.users) ? j.users : [];
-      const lines = [];
-      lines.push(j?.ok ? 'Seed complete.' : 'Seed failed.');
-      if (typeof j?.bootstrap !== 'undefined') lines.push('bootstrap=' + String(!!j.bootstrap));
-      for (const u of users) {
-        const status = u?.ok ? 'ok' : ('error: ' + String(u?.error || 'unknown'));
-        const detail = String(u?.detail || '').trim();
-        lines.push(`${u?.role || ''} ${u?.email || ''} ${status}${detail ? (' (' + detail + ')') : ''}`.trim());
-      }
-      return lines.join('\n');
-    }
-
-    on('seedBtn', 'click', async () => {
-      $('authMsg').textContent = '';
-      $('authOk').textContent = '';
-      $('seedMsg').textContent = '';
-      try{
-        const email = $('email').value.trim();
-        const password = $('password').value;
-        const r = await fetch('/api/portal/seed', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        });
-
-        const j = await r.json().catch(() => null);
-        if (!j) throw new Error('seed_failed');
-        if (!j.ok) {
-          const msg = String(j?.error || ('http_' + r.status));
-          const det = String(j?.detail || '').trim();
-          if (msg === 'missing_bearer_token') throw new Error('Sign in as manager to seed.');
-          throw new Error(det ? (msg + ': ' + det) : msg);
-        }
-        $('seedMsg').textContent = renderSeedResult(j);
-      } catch(e){
-        $('authMsg').textContent = String(e.message || e);
-      }
-    });
 
     on('logoutBtn', 'click', async () => {
       state.token = '';
@@ -1123,6 +1501,12 @@
     on('loadEventsBtn', 'click', () => loadEvents().catch(() => {}));
     on('newEventToggle', 'click', () => { $('newEventBox').hidden = !$('newEventBox').hidden; });
     on('createEventBtn', 'click', () => createEvent().catch(() => {}));
+
+    on('closeSubmitBtn', 'click', () => submitClose().catch(() => {}));
+    on('closeQuoteBtn', 'click', () => fillTierPrice());
+
+    on('submitRecapBtn', 'click', () => submitRecap().catch(() => {}));
+    on('closeRecapBtn', 'click', () => setSelectedEvent(null));
 
     on('loadPayoutsBtn', 'click', () => loadPayouts().catch(() => {}));
 

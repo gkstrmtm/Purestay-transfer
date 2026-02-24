@@ -120,7 +120,18 @@ module.exports = async (req, res) => {
       || (row.assigned_user_id && row.assigned_user_id === s.user.id)
       || (row.created_by && row.created_by === s.user.id);
 
-    if (!canEdit) return sendJson(res, 403, { ok: false, error: 'forbidden' });
+    const requestedAssignedUserId = body.assignedUserId != null ? (cleanStr(body.assignedUserId, 60) || null) : undefined;
+    const wantsSelfAssign = requestedAssignedUserId && requestedAssignedUserId === s.user.id;
+    const role = String(s.profile?.role || '');
+    const canClaim = !canEdit
+      && wantsSelfAssign
+      && !row.assigned_user_id
+      && row.assigned_role
+      && role
+      && row.assigned_role === role
+      && String(row.status || 'open') === 'open';
+
+    if (!canEdit && !canClaim) return sendJson(res, 403, { ok: false, error: 'forbidden' });
 
     const patch = {
       status: body.status != null ? cleanStr(body.status, 40) : undefined,
@@ -142,6 +153,17 @@ module.exports = async (req, res) => {
 
     for (const k of Object.keys(patch)) {
       if (patch[k] === undefined) delete patch[k];
+    }
+
+    if (canClaim) {
+      // Claimers can only self-assign and move status to assigned.
+      const allowed = {
+        assigned_user_id: patch.assigned_user_id,
+        status: patch.status || 'assigned',
+      };
+      for (const k of Object.keys(patch)) delete patch[k];
+      patch.assigned_user_id = allowed.assigned_user_id;
+      patch.status = allowed.status;
     }
 
     if (!Object.keys(patch).length) return sendJson(res, 200, { ok: true, event: row });
