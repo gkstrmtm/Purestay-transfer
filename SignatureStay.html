@@ -31,8 +31,8 @@
       background:linear-gradient(to bottom, rgba(0,0,0,.38), rgba(0,0,0,0));
     }
     .brand a{ display:inline-block; }
-    .logo{ height:46px; width:auto; filter:drop-shadow(0 2px 8px rgba(0,0,0,.5)); }
-    @media (max-width:760px){ .logo{ height:38px; } }
+    .logo{ height:56px; width:auto; filter:drop-shadow(0 2px 8px rgba(0,0,0,.5)); }
+    @media (max-width:760px){ .logo{ height:44px; } }
 
     .homeBtn{
       color:#111; background:#fff; font-size:14px; padding:11px 16px; border-radius:999px;
@@ -217,7 +217,7 @@
 
         <div class="btnRow">
           <a href="/discovery" class="btnPrimary">Select Signature Stay</a>
-          <a href="/#packages" class="btnGhost">Compare packages</a>
+          <a href="/our-packages" class="btnGhost">Compare packages</a>
         </div>
 
         <div class="bookBox" aria-label="Book a discovery call">
@@ -248,8 +248,11 @@
         el.style.width       = vw + 'px';
       });
     }
-    applyBleed();
-    window.addEventListener('resize', applyBleed);
+    function scheduleBleed(){ requestAnimationFrame(()=> requestAnimationFrame(applyBleed)); }
+    scheduleBleed();
+    window.addEventListener('resize', scheduleBleed, {passive:true});
+    window.addEventListener('orientationchange', scheduleBleed, {passive:true});
+    window.addEventListener('pageshow', scheduleBleed);
 
     const chips = Array.from(document.querySelectorAll('.chip.reveal'));
     const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;

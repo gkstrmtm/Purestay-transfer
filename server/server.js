@@ -195,13 +195,36 @@ function sanitizeSettingsForPublic(settings) {
 
 const server = http.createServer(async (req, res) => {
   const u = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
-  const pathname = safeDecode(u.pathname);
+  let pathname = safeDecode(u.pathname);
+  if (pathname.length > 1 && pathname.endsWith('/')) pathname = pathname.slice(0, -1);
 
-  // Convenience slugs
-  if (pathname === '/backend' || pathname === '/admin') {
-    req.url = '/Backend.html';
-    return; // fall through to static handler below
-  }
+  // Local dev parity with vercel.json rewrites (clean URLs -> actual file names)
+  const REWRITE_MAP = {
+    '/': '/Home.html',
+    '/home': '/Home.html',
+
+    '/discovery': '/Discovery.html',
+    '/careers': '/Careers.html',
+    '/dialer-training': '/DialerTraining.html',
+    '/certificate': '/Certificate.html',
+
+    '/core': '/Core.html',
+    '/culture-shift': '/CultureShift.html',
+    '/signature-stay': '/SignatureStay.html',
+    '/our-packages': '/OurPackages.html',
+
+    '/ec-toolkit': '/ECtoolkit.html',
+    '/eventcc': '/eventcc.html',
+    '/budget-calculator': '/budgetcal.html',
+
+    '/privacy': '/Privacy.html',
+    '/terms': '/Terms.html',
+
+    '/backend': '/Backend.html',
+    '/admin': '/Backend.html',
+  };
+
+  if (REWRITE_MAP[pathname]) pathname = REWRITE_MAP[pathname];
 
   // --- API ---
   if (pathname === '/api/health') {

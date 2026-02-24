@@ -121,7 +121,11 @@ Notes:
       el.style.width       = vw + 'px';
     });
   }
-  applyBleed(); window.addEventListener('resize', applyBleed);
+  function scheduleBleed(){ requestAnimationFrame(()=> requestAnimationFrame(applyBleed)); }
+  scheduleBleed();
+  window.addEventListener('resize', scheduleBleed, {passive:true});
+  window.addEventListener('orientationchange', scheduleBleed, {passive:true});
+  window.addEventListener('pageshow', scheduleBleed);
 
   // Linear modules
   const MODULES = [

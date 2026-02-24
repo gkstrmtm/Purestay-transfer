@@ -150,7 +150,7 @@ Patch 2025-10-08-t:
     }
     .ps .ticker .big{color:var(--maroon);text-shadow:none;font-family:Fraunces;font-weight:800;font-size:clamp(30px,4.6vw,46px);line-height:1.08;text-align:center;}
     .ps .loss-line1{display:block;}
-    .ps .loss-line2{display:block;white-space:nowrap;}
+    .ps .loss-line2{display:block;}
     .ps #lossLive{display:inline-block;margin-right:2px;}
     .ps .loss-dot{display:inline-block;}
     .ps .ticker p{color:#5d221c;text-align:center;max-width:60ch;margin:0 auto;}
@@ -193,6 +193,9 @@ Patch 2025-10-08-t:
       border-radius:28px;
       padding:22px 18px 24px;
       box-shadow:0 26px 80px rgba(122,46,38,.22);
+      display:flex;
+      flex-direction:column;
+      min-height:100%;
     }
     .ps .pkg-title{
       font-family:Fraunces,ui-serif,Georgia,serif;
@@ -219,13 +222,36 @@ Patch 2025-10-08-t:
       color:#fff;
       margin:8px 0 14px;
     }
-    .ps .pkg-feats{ list-style:none; padding:0; margin:0 0 16px; }
+    .ps .pkg-feats{ list-style:none; padding:0; margin:0 0 16px; flex:1 1 auto; }
     .ps .pkg-feats li{
       color:#E6C981; font-weight:800;
       font-size:clamp(16px,2.4vw,22px);
       line-height:1.28; margin:10px 0;
     }
+    .ps .pkg-cta{ margin-top:auto; }
     .ps .pkg-cta .btn.gold{ border-radius:14px; padding:12px 22px; font-weight:900; }
+
+    /* Make Culture Shift stand out as preferred */
+    .ps .pkg--culture{
+      position:relative;
+      border:2px solid rgba(206,164,60,.95);
+      box-shadow:0 28px 90px rgba(206,164,60,.18), 0 26px 80px rgba(122,46,38,.18);
+    }
+    .ps .pkg--culture::before{
+      content:"Preferred";
+      position:absolute;
+      top:14px;
+      right:14px;
+      background:linear-gradient(180deg, #FFD775, #D2A43B);
+      color:#1a1a1a;
+      padding:6px 10px;
+      border-radius:999px;
+      font-weight:900;
+      font-size:12px;
+      letter-spacing:.02em;
+      box-shadow:0 10px 24px rgba(206,164,60,.25);
+    }
+    .ps .pkg--culture .pkg-badge{ background:#fff; color:#111; }
 
     /* ===== CONTACT (full-bleed) ===== */
     .ps #contact{
@@ -355,7 +381,7 @@ Patch 2025-10-08-t:
       <div class="grid-2" style="margin-top:16px;">
         <article class="card" data-reveal>
           <h3>Step One</h3>
-          <p>Either <a href="/discovery">Book a Call</a> or fill out the <a href="/discovery">Discovery Form</a>. This is how we learn your property, your residents, the event space, and your goals.</p>
+          <p>Either <a href="/discovery#ps-quote">Book a Call</a> or fill out the <a href="/discovery#ps-quote">Discovery Form</a>. This is how we learn your property, your residents, the event space, and your goals.</p>
         </article>
         <article class="card" data-reveal>
           <h3>Step Two</h3>
@@ -395,7 +421,7 @@ Patch 2025-10-08-t:
       <div class="card ticker" data-reveal>
         <h2 id="res-title" class="big on-white" style="margin-top:0;">
           <span class="loss-line1">Since you landed, your property has lost</span>
-          <span class="loss-line2"><span id="lossLive">$0.00</span><span class="loss-dot">.</span></span>
+          <span class="loss-line2"><span id="lossLive">$0.00</span></span>
         </h2>
         <p>Based on typical turnover cost and vacancy drag for properties like yours.</p>
         <div class="center-cta">
@@ -458,7 +484,7 @@ Patch 2025-10-08-t:
           </div>
         </article>
 
-        <article class="pkg-card" data-reveal>
+        <article class="pkg-card pkg--culture" data-reveal>
           <div class="pkg-title">Culture Shift</div>
           <div class="pkg-badge">For when you already have stable numbers</div>
           <div class="pkg-price">From $1,500 / month</div>

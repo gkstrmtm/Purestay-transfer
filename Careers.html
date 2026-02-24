@@ -34,8 +34,11 @@ Note: Replace HEADSHOT_URL with Rosel's headshot URL.
     background:linear-gradient(to bottom, rgba(0,0,0,0.38), rgba(0,0,0,0));
   }
   .brand{ display:flex; gap:12px; }
-  .logo{ height:185px; width:auto; filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5)); }
-  @media (max-width:720px){ .logo{ height:132px; } }
+  .logo{ height:72px; width:auto; filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5)); }
+  @media (max-width:720px){
+    .heroTop{ padding:14px 16px; }
+    .logo{ height:52px; }
+  }
 
   .applyNow{
     color:#111; background:#fff; font-size:14px; padding:11px 16px; border-radius:999px;
@@ -47,7 +50,10 @@ Note: Replace HEADSHOT_URL with Rosel's headshot URL.
 
   .stage{
     position:relative; z-index:4; display:grid; place-items:center; text-align:center;
-    padding: clamp(220px, 27vh, 300px) 20px 120px; max-width:1200px; margin:0 auto;
+    padding: clamp(200px, 24vh, 280px) 20px 120px; max-width:1200px; margin:0 auto;
+  }
+  @media (max-width:720px){
+    .stage{ padding: clamp(160px, 22vh, 220px) 16px 96px; }
   }
   .kicker{
     display:inline-grid; place-items:center; font-size:clamp(12px,1.3vw,14px); letter-spacing:.08em; text-transform:uppercase;
@@ -238,8 +244,11 @@ Note: Replace HEADSHOT_URL with Rosel's headshot URL.
       el.style.width       = vw + 'px';
     });
   }
-  applyBleed();
-  window.addEventListener('resize', applyBleed);
+  function scheduleBleed(){ requestAnimationFrame(()=> requestAnimationFrame(applyBleed)); }
+  scheduleBleed();
+  window.addEventListener('resize', scheduleBleed, {passive:true});
+  window.addEventListener('orientationchange', scheduleBleed, {passive:true});
+  window.addEventListener('pageshow', scheduleBleed);
 
   /* Word flipper: dynamic width per word */
   const target = document.getElementById('swap-text');
