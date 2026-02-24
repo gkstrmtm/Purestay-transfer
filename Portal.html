@@ -638,53 +638,14 @@
           </div>
         </div>
 
-        <div id="viewDocs" class="hide">
-          <div class="row" style="justify-content:space-between;">
-            <button id="loadDocsBtn" class="btn secondary">Load</button>
-          </div>
-          <div id="docsAdmin" class="card hide" style="margin-top:14px; background: #fff;">
-            <div class="bd">
-              <div class="two">
-                <div><label>Title</label><input id="docTitle" placeholder="Event Coordinator SOP" /></div>
-                <div><label>Audience role (blank = all)</label><input id="docAudience" placeholder="event_coordinator" /></div>
-              </div>
-              <div style="margin-top:10px;">
-                <label>CSV or text content</label>
-                <textarea id="docContent" placeholder="Paste CSV here…"></textarea>
-              </div>
-              <div class="row" style="margin-top:10px;">
-                <button id="createDocBtn" class="btn">Save doc</button>
-                <div id="createDocMsg" class="err"></div>
-              </div>
-            </div>
-          </div>
-          <div style="height:14px"></div>
-          <div id="docsMsg" class="err"></div>
-          <div id="docsList"></div>
-        </div>
-
         <div id="viewManager" class="hide">
           <div class="row" style="justify-content:space-between;">
             <div>
               <div class="muted small">Manager view</div>
-              <div style="font-weight:700; margin-top:4px;">Role access matrix + users</div>
+              <div style="font-weight:700; margin-top:4px;">Users</div>
             </div>
             <div class="row">
               <button id="loadUsersBtn" class="btn secondary">Load users</button>
-            </div>
-          </div>
-          <div style="height:12px"></div>
-          <div class="card" style="background: #fff;">
-            <div class="bd">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Role</th>
-                    <th>Can see</th>
-                  </tr>
-                </thead>
-                <tbody id="roleMatrix"></tbody>
-              </table>
             </div>
           </div>
           <div style="height:14px"></div>
@@ -729,18 +690,6 @@
     })();
 
     const $ = (id) => document.getElementById(id);
-
-    const ROLE_MATRIX = [
-      { role: 'dialer', canSee: 'Leads assigned to dialer, log call outcomes, AI follow-up' },
-      { role: 'in_person_setter', canSee: 'Leads assigned to in_person_setter, log outcomes, follow-ups' },
-      { role: 'remote_setter', canSee: 'Leads assigned to remote_setter, log outcomes, follow-ups' },
-      { role: 'closer', canSee: 'Leads assigned to closer, AI research, closing workflows' },
-      { role: 'event_host', canSee: 'Assigned events and submit recaps' },
-      { role: 'media_team', canSee: 'Assigned events + media/recap submissions' },
-      { role: 'account_manager', canSee: 'Leads assigned to account_manager + AI research' },
-      { role: 'event_coordinator', canSee: 'Create/dispatch events + manage assignments' },
-      { role: 'manager', canSee: 'Everything' },
-    ];
 
     const state = {
       token: '',
@@ -889,10 +838,6 @@
           </div>
         </div>
       `;
-
-      // Populate manager role matrix
-      const rm = $('roleMatrix');
-      rm.innerHTML = ROLE_MATRIX.map((r) => `<tr><td><span class="badge">${r.role}</span></td><td>${r.canSee}</td></tr>`).join('');
 
       setTab(state.activeTab || 'overview');
     }
@@ -1483,35 +1428,4 @@
       state.token = '';
       localStorage.removeItem('portal_access_token');
       await refreshMe();
-    });
 
-    on('refreshBtn', 'click', () => refreshMe().catch(() => {}));
-
-    on('loadLeadsBtn', 'click', () => loadLeads().catch(() => {}));
-    on('newLeadToggle', 'click', () => { $('newLeadBox').hidden = !$('newLeadBox').hidden; });
-    on('createLeadBtn', 'click', () => createLead().catch(() => {}));
-
-    on('pickFromLeads', 'click', () => setTab('leads'));
-    on('logCallBtn', 'click', () => logCall().catch(() => {}));
-    on('aiFollowupBtn', 'click', () => aiFollowup().catch(() => {}));
-
-    on('loadEventsBtn', 'click', () => loadEvents().catch(() => {}));
-    on('newEventToggle', 'click', () => { $('newEventBox').hidden = !$('newEventBox').hidden; });
-    on('createEventBtn', 'click', () => createEvent().catch(() => {}));
-
-    on('closeSubmitBtn', 'click', () => submitClose().catch(() => {}));
-    on('closeQuoteBtn', 'click', () => fillTierPrice());
-
-    on('submitRecapBtn', 'click', () => submitRecap().catch(() => {}));
-    on('closeRecapBtn', 'click', () => setSelectedEvent(null));
-
-    on('loadPayoutsBtn', 'click', () => loadPayouts().catch(() => {}));
-
-    on('loadUsersBtn', 'click', () => loadUsers().catch(() => {}));
-
-    boot().catch((e) => {
-      $('authMsg').textContent = String(e.message || e);
-    });
-  </script>
-</body>
-</html>
