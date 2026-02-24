@@ -5,84 +5,145 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PureStay Portal</title>
   <meta name="robots" content="noindex,nofollow" />
+  <link rel="icon" href="brand/purestay_exact_SVG.svg" type="image/svg+xml">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;800&family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#0b1220;
-      --card:#0f1a2e;
-      --card2:#0b1426;
-      --text:#e7eefc;
-      --muted:#a7b4d2;
-      --line:rgba(255,255,255,.10);
-      --brand:#7dd3fc;
-      --ok:#34d399;
-      --warn:#fbbf24;
-      --bad:#fb7185;
-      --btn:#1d4ed8;
-      --btn2:#0ea5e9;
-      --shadow: 0 18px 50px rgba(0,0,0,.45);
+      --ink:#0e0d0c;
+      --bg:#ffffff;
+      --muted:#6b6460;
+      --border:#e7e1da;
+      --card:#ffffff;
+      --shadow:0 14px 38px rgba(0,0,0,.10);
       --radius: 16px;
+
+      --maroon:#7A2E26;
+      --maroon-700:#66271f;
+      --gold:#C79A3B;
+      --gold-700:#B78A2F;
+      --ring:rgba(199,154,59,.38);
+
+      --ok:#0f766e;
+      --warn:#b45309;
+      --bad:#b42318;
+
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     }
     *{box-sizing:border-box}
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-      background: radial-gradient(1100px 700px at 15% -10%, rgba(29,78,216,.35), transparent 60%),
-                  radial-gradient(900px 600px at 90% 0%, rgba(14,165,233,.25), transparent 55%),
-                  var(--bg);
-      color:var(--text);
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: #f7f4f0;
+      color:var(--ink);
       min-height:100vh;
     }
-    a{color:var(--brand); text-decoration:none}
+    a{color:var(--maroon); text-decoration:none}
     a:hover{text-decoration:underline}
 
-    .wrap{max-width:1100px; margin:0 auto; padding:24px;}
-    header{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:16px;
-      padding:16px 20px;
-      border:1px solid var(--line);
-      border-radius: var(--radius);
-      background: rgba(15,26,46,.75);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(8px);
-    }
-    .brand{display:flex; align-items:center; gap:12px;}
-    .logo{
-      width:38px; height:38px; border-radius: 12px;
-      background: linear-gradient(135deg, rgba(125,211,252,1), rgba(29,78,216,1));
-      box-shadow: 0 10px 30px rgba(125,211,252,.18);
-    }
-    .brand h1{font-size:16px; margin:0; letter-spacing:.4px}
-    .brand .sub{font-size:12px; color:var(--muted)}
+    .hide{display:none !important;}
 
-    .pill{font-family: var(--mono); font-size:12px; color:var(--muted); border:1px solid var(--line); padding:6px 10px; border-radius:999px;}
+    .auth{
+      min-height: 100vh;
+      display:grid;
+      place-items:center;
+      padding: 28px 16px;
+    }
+
+    .authCard{
+      width: min(520px, 100%);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .authTop{display:flex; align-items:center; gap:14px;}
+    .authTop img{height:52px; width:auto; display:block;}
+    .authTop h1{margin:0; font-family: Fraunces, ui-serif, Georgia, serif; font-weight:800; font-size:22px; letter-spacing:.2px;}
+    .authTop .sub{color:var(--muted); font-size:13px; margin-top:2px;}
+
+    .pill{font-family: var(--mono); font-size:12px; color:var(--muted); border:1px solid var(--border); padding:6px 10px; border-radius:999px; background:#fff;}
 
     .btn{
-      appearance:none; border:0;
-      background: linear-gradient(135deg, rgba(29,78,216,1), rgba(14,165,233,1));
-      color:white; padding:10px 14px; border-radius: 12px;
-      font-weight:600; cursor:pointer;
+      appearance:none;
+      border: 1px solid transparent;
+      background: var(--maroon);
+      color: #fff;
+      padding: 11px 14px;
+      border-radius: 12px;
+      font-weight: 900;
+      letter-spacing: .2px;
+      cursor:pointer;
+      box-shadow: var(--shadow);
+      transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
     }
+    .btn:hover{transform: translateY(-1px); box-shadow: 0 18px 44px rgba(122,46,38,.18); background: var(--maroon-700);}
+    .btn:focus-visible{outline:none; box-shadow: 0 0 0 3px var(--ring);}
     .btn.secondary{
-      background: transparent;
-      border: 1px solid var(--line);
-      color: var(--text);
+      background: #fff;
+      border-color: var(--border);
+      color: var(--maroon);
+      box-shadow: none;
     }
+    .btn.secondary:hover{transform:none; box-shadow:none; background:#fff; border-color: rgba(199,154,59,.55)}
     .btn:disabled{opacity:.6; cursor:not-allowed}
 
-    .grid{display:grid; gap:16px; grid-template-columns: 1.05fr .95fr; margin-top:16px;}
-    @media (max-width: 900px){ .grid{grid-template-columns:1fr;} }
+    .container{max-width: 1180px; margin:0 auto; padding: 18px 18px;}
+
+    .appbar{
+      position: sticky;
+      top:0;
+      z-index: 10;
+      background: rgba(255,255,255,.88);
+      backdrop-filter: saturate(180%) blur(10px);
+      border-bottom: 1px solid rgba(0,0,0,.06);
+    }
+
+    .appbarInner{display:flex; align-items:center; justify-content:space-between; gap:14px; padding: 10px 18px; max-width:1180px; margin:0 auto;}
+    .appbrand{display:flex; align-items:center; gap:12px;}
+    .appbrand img{height:46px; width:auto; display:block;}
+    .appbrand .t{font-weight: 900; letter-spacing:.2px;}
+
+    .layout{max-width:1180px; margin:0 auto; display:grid; grid-template-columns: 240px 1fr; gap: 16px; padding: 16px 18px 28px;}
+    @media (max-width: 900px){ .layout{grid-template-columns: 1fr;} }
+
+    .sidebar{
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 12px;
+      height: fit-content;
+    }
+
+    .navTitle{font-size:12px; color:var(--muted); font-weight:900; letter-spacing:.08em; text-transform:uppercase; padding: 6px 8px 10px;}
+    .navBtn{
+      width: 100%;
+      text-align:left;
+      padding: 10px 10px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      background: transparent;
+      cursor:pointer;
+      font-weight: 900;
+      color: #3a2f2c;
+      transition: background .15s ease, border-color .15s ease;
+    }
+    .navBtn:hover{background: rgba(199,154,59,.10); border-color: rgba(199,154,59,.22)}
+    .navBtn.active{background: rgba(122,46,38,.08); border-color: rgba(122,46,38,.22); color: var(--maroon)}
 
     .card{
-      border:1px solid var(--line);
+      background: var(--card);
+      border:1px solid var(--border);
       border-radius: var(--radius);
-      background: rgba(15,26,46,.65);
       box-shadow: var(--shadow);
-      backdrop-filter: blur(8px);
       overflow:hidden;
     }
-    .card .hd{padding:14px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:12px;}
+    .card .hd{padding:14px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:12px;}
     .card .hd h2{margin:0; font-size:14px; letter-spacing:.2px}
     .card .bd{padding:16px;}
 
@@ -92,111 +153,90 @@
     label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px;}
     input, select, textarea{
       width:100%;
-      background: rgba(11,20,38,.8);
-      color: var(--text);
-      border:1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      border:1px solid var(--border);
       border-radius: 12px;
       padding:10px 12px;
       outline:none;
     }
+    input:focus, select:focus, textarea:focus{box-shadow: 0 0 0 3px var(--ring); border-color: rgba(199,154,59,.55)}
     textarea{min-height: 120px; resize: vertical;}
     .two{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
     @media (max-width: 520px){ .two{grid-template-columns:1fr;} }
 
-    .tabs{display:flex; gap:8px; flex-wrap:wrap;}
-    .tab{padding:8px 10px; border:1px solid var(--line); border-radius:999px; background: rgba(11,20,38,.35); cursor:pointer; font-size:12px; color:var(--muted);}
-    .tab.active{background: rgba(125,211,252,.12); color:var(--text); border-color: rgba(125,211,252,.35);}
-
     table{width:100%; border-collapse: collapse; font-size:13px;}
-    th, td{padding:10px 8px; border-bottom:1px solid var(--line); vertical-align:top;}
+    th, td{padding:10px 8px; border-bottom:1px solid var(--border); vertical-align:top;}
     th{color:var(--muted); font-weight:600; text-align:left; font-size:12px;}
 
-    .badge{font-family: var(--mono); font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid var(--line); color:var(--muted)}
-    .badge.ok{border-color: rgba(52,211,153,.35); color: rgba(52,211,153,1)}
-    .badge.warn{border-color: rgba(251,191,36,.35); color: rgba(251,191,36,1)}
+    .badge{font-family: var(--mono); font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid var(--border); color:var(--muted); background:#fff}
+    .badge.ok{border-color: rgba(15,118,110,.25); color: rgba(15,118,110,1)}
+    .badge.warn{border-color: rgba(180,83,9,.25); color: rgba(180,83,9,1)}
 
     .err{color: var(--bad); font-family: var(--mono); font-size:12px; white-space: pre-wrap;}
     .ok{color: var(--ok); font-family: var(--mono); font-size:12px; white-space: pre-wrap;}
-
-    .hide{display:none !important;}
 
     .small{font-size:12px;}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
+  <div id="authView" class="auth">
+    <div class="authCard">
+      <div class="authTop">
+        <img src="brand/purestay_exact_SVG.svg" alt="PureStay" />
         <div>
-          <h1>PureStay Portal</h1>
-          <div class="sub">Dispatch, leads, and role dashboards</div>
+          <h1>Portal</h1>
+          <div class="sub">Sign in to continue</div>
         </div>
       </div>
-      <div class="row">
-        <div id="sessionPill" class="pill">Not signed in</div>
-        <button id="logoutBtn" class="btn secondary hide">Logout</button>
+
+      <div style="height:16px"></div>
+      <div class="two">
+        <div>
+          <label>Email</label>
+          <input id="email" type="email" autocomplete="email" placeholder="you@company.com" />
+        </div>
+        <div>
+          <label>Password</label>
+          <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
+        </div>
       </div>
-    </header>
+      <div style="height:12px"></div>
+      <div class="row" style="justify-content:space-between;">
+        <button id="loginBtn" class="btn">Sign in</button>
+        <div class="small muted">PureStay internal</div>
+      </div>
+      <div style="height:12px"></div>
+      <div id="authMsg" class="err"></div>
+      <div id="authOk" class="ok"></div>
+    </div>
+  </div>
 
-    <div class="grid">
-      <section class="card" id="authCard">
-        <div class="hd">
-          <h2>Sign in</h2>
-          <span class="badge ok" id="cfgBadge">Server auth</span>
+  <div id="appView" class="hide">
+    <div class="appbar">
+      <div class="appbarInner">
+        <div class="appbrand">
+          <img src="brand/purestay_exact_SVG.svg" alt="PureStay" />
+          <div>
+            <div class="t">Portal</div>
+            <div class="muted small" id="roleLine">—</div>
+          </div>
         </div>
-        <div class="bd">
-          <div class="small muted">Sign in uses server auth. No browser Supabase keys required.</div>
-          <div style="height:12px"></div>
-          <div class="two">
-            <div>
-              <label>Email</label>
-              <input id="email" type="email" autocomplete="email" placeholder="you@company.com" />
-            </div>
-            <div>
-              <label>Password</label>
-              <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
-            </div>
-          </div>
-          <div style="height:12px"></div>
-          <div class="row">
-            <button id="loginBtn" class="btn">Sign in</button>
-            <span class="small muted">Uses your Supabase Auth users.</span>
-          </div>
-          <div style="height:10px"></div>
-          <div class="row">
-            <button id="seedBtn" class="btn secondary">Seed demo users</button>
-            <span class="small muted">First run only. Creates a manager user too.</span>
-          </div>
-          <div style="height:12px"></div>
-          <div id="authMsg" class="err"></div>
-          <div id="authOk" class="ok"></div>
-          <div id="seedMsg" class="ok"></div>
+        <div class="row">
+          <div id="appUser" class="pill">—</div>
+          <button id="logoutBtn" class="btn secondary">Logout</button>
         </div>
-      </section>
-
-      <section class="card" id="quickCard">
-        <div class="hd"><h2>Quick actions</h2></div>
-        <div class="bd">
-          <div class="row" style="justify-content:space-between;">
-            <div>
-              <div class="muted small">Role</div>
-              <div id="roleLine" style="font-weight:700; margin-top:4px;">—</div>
-            </div>
-            <div>
-              <div class="muted small">User</div>
-              <div id="userLine" style="font-weight:700; margin-top:4px;">—</div>
-            </div>
-          </div>
-          <div style="height:12px"></div>
-          <div class="tabs" id="tabs"></div>
-          <div style="height:12px"></div>
-          <div class="small muted">This is a functional starter portal. Next iterations can expand forms and dispatch logic per role.</div>
-        </div>
-      </section>
+      </div>
     </div>
 
-    <section class="card" id="appCard">
+    <div class="layout">
+      <nav class="sidebar">
+        <div class="navTitle">Menu</div>
+        <div id="nav"></div>
+      </nav>
+
+      <main>
+        <section class="card" id="appCard">
       <div class="hd">
         <h2 id="viewTitle">Overview</h2>
         <div class="row">
@@ -226,7 +266,7 @@
             <button id="newLeadToggle" class="btn secondary">New lead</button>
           </div>
 
-          <div id="newLeadBox" class="card" style="margin-top:14px; background: rgba(11,20,38,.35);" hidden>
+          <div id="newLeadBox" class="card" style="margin-top:14px; background: #fff;" hidden>
             <div class="bd">
               <div class="two">
                 <div><label>First name</label><input id="nlFirst" /></div>
@@ -253,7 +293,7 @@
 
           <div style="height:14px"></div>
           <div id="leadsMsg" class="err"></div>
-          <div style="overflow:auto; border:1px solid var(--line); border-radius: 12px;">
+          <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
             <table>
               <thead>
                 <tr>
@@ -272,9 +312,7 @@
         </div>
 
         <div id="viewCalls" class="hide">
-          <div class="muted small">Log a call outcome and generate a custom follow-up.</div>
-          <div style="height:12px"></div>
-          <div class="card" style="background: rgba(11,20,38,.35);">
+          <div class="card" style="background: #fff;">
             <div class="bd">
               <div class="row" style="justify-content:space-between;">
                 <div>
@@ -317,7 +355,7 @@
                 <button id="aiFollowupBtn" class="btn secondary">AI follow-up</button>
                 <div id="callMsg" class="err"></div>
               </div>
-              <div id="followupBox" class="card hide" style="margin-top:12px; background: rgba(11,20,38,.35);">
+              <div id="followupBox" class="card hide" style="margin-top:12px; background: #fff;">
                 <div class="bd">
                   <div class="muted small">Generated follow-up</div>
                   <div style="height:8px"></div>
@@ -346,7 +384,7 @@
             <button id="newEventToggle" class="btn secondary hide">New event</button>
           </div>
 
-          <div id="newEventBox" class="card" style="margin-top:14px; background: rgba(11,20,38,.35);" hidden>
+          <div id="newEventBox" class="card" style="margin-top:14px; background: #fff;" hidden>
             <div class="bd">
               <div class="two">
                 <div><label>Title</label><input id="neTitle" placeholder="Property event" /></div>
@@ -369,7 +407,7 @@
 
           <div style="height:14px"></div>
           <div id="eventsMsg" class="err"></div>
-          <div style="overflow:auto; border:1px solid var(--line); border-radius: 12px;">
+          <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
             <table>
               <thead>
                 <tr>
@@ -388,12 +426,11 @@
 
         <div id="viewPayments" class="hide">
           <div class="row" style="justify-content:space-between;">
-            <div class="muted small">Payouts are pulled from portal payouts records.</div>
             <button id="loadPayoutsBtn" class="btn secondary">Load</button>
           </div>
           <div style="height:14px"></div>
           <div id="payoutsMsg" class="err"></div>
-          <div style="overflow:auto; border:1px solid var(--line); border-radius: 12px;">
+          <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
             <table>
               <thead>
                 <tr>
@@ -410,10 +447,9 @@
 
         <div id="viewDocs" class="hide">
           <div class="row" style="justify-content:space-between;">
-            <div class="muted small">SOPs and internal docs. Manager can import CSV by pasting it.</div>
             <button id="loadDocsBtn" class="btn secondary">Load</button>
           </div>
-          <div id="docsAdmin" class="card hide" style="margin-top:14px; background: rgba(11,20,38,.35);">
+          <div id="docsAdmin" class="card hide" style="margin-top:14px; background: #fff;">
             <div class="bd">
               <div class="two">
                 <div><label>Title</label><input id="docTitle" placeholder="Event Coordinator SOP" /></div>
@@ -441,12 +477,11 @@
               <div style="font-weight:700; margin-top:4px;">Role access matrix + users</div>
             </div>
             <div class="row">
-              <button id="seedBtnMgr" class="btn secondary">Seed demo users</button>
               <button id="loadUsersBtn" class="btn secondary">Load users</button>
             </div>
           </div>
           <div style="height:12px"></div>
-          <div class="card" style="background: rgba(11,20,38,.35);">
+          <div class="card" style="background: #fff;">
             <div class="bd">
               <table>
                 <thead>
@@ -461,8 +496,7 @@
           </div>
           <div style="height:14px"></div>
           <div id="usersMsg" class="err"></div>
-          <div id="seedMsgMgr" class="ok"></div>
-          <div style="overflow:auto; border:1px solid var(--line); border-radius: 12px;">
+          <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
             <table>
               <thead>
                 <tr>
@@ -477,7 +511,9 @@
           </div>
         </div>
       </div>
-    </section>
+        </section>
+      </main>
+    </div>
   </div>
 
   <script>
@@ -487,8 +523,8 @@
       { role: 'dialer', canSee: 'Leads assigned to dialer, log call outcomes, AI follow-up' },
       { role: 'in_person_setter', canSee: 'Leads assigned to in_person_setter, log outcomes, follow-ups' },
       { role: 'remote_setter', canSee: 'Leads assigned to remote_setter, log outcomes, follow-ups' },
-      { role: 'closer', canSee: 'Leads assigned to closer, AI research, close workflows (next)' },
-      { role: 'event_host', canSee: 'Assigned events + submit recaps (next)' },
+      { role: 'closer', canSee: 'Leads assigned to closer, AI research, closing workflows' },
+      { role: 'event_host', canSee: 'Assigned events and submit recaps' },
       { role: 'media_team', canSee: 'Assigned events + media/recap submissions' },
       { role: 'account_manager', canSee: 'Leads assigned to account_manager + AI research' },
       { role: 'event_coordinator', canSee: 'Create/dispatch events + manage assignments' },
@@ -526,18 +562,23 @@
       for (const v of views) $('view'+v).classList.add('hide');
       $('view' + title).classList.remove('hide');
 
-      for (const el of document.querySelectorAll('.tab')) el.classList.toggle('active', el.dataset.tab === tab);
+      for (const el of document.querySelectorAll('.navBtn')) el.classList.toggle('active', el.dataset.tab === tab);
 
       if (tab === 'leads') loadLeads().catch(()=>{});
       if (tab === 'events') loadEvents().catch(()=>{});
     }
 
-    function setSessionPill(){
-      if (!state.me){
-        $('sessionPill').textContent = 'Not signed in';
-        return;
-      }
-      $('sessionPill').textContent = state.me.profile.role + ' • ' + (state.me.user.email || '');
+    function showAuthView(message){
+      $('authView').classList.remove('hide');
+      $('appView').classList.add('hide');
+      $('authMsg').textContent = message || '';
+      const ok = $('authOk');
+      if (ok) ok.textContent = '';
+    }
+
+    function showAppView(){
+      $('authView').classList.add('hide');
+      $('appView').classList.remove('hide');
     }
 
     async function api(path, { method='GET', body=null } = {}){
@@ -561,43 +602,31 @@
       const token = String(state.token || '').trim();
       if (!token){
         state.me = null;
-        setSessionPill();
-        $('logoutBtn').classList.add('hide');
-        $('refreshBtn').classList.add('hide');
-        $('authCard').classList.remove('hide');
-        $('roleLine').textContent = '—';
-        $('userLine').textContent = '—';
-        $('tabs').innerHTML = '';
-        $('viewOverview').innerHTML = '<div class="muted">Sign in to view your dashboard.</div>';
+        showAuthView('');
         setTab('overview');
         return;
       }
 
+      let me = null;
       try {
-        const me = await api('/api/portal/me');
+        me = await api('/api/portal/me');
         state.me = me;
       } catch (e) {
         // Token likely expired or invalid
         state.token = '';
         localStorage.removeItem('portal_access_token');
         state.me = null;
-        setSessionPill();
-        $('authCard').classList.remove('hide');
-        $('logoutBtn').classList.add('hide');
-        $('refreshBtn').classList.add('hide');
-        $('authMsg').textContent = 'Session expired. Please sign in again.';
+        showAuthView('Session expired. Please sign in again.');
         return;
       }
 
-      $('logoutBtn').classList.remove('hide');
-      $('refreshBtn').classList.remove('hide');
-      $('authCard').classList.add('hide');
+      showAppView();
 
+  me = state.me;
       $('roleLine').textContent = me.profile.role;
-      $('userLine').textContent = me.user.email;
-      setSessionPill();
+      $('appUser').textContent = me.user.email;
 
-      const tabs = [
+      const navItems = [
         { id:'overview', label:'Overview' },
         { id:'leads', label:'Leads' },
         { id:'calls', label:'Calls' },
@@ -605,12 +634,14 @@
         { id:'payments', label:'Payments' },
         { id:'docs', label:'Docs' },
       ];
-      if (me.profile.role === 'manager') tabs.push({ id:'manager', label:'Manager' });
+      if (me.profile.role === 'manager') navItems.push({ id:'manager', label:'Manager' });
 
-      $('tabs').innerHTML = tabs.map((t) => `<div class="tab" role="button" tabindex="0" data-tab="${t.id}">${t.label}</div>`).join('');
-      for (const el of document.querySelectorAll('.tab')){
+      $('nav').innerHTML = navItems
+        .map((t) => `<button class="navBtn" type="button" data-tab="${t.id}">${t.label}</button>`)
+        .join('');
+
+      for (const el of document.querySelectorAll('.navBtn')){
         el.addEventListener('click', () => setTab(el.dataset.tab));
-        el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') setTab(el.dataset.tab); });
       }
 
       // Manager-only controls
@@ -619,15 +650,14 @@
 
       // Overview
       $('viewOverview').innerHTML = `
-        <div class="row" style="justify-content:space-between;">
+        <div class="row" style="justify-content:space-between; gap:16px;">
           <div>
-            <div class="muted small">Signed in as</div>
-            <div style="font-weight:800; margin-top:4px;">${me.user.email}</div>
-            <div class="muted small" style="margin-top:6px;">Role: <span class="badge ok">${me.profile.role}</span></div>
+            <div class="muted small">Signed in</div>
+            <div style="font-weight:900; margin-top:4px;">${me.user.email}</div>
           </div>
           <div>
-            <div class="muted small">Tip</div>
-            <div class="small">Use Leads to pick a lead, then Calls for outcomes + AI follow-up.</div>
+            <div class="muted small">Role</div>
+            <div style="margin-top:4px;"><span class="badge ok">${me.profile.role}</span></div>
           </div>
         </div>
       `;
@@ -878,7 +908,7 @@
           const role = d.audience_role ? `<span class="badge">${d.audience_role}</span>` : `<span class="badge ok">all</span>`;
           const content = (d.content || '').slice(0, 2000);
           return `
-            <div class="card" style="background: rgba(11,20,38,.35); margin-bottom:12px;">
+            <div class="card" style="background: #fff; margin-bottom:12px;">
               <div class="bd">
                 <div class="row" style="justify-content:space-between;">
                   <div style="font-weight:800;">${d.title}</div>
@@ -948,47 +978,9 @@
         .replace(/'/g, '&#039;');
     }
 
-    function renderSeedResult(j) {
-      const users = Array.isArray(j?.users) ? j.users : [];
-      const okUsers = users.filter((u) => u && u.ok);
-      const lines = [];
-      lines.push(`Seed complete. bootstrap=${String(!!j?.bootstrap)}`);
-      lines.push('Default password is PurestayDemo!234 unless you set PORTAL_DEMO_PASSWORD.');
-      const mgr = okUsers.find((u) => u.role === 'manager');
-      if (mgr?.email) lines.push(`Manager login: ${mgr.email}`);
-      if (okUsers.length) {
-        lines.push('Users:');
-        for (const u of okUsers) lines.push(`- ${u.role}: ${u.email}`);
-      }
-      return lines.join('\n');
-    }
-
-    async function seedDemoSignedOut() {
-      $('seedMsg').textContent = '';
-      $('authMsg').textContent = '';
-      try {
-        const r = await fetch('/api/portal/seed', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({}),
-        });
-        const j = await r.json().catch(() => null);
-        if (!j || !j.ok) throw new Error(j?.error || ('http_' + r.status));
-        $('seedMsg').textContent = renderSeedResult(j);
-      } catch (e) {
-        $('authMsg').textContent = String(e.message || e);
-      }
-    }
-
-    async function seedDemoManager() {
-      $('seedMsgMgr').textContent = '';
-      $('usersMsg').textContent = '';
-      try {
-        const j = await api('/api/portal/seed', { method: 'POST', body: {} });
-        $('seedMsgMgr').textContent = renderSeedResult(j);
-      } catch (e) {
-        $('usersMsg').textContent = String(e.message || e);
-      }
+    function on(id, eventName, handler){
+      const el = $(id);
+      if (el) el.addEventListener(eventName, handler);
     }
 
     async function boot(){
@@ -1000,7 +992,7 @@
       await refreshMe();
     }
 
-    $('loginBtn').addEventListener('click', async () => {
+    on('loginBtn', 'click', async () => {
       $('authMsg').textContent = '';
       $('authOk').textContent = '';
       try{
@@ -1029,35 +1021,32 @@
       }
     });
 
-    $('logoutBtn').addEventListener('click', async () => {
+    on('logoutBtn', 'click', async () => {
       state.token = '';
       localStorage.removeItem('portal_access_token');
       await refreshMe();
     });
 
-    $('refreshBtn').addEventListener('click', () => refreshMe().catch(() => {}));
+    on('refreshBtn', 'click', () => refreshMe().catch(() => {}));
 
-    $('loadLeadsBtn').addEventListener('click', () => loadLeads().catch(() => {}));
-    $('newLeadToggle').addEventListener('click', () => { $('newLeadBox').hidden = !$('newLeadBox').hidden; });
-    $('createLeadBtn').addEventListener('click', () => createLead().catch(() => {}));
+    on('loadLeadsBtn', 'click', () => loadLeads().catch(() => {}));
+    on('newLeadToggle', 'click', () => { $('newLeadBox').hidden = !$('newLeadBox').hidden; });
+    on('createLeadBtn', 'click', () => createLead().catch(() => {}));
 
-    $('pickFromLeads').addEventListener('click', () => setTab('leads'));
-    $('logCallBtn').addEventListener('click', () => logCall().catch(() => {}));
-    $('aiFollowupBtn').addEventListener('click', () => aiFollowup().catch(() => {}));
+    on('pickFromLeads', 'click', () => setTab('leads'));
+    on('logCallBtn', 'click', () => logCall().catch(() => {}));
+    on('aiFollowupBtn', 'click', () => aiFollowup().catch(() => {}));
 
-    $('loadEventsBtn').addEventListener('click', () => loadEvents().catch(() => {}));
-    $('newEventToggle').addEventListener('click', () => { $('newEventBox').hidden = !$('newEventBox').hidden; });
-    $('createEventBtn').addEventListener('click', () => createEvent().catch(() => {}));
+    on('loadEventsBtn', 'click', () => loadEvents().catch(() => {}));
+    on('newEventToggle', 'click', () => { $('newEventBox').hidden = !$('newEventBox').hidden; });
+    on('createEventBtn', 'click', () => createEvent().catch(() => {}));
 
-    $('loadPayoutsBtn').addEventListener('click', () => loadPayouts().catch(() => {}));
+    on('loadPayoutsBtn', 'click', () => loadPayouts().catch(() => {}));
 
-    $('loadDocsBtn').addEventListener('click', () => loadDocs().catch(() => {}));
-    $('createDocBtn').addEventListener('click', () => createDoc().catch(() => {}));
+    on('loadDocsBtn', 'click', () => loadDocs().catch(() => {}));
+    on('createDocBtn', 'click', () => createDoc().catch(() => {}));
 
-    $('loadUsersBtn').addEventListener('click', () => loadUsers().catch(() => {}));
-
-    $('seedBtn').addEventListener('click', () => seedDemoSignedOut().catch(() => {}));
-    $('seedBtnMgr').addEventListener('click', () => seedDemoManager().catch(() => {}));
+    on('loadUsersBtn', 'click', () => loadUsers().catch(() => {}));
 
     boot().catch((e) => {
       $('authMsg').textContent = String(e.message || e);
