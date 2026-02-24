@@ -1,5 +1,5 @@
 const { sendJson, handleCors, bearerToken } = require('../../lib/vercelApi');
-const { getSiteUrl, putPost } = require('../../lib/blogs');
+const { getSiteUrl, putPost, getPost } = require('../../lib/blogs');
 const { hasKvEnv } = require('../../lib/storage');
 const { intervalDays, startDateAligned, sequenceForDate, scheduledMeta } = require('../../lib/blogSchedule');
 const { generateBlogPost } = require('../../lib/aiBlog');
@@ -40,6 +40,19 @@ module.exports = async (req, res) => {
   today.setUTCHours(12, 0, 0, 0);
   const seq = sequenceForDate(today, { start, stepDays });
   const meta = scheduledMeta({ sequence: seq, publishedAt: today.toISOString(), stepDays, start });
+
+  // If we already generated this scheduled post, skip so cron doesn't burn AI credits.
+  const existing = await getPost(meta.slug);
+  if (existing && existing.slug === meta.slug) {
+    return sendJson(res, 200, {
+      ok: true,
+      skipped: true,
+      reason: 'already_generated',
+      slug: meta.slug,
+      url: `${siteUrl}/blogs/${meta.slug}`,
+      schedule: { stepDays, start: start.toISOString() },
+    });
+  }
 
   const gen = await generateBlogPost({
     sequence: seq,
