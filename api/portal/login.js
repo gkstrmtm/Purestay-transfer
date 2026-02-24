@@ -53,12 +53,25 @@ function cleanStr(v, maxLen) {
   return String(v || '').trim().slice(0, maxLen);
 }
 
+async function assertServiceRole(sb) {
+  try {
+    const r = await sb.auth.admin.listUsers({ page: 1, perPage: 1 });
+    if (r?.error) return { ok: false, error: 'invalid_supabase_service_role', detail: r.error.message || '' };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: 'invalid_supabase_service_role', detail: String(e?.message || e || '') };
+  }
+}
+
 module.exports = async (req, res) => {
   if (handleCors(req, res, { methods: ['POST', 'OPTIONS'] })) return;
   if (req.method !== 'POST') return sendJson(res, 405, { ok: false, error: 'method_not_allowed' });
 
   const sb = supabaseAdmin();
   if (!sb) return sendJson(res, 503, { ok: false, error: 'missing_supabase_service_role' });
+
+  const svc = await assertServiceRole(sb);
+  if (!svc.ok) return sendJson(res, 503, { ok: false, error: svc.error, detail: svc.detail });
 
   const body = await readJson(req);
   if (!body) return sendJson(res, 400, { ok: false, error: 'invalid_body' });
@@ -95,7 +108,13 @@ module.exports = async (req, res) => {
     const { error: upsertErr } = await sb
       .from('portal_profiles')
       .upsert({ user_id: userId, role, full_name: fullName }, { onConflict: 'user_id' });
-    if (upsertErr) return sendJson(res, 500, { ok: false, error: 'profile_provision_failed' });
+    if (upsertErr) {
+      return sendJson(res, 500, {
+        ok: false,
+        error: 'profile_provision_failed',
+        detail: upsertErr.message || '',
+      });
+    }
 
     const { data: prof2, error: pErr2 } = await sb
       .from('portal_profiles')

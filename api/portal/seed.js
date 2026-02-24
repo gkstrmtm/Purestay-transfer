@@ -21,12 +21,25 @@ function titleCase(s) {
     .join(' ');
 }
 
+async function assertServiceRole(sb) {
+  try {
+    const r = await sb.auth.admin.listUsers({ page: 1, perPage: 1 });
+    if (r?.error) return { ok: false, error: 'invalid_supabase_service_role', detail: r.error.message || '' };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: 'invalid_supabase_service_role', detail: String(e?.message || e || '') };
+  }
+}
+
 module.exports = async (req, res) => {
   if (handleCors(req, res, { methods: ['POST', 'OPTIONS'] })) return;
   if (req.method !== 'POST') return sendJson(res, 405, { ok: false, error: 'method_not_allowed' });
 
   const sb = supabaseAdmin();
   if (!sb) return sendJson(res, 503, { ok: false, error: 'missing_supabase_service_role' });
+
+  const svc = await assertServiceRole(sb);
+  if (!svc.ok) return sendJson(res, 503, { ok: false, error: svc.error, detail: svc.detail });
 
   // Bootstrap mode: allow seeding only if no profiles exist yet.
   // Otherwise require a manager session.
@@ -85,15 +98,17 @@ module.exports = async (req, res) => {
       .upsert({ user_id: userId, role, full_name: fullName }, { onConflict: 'user_id' });
 
     if (upsertErr) {
-      results.push({ role, email, ok: false, error: 'profile_upsert_failed' });
+      results.push({ role, email, ok: false, error: 'profile_upsert_failed', detail: upsertErr.message || '' });
       continue;
     }
 
     results.push({ role, email, ok: true, userId });
   }
 
+  const ok = results.every((x) => x && x.ok);
+
   return sendJson(res, 200, {
-    ok: true,
+    ok,
     bootstrap,
     domain,
     passwordHint: 'Use the password you supplied to this endpoint.',
