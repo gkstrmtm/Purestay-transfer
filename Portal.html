@@ -177,6 +177,18 @@
     .err{color: var(--bad); font-family: var(--mono); font-size:12px; white-space: pre-wrap;}
     .ok{color: var(--ok); font-family: var(--mono); font-size:12px; white-space: pre-wrap;}
 
+    .spin{
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      border: 2px solid rgba(0,0,0,.14);
+      border-top-color: rgba(122,46,38,.95);
+      display: inline-block;
+      vertical-align: -2px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
     .small{font-size:12px;}
   </style>
 </head>
@@ -690,6 +702,41 @@
     })();
 
     const $ = (id) => document.getElementById(id);
+
+    function setAuthLoading(loading, label){
+      const loginBtn = $('loginBtn');
+      const signupBtn = $('signupBtn');
+      if (loginBtn) {
+        loginBtn.disabled = !!loading;
+        loginBtn.textContent = loading ? (label || 'Signing in…') : 'Sign in';
+      }
+      if (signupBtn) {
+        signupBtn.disabled = !!loading;
+        signupBtn.textContent = loading ? 'Working…' : 'Create account';
+      }
+      const ok = $('authOk');
+      if (ok) ok.innerHTML = loading ? `<span class="spin"></span> ${escapeHtml(label || 'Signing in…')}` : '';
+    }
+
+    function withTimeout(promise, ms, label){
+      let t;
+      const timeout = new Promise((_, rej) => {
+        t = setTimeout(() => rej(new Error(label || 'request_timeout')), ms);
+      });
+      return Promise.race([promise, timeout]).finally(() => clearTimeout(t));
+    }
+
+    // If something breaks in JS, surface it instead of silently doing nothing.
+    window.addEventListener('error', (ev) => {
+      const msg = String(ev?.message || 'script_error');
+      const el = $('authMsg');
+      if (el) el.textContent = msg;
+    });
+    window.addEventListener('unhandledrejection', (ev) => {
+      const msg = String(ev?.reason?.message || ev?.reason || 'promise_rejection');
+      const el = $('authMsg');
+      if (el) el.textContent = msg;
+    });
 
     const state = {
       token: '',
@@ -1360,15 +1407,16 @@
     on('loginBtn', 'click', async () => {
       $('authMsg').textContent = '';
       $('authOk').textContent = '';
+      setAuthLoading(true, 'Signing in…');
       try{
         const email = $('email').value.trim();
         const password = $('password').value;
 
-        const r = await fetch('/api/portal/login', {
+        const r = await withTimeout(fetch('/api/portal/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password }),
-        });
+        }), 15000, 'login_timeout');
 
         const j = await r.json().catch(() => null);
         if (!j || !j.ok) {
@@ -1383,25 +1431,29 @@
         state.token = token;
         localStorage.setItem('portal_access_token', token);
 
+        setAuthLoading(false);
         $('authOk').textContent = 'Signed in.';
         await refreshMe();
       } catch(e){
         $('authMsg').textContent = String(e.message || e);
+      } finally {
+        setAuthLoading(false);
       }
     });
 
     on('signupBtn', 'click', async () => {
       $('authMsg').textContent = '';
       $('authOk').textContent = '';
+      setAuthLoading(true, 'Creating account…');
       try{
         const email = $('email').value.trim();
         const password = $('password').value;
 
-        const r = await fetch('/api/portal/signup', {
+        const r = await withTimeout(fetch('/api/portal/signup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password }),
-        });
+        }), 15000, 'signup_timeout');
 
         const j = await r.json().catch(() => null);
         if (!j || !j.ok) {
@@ -1416,10 +1468,13 @@
         state.token = token;
         localStorage.setItem('portal_access_token', token);
 
+        setAuthLoading(false);
         $('authOk').textContent = 'Account created.';
         await refreshMe();
       } catch(e){
         $('authMsg').textContent = String(e.message || e);
+      } finally {
+        setAuthLoading(false);
       }
     });
 
