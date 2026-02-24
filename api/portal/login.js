@@ -63,15 +63,35 @@ async function assertServiceRole(sb) {
   }
 }
 
+function supabaseAuthClient() {
+  const url = process.env.SUPABASE_URL || '';
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  if (!url || !key) return null;
+  try {
+    // eslint-disable-next-line global-require
+    const { createClient } = require('@supabase/supabase-js');
+    return createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+  } catch {
+    return null;
+  }
+}
+
 module.exports = async (req, res) => {
   if (handleCors(req, res, { methods: ['POST', 'OPTIONS'] })) return;
   if (req.method !== 'POST') return sendJson(res, 405, { ok: false, error: 'method_not_allowed' });
 
-  const sb = supabaseAdmin();
-  if (!sb) return sendJson(res, 503, { ok: false, error: 'missing_supabase_service_role' });
+  // IMPORTANT: do not call signInWithPassword on the same client used for service-role DB writes.
+  // Supabase-js will attach the user JWT to subsequent requests, which then triggers RLS.
+  const sbAdmin = supabaseAdmin();
+  if (!sbAdmin) return sendJson(res, 503, { ok: false, error: 'missing_supabase_service_role' });
 
-  const svc = await assertServiceRole(sb);
+  const svc = await assertServiceRole(sbAdmin);
   if (!svc.ok) return sendJson(res, 503, { ok: false, error: svc.error, detail: svc.detail });
+
+  const sbAuth = supabaseAuthClient();
+  if (!sbAuth) return sendJson(res, 503, { ok: false, error: 'missing_supabase_service_role' });
 
   const body = await readJson(req);
   if (!body) return sendJson(res, 400, { ok: false, error: 'invalid_body' });
@@ -81,14 +101,14 @@ module.exports = async (req, res) => {
 
   if (!email || !password) return sendJson(res, 422, { ok: false, error: 'missing_credentials' });
 
-  const r = await sb.auth.signInWithPassword({ email, password });
+  const r = await sbAuth.auth.signInWithPassword({ email, password });
   if (r.error || !r.data?.session || !r.data?.user) {
     return sendJson(res, 401, { ok: false, error: 'invalid_login' });
   }
 
   // Ensure the user exists in portal_profiles (auto-provision for allowed emails).
   const userId = r.data.user.id;
-  const { data: prof, error: pErr } = await sb
+  const { data: prof, error: pErr } = await sbAdmin
     .from('portal_profiles')
     .select('user_id, role, full_name, created_at')
     .eq('user_id', userId)
@@ -105,7 +125,7 @@ module.exports = async (req, res) => {
     const role = normalizeRole(metaRole || localPart);
     const fullName = titleCase(role);
 
-    const { error: upsertErr } = await sb
+    const { error: upsertErr } = await sbAdmin
       .from('portal_profiles')
       .upsert({ user_id: userId, role, full_name: fullName }, { onConflict: 'user_id' });
     if (upsertErr) {
@@ -116,7 +136,7 @@ module.exports = async (req, res) => {
       });
     }
 
-    const { data: prof2, error: pErr2 } = await sb
+    const { data: prof2, error: pErr2 } = await sbAdmin
       .from('portal_profiles')
       .select('user_id, role, full_name, created_at')
       .eq('user_id', userId)

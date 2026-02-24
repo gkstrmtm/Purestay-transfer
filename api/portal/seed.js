@@ -31,6 +31,21 @@ async function assertServiceRole(sb) {
   }
 }
 
+function supabaseAuthClient() {
+  const url = process.env.SUPABASE_URL || '';
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  if (!url || !key) return null;
+  try {
+    // eslint-disable-next-line global-require
+    const { createClient } = require('@supabase/supabase-js');
+    return createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+  } catch {
+    return null;
+  }
+}
+
 module.exports = async (req, res) => {
   if (handleCors(req, res, { methods: ['POST', 'OPTIONS'] })) return;
   if (req.method !== 'POST') return sendJson(res, 405, { ok: false, error: 'method_not_allowed' });
@@ -63,7 +78,10 @@ module.exports = async (req, res) => {
       const password = String(body?.password || '').trim();
       if (!email || !password) return sendJson(res, 401, { ok: false, error: 'missing_bearer_token' });
 
-      const login = await sb.auth.signInWithPassword({ email, password });
+      const sbAuth = supabaseAuthClient();
+      if (!sbAuth) return sendJson(res, 503, { ok: false, error: 'missing_supabase_service_role' });
+
+      const login = await sbAuth.auth.signInWithPassword({ email, password });
       const user = login?.data?.user || null;
       if (login?.error || !user) return sendJson(res, 401, { ok: false, error: 'invalid_login' });
 
