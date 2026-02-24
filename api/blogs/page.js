@@ -1,8 +1,6 @@
 const { handleCors } = require('../../lib/vercelApi');
 const { listPosts, getPost, getSiteUrl, isoDateOnly } = require('../../lib/blogs');
 const { hasKvEnv } = require('../../lib/storage');
-const { listScheduled, parseDateFromSlug, sequenceForDate, startDateAligned, intervalDays, scheduledMeta } = require('../../lib/blogSchedule');
-const { generateBlogPost } = require('../../lib/aiBlog');
 
 function sendHtml(res, status, html) {
   res.statusCode = status;
@@ -82,6 +80,9 @@ function pageShell({ title, description, canonical, og, jsonLd, body }) {
     .ctaBtn{ display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; border-radius:12px; font-weight:950; background:var(--maroon); color:#fff; border:1px solid transparent; box-shadow:0 14px 38px rgba(0,0,0,.10); }
     .ctaBtn:hover{ background:var(--maroon-700); text-decoration:none; }
 
+    .btn{ display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; border-radius:12px; font-weight:950; background:var(--maroon); color:#fff; border:1px solid transparent; box-shadow:0 14px 38px rgba(0,0,0,.10); }
+    .btn:hover{ background:var(--maroon-700); text-decoration:none; }
+
     .wrap{ max-width:1100px; margin:0 auto; padding:24px 18px 70px; }
     .hero{ padding:6px 0 18px; }
     .kicker{ display:inline-block; font-weight:950; font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--maroon); }
@@ -121,14 +122,15 @@ function pageShell({ title, description, canonical, og, jsonLd, body }) {
     .linkBtn{ display:flex; align-items:center; justify-content:space-between; gap:10px; color:var(--ink); font-weight:950; padding:12px 12px; border-radius:14px; border:1px solid var(--line); background:#fff; text-decoration:none; }
     .linkBtn:hover{ box-shadow:0 10px 22px rgba(0,0,0,.06); text-decoration:none; }
     .linkBtn::after{ content:'→'; opacity:.55; font-weight:950; }
-    .linkBtn.call{ background:rgba(122,46,38,.10); border-color:rgba(122,46,38,.22); color:var(--maroon-700); }
-    .linkBtn.call:hover{ background:rgba(122,46,38,.14); border-color:rgba(122,46,38,.30); }
-    .linkBtn.core{ background:rgba(199,154,59,.16); border-color:rgba(199,154,59,.30); color:#3d2a10; }
-    .linkBtn.core:hover{ background:rgba(199,154,59,.22); border-color:rgba(199,154,59,.38); }
-    .linkBtn.culture{ background:rgba(13,110,92,.12); border-color:rgba(13,110,92,.26); color:#0b3d34; }
-    .linkBtn.culture:hover{ background:rgba(13,110,92,.16); border-color:rgba(13,110,92,.32); }
-    .linkBtn.signature{ background:rgba(67,56,202,.11); border-color:rgba(67,56,202,.24); color:#26236c; }
-    .linkBtn.signature:hover{ background:rgba(67,56,202,.15); border-color:rgba(67,56,202,.30); }
+    /* Make the buttons clearly tinted (users rely on color cues). */
+    .linkBtn.call{ background:rgba(122,46,38,.16); border-color:rgba(122,46,38,.28); color:var(--maroon-700); }
+    .linkBtn.call:hover{ background:rgba(122,46,38,.22); border-color:rgba(122,46,38,.36); }
+    .linkBtn.core{ background:rgba(199,154,59,.22); border-color:rgba(199,154,59,.34); color:#3d2a10; }
+    .linkBtn.core:hover{ background:rgba(199,154,59,.28); border-color:rgba(199,154,59,.42); }
+    .linkBtn.culture{ background:rgba(13,110,92,.18); border-color:rgba(13,110,92,.30); color:#0b3d34; }
+    .linkBtn.culture:hover{ background:rgba(13,110,92,.24); border-color:rgba(13,110,92,.38); }
+    .linkBtn.signature{ background:rgba(67,56,202,.16); border-color:rgba(67,56,202,.28); color:#26236c; }
+    .linkBtn.signature:hover{ background:rgba(67,56,202,.22); border-color:rgba(67,56,202,.36); }
     .linkBtn.talk{ background:rgba(16,16,16,.06); border-color:rgba(16,16,16,.14); color:var(--ink); }
     .linkBtn.talk:hover{ background:rgba(16,16,16,.08); border-color:rgba(16,16,16,.18); }
 
@@ -162,7 +164,7 @@ function pageShell({ title, description, canonical, og, jsonLd, body }) {
   <footer class="foot">
     <div class="footInner">
       <span>© ${new Date().getUTCFullYear()} PureStay • Resident retention experiences</span>
-      <a class="pill primary" href="/discovery">Book a call</a>
+      <a class="ctaBtn" href="/discovery">Book a call</a>
     </div>
   </footer>
 
@@ -193,7 +195,7 @@ function blogIndexJsonLd({ siteUrl, posts }) {
     name: 'PureStay Blogs',
     url: `${siteUrl}/blogs`,
     description: 'SEO resources for multifamily resident retention and community engagement.',
-    blogPost: posts.map((p) => ({
+    blogPost: (posts || []).map((p) => ({
       '@type': 'BlogPosting',
       headline: p.title,
       url: `${siteUrl}/blogs/${p.slug}`,
@@ -224,83 +226,6 @@ function blogPostJsonLd({ siteUrl, post }) {
     wordCount: post.wordCount || undefined,
     timeRequired: post.readingMinutes ? `PT${post.readingMinutes}M` : undefined,
   };
-}
-
-function isBot(req) {
-  const ua = String(req.headers?.['user-agent'] || '').toLowerCase();
-  if (!ua) return false;
-  return /bot|crawler|spider|google|bing|duckduck|yandex|baidu|facebookexternalhit|twitterbot|slackbot|linkedinbot/.test(ua);
-}
-
-function renderNotReady({ siteUrl, meta }) {
-  const title = `${meta.title} | PureStay`;
-  const canonical = `${siteUrl}/blogs/${meta.slug}`;
-  const body = `
-  <main class="wrap">
-    <section class="hero">
-      <span class="kicker">PURESTAY BLOG</span>
-      <div class="rule"></div>
-      <h1>${escapeHtml(meta.title)}</h1>
-      <p class="sub">This post is being published by our scheduler. Please check back soon.</p>
-      <div class="metaRow">
-        <span class="chip">Not published yet</span>
-      </div>
-    </section>
-
-    <section class="grid" aria-label="Blog post">
-      <article class="card">
-        <div class="cardPad">
-          <p style="margin:0; color:var(--muted); font-weight:750; line-height:1.65;">
-            Posts are generated on a schedule (and via admin backfill), then cached globally.
-            Clicking a post does <b>not</b> trigger AI generation.
-          </p>
-          <div style="height:12px"></div>
-          <p style="margin:0; color:var(--muted); font-weight:850;">Try again in a minute.</p>
-          <div style="height:16px"></div>
-          <a class="ctaBtn" href="/blogs">Back to Blogs</a>
-        </div>
-      </article>
-
-      <aside class="card sideBox">
-        <div class="cardPad">
-          <h3>Packages</h3>
-          <p>Pick the level of resident touchpoints and media you want. We handle planning and on-site hosting.</p>
-          <div class="links">
-            <a class="linkBtn core" href="/core">Core Package</a>
-            <a class="linkBtn culture" href="/culture-shift">Culture Shift</a>
-            <a class="linkBtn signature" href="/signature-stay">Signature Stay</a>
-            <a class="linkBtn call" href="/discovery">Talk to us</a>
-          </div>
-        </div>
-      </aside>
-    </section>
-  </main>`;
-
-  // Avoid indexing placeholder pages.
-  const shell = pageShell({
-    title,
-    description: 'This post is being published by our scheduler. Please check back soon.',
-    canonical,
-    og: {
-      title,
-      description: 'This post is being published by our scheduler. Please check back soon.',
-      type: 'article',
-      url: canonical,
-      image: `${siteUrl}/brand/PureStay_white.png`,
-    },
-    jsonLd: {
-      '@context': 'https://schema.org',
-      '@type': 'WebPage',
-      name: meta.title,
-      url: canonical,
-    },
-    body,
-  });
-
-  return shell.replace(
-    '<meta name="viewport" content="width=device-width, initial-scale=1" />',
-    '<meta name="viewport" content="width=device-width, initial-scale=1" />\n  <meta name="robots" content="noindex, nofollow" />'
-  );
 }
 
 function renderIndex({ siteUrl, posts, total, page, perPage }) {
@@ -343,7 +268,7 @@ function renderIndex({ siteUrl, posts, total, page, perPage }) {
 
           <div class="pager" aria-label="Pagination">
             <a ${prevHref ? `href="${prevHref}"` : ''} class="${prevHref ? '' : 'dim'}">← Prev</a>
-            <div class="center">Showing ${escapeHtml(String(Math.min(total, (p - 1) * pp + 1)))}–${escapeHtml(String(Math.min(total, p * pp)))} of ${escapeHtml(String(total))}</div>
+            <div class="center">Showing ${escapeHtml(String(Math.min(total, (p - 1) * pp + 1)))} to ${escapeHtml(String(Math.min(total, p * pp)))} of ${escapeHtml(String(total))}</div>
             <a ${nextHref ? `href="${nextHref}"` : ''} class="${nextHref ? '' : 'dim'}">Next →</a>
           </div>
         </div>
@@ -425,13 +350,13 @@ function renderPost({ siteUrl, post }) {
 
       <aside class="card sideBox">
         <div class="cardPad">
-          <h3>Packages</h3>
-          <p>Pick the level of resident touchpoints and media you want. We handle planning and on-site hosting.</p>
+          <h3>Want this done-for-you?</h3>
+          <p>PureStay runs on-site resident experiences and provides reporting so your team can focus on leasing and renewals.</p>
           <div class="links">
-            <a class="linkBtn core" href="/core">Core Package</a>
-            <a class="linkBtn culture" href="/culture-shift">Culture Shift</a>
-            <a class="linkBtn signature" href="/signature-stay">Signature Stay</a>
-            <a class="linkBtn call" href="/discovery">Talk to us</a>
+            <a class="linkBtn call" href="/discovery">Book a discovery call</a>
+            <a class="linkBtn core" href="/core">See Core Package</a>
+            <a class="linkBtn culture" href="/culture-shift">See Culture Shift</a>
+            <a class="linkBtn signature" href="/signature-stay">See Signature Stay</a>
           </div>
         </div>
       </aside>
@@ -468,99 +393,45 @@ module.exports = async (req, res) => {
   const kvEnabled = hasKvEnv();
 
   if (!slug) {
-    // Index page: either KV-backed list, or deterministic schedule list.
+    // Index page: KV-backed list only.
     const perPage = 10;
     const page = Math.max(1, Number(url.searchParams.get('page') || 1));
     const limit = perPage;
     const offset = (page - 1) * perPage;
 
-    let listing;
-    if (kvEnabled) listing = await listPosts({ limit, offset });
-    else listing = listScheduled({ limit: limit || 50, offset: offset || 0 });
-
-    setEdgeCache(res, 60 * 60); // cache index for 1 hour
+    const listing = kvEnabled ? await listPosts({ limit, offset }) : { posts: [], total: 0 };
+    setEdgeCache(res, kvEnabled ? 60 * 60 : 60 * 5);
     return sendHtml(res, 200, renderIndex({ siteUrl, posts: listing.posts, total: listing.total, page, perPage }));
   }
 
-  let post = null;
-  if (kvEnabled) post = await getPost(slug);
-
-  // No-KV mode: generate on-demand from slug's date/sequence and rely on edge cache.
-  if (!post && !kvEnabled) {
-    const ssr = String(url.searchParams.get('ssr') || '').trim() === '1';
-    const allowSsr = ssr || isBot(req);
-
-    const date = parseDateFromSlug(slug) || new Date();
-    const stepDays = intervalDays();
-    const start = startDateAligned({ years: 2, stepDays });
-    const seq = sequenceForDate(date, { start, stepDays });
-    const meta = scheduledMeta({ sequence: seq, publishedAt: date.toISOString(), stepDays, start });
-
-    if (!allowSsr) {
-      // Never generate for human clicks. Posts are created by cron/admin and cached.
-      setEdgeCache(res, 15);
-      return sendHtml(res, 202, renderNotReady({ siteUrl, meta }));
-    }
-
-    const gen = await generateBlogPost({
-      sequence: seq,
-      publishedAt: meta.publishedAt,
-      siteUrl,
-      forced: {
-        title: meta.title,
-        slug: meta.slug,
-        topic: meta.topic,
-        primaryKeyword: meta.topic,
+  if (!kvEnabled) {
+    const html = pageShell({
+      title: 'Not Found | PureStay Blogs',
+      description: 'This blog post does not exist.',
+      canonical: `${siteUrl}/blogs/${encodeURIComponent(slug)}`,
+      og: {
+        title: 'Not Found | PureStay Blogs',
+        description: 'This blog post does not exist.',
+        type: 'website',
+        url: `${siteUrl}/blogs/${encodeURIComponent(slug)}`,
+        image: `${siteUrl}/brand/PureStay_white.png`,
       },
+      jsonLd: { '@context': 'https://schema.org', '@type': 'WebPage', name: 'Not Found' },
+      body: `
+        <main class="wrap">
+          <section class="hero">
+            <span class="kicker">Blogs</span>
+            <h1>Post not found</h1>
+            <p class="sub">That link doesn’t match any post we have.</p>
+          </section>
+          <a class="pill primary" href="/blogs">Go to blogs</a>
+        </main>`,
     });
-
-    if (!gen.ok) {
-      const html = pageShell({
-        title: 'Blogs | PureStay',
-        description: 'Blog generation is not configured yet.',
-        canonical: `${siteUrl}/blogs/${encodeURIComponent(slug)}`,
-        og: {
-          title: 'Blogs | PureStay',
-          description: 'Blog generation is not configured yet.',
-          type: 'website',
-          url: `${siteUrl}/blogs/${encodeURIComponent(slug)}`,
-          image: `${siteUrl}/brand/PureStay_white.png`,
-        },
-        jsonLd: { '@context': 'https://schema.org', '@type': 'WebPage', name: 'Blogs' },
-        body: `
-          <main class="wrap">
-            <section class="hero">
-              <span class="kicker">Blogs</span>
-              <h1>Blog generation isn’t configured</h1>
-              <p class="sub">Set <b>AI_API_KEY</b> in Vercel Environment Variables to enable automated posts.</p>
-            </section>
-            <a class="pill primary" href="/blogs">Go to blogs</a>
-          </main>`,
-      });
-      setEdgeCache(res, 60); // short cache for misconfig
-      return sendHtml(res, 503, html);
-    }
-
-    const wcText = String(gen.data.html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-    const wordCount = wcText ? wcText.split(' ').length : 0;
-    const readingMinutes = Math.max(3, Math.round(wordCount / 220));
-
-    post = {
-      title: gen.data.title,
-      slug: meta.slug,
-      excerpt: gen.data.excerpt || meta.excerpt,
-      metaDescription: gen.data.metaDescription,
-      primaryKeyword: gen.data.primaryKeyword || meta.topic,
-      keywords: gen.data.keywords || [],
-      tags: gen.data.tags || [],
-      html: gen.data.html,
-      faq: gen.data.faq || [],
-      publishedAt: meta.publishedAt,
-      updatedAt: meta.publishedAt,
-      wordCount,
-      readingMinutes,
-    };
+    setEdgeCache(res, 60 * 5);
+    return sendHtml(res, 404, html);
   }
+
+  const post = await getPost(slug);
 
   if (!post) {
     const html = pageShell({

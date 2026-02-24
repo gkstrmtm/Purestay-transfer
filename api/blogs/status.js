@@ -1,7 +1,6 @@
 const { sendJson, handleCors, bearerToken } = require('../../lib/vercelApi');
 const { getState, listPosts } = require('../../lib/blogs');
 const { hasKvEnv } = require('../../lib/storage');
-const { listScheduled, intervalDays, yearsBack } = require('../../lib/blogSchedule');
 
 module.exports = async (req, res) => {
   if (handleCors(req, res, { methods: ['GET', 'OPTIONS'] })) return;
@@ -25,12 +24,11 @@ module.exports = async (req, res) => {
     });
   }
 
-  const listing = listScheduled({ limit: 1, offset: 0 });
   return sendJson(res, 200, {
     ok: true,
-    mode: 'scheduled',
-    schedule: { stepDays: intervalDays(), years: yearsBack(), start: listing.schedule?.start || '' },
-    latest: listing.posts?.[0] || null,
-    total: listing.total || 0,
+    mode: 'disabled',
+    reason: 'kv_required',
+    latest: null,
+    total: 0,
   });
 };

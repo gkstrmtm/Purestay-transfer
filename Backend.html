@@ -104,6 +104,12 @@
       color:#111;
     }
 
+    .btn.danger{
+      background:#fff;
+      border-color:#f0c9c9;
+      color:#7a1f1f;
+    }
+
     .status{ font-weight:900; font-size:14px; }
     .ok{ color:#0b6b2b; }
     .bad{ color:#7a1f1f; }
@@ -185,26 +191,49 @@
 
         <section class="section" id="blogs">
           <h2>Blogs</h2>
-          <p class="muted">Automatically-generated SEO blogs for multifamily resident retention. Use backfill to add older posts.</p>
+          <p class="muted">Generate and store real SEO blogs. Backfill creates posts one-by-one across a range (no placeholders).</p>
 
           <div class="grid">
             <div>
               <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:12px;">
                 <button class="btn" id="btnBlogGenerate" type="button">Generate next blog</button>
                 <button class="btn secondary" id="btnBlogBackfill" type="button">Generate next backfill</button>
+                <button class="btn secondary" id="btnBlogBackfillAll" type="button">Generate backfill (all)</button>
+                <button class="btn danger" id="btnBlogDeleteAll" type="button">Delete all blogs</button>
                 <button class="btn secondary" id="btnBlogRefresh" type="button">Refresh</button>
               </div>
+
+              <div class="grid" style="margin-top:12px; grid-template-columns: 1fr 1fr;">
+                <div>
+                  <label for="blogStartDate">Start date (YYYY-MM-DD)</label>
+                  <input id="blogStartDate" type="text" placeholder="2024-01-01" />
+                </div>
+                <div>
+                  <label for="blogEndDate">End date (YYYY-MM-DD)</label>
+                  <input id="blogEndDate" type="text" placeholder="2026-02-23" />
+                </div>
+                <div>
+                  <label for="blogStepDays">Spacing (days)</label>
+                  <input id="blogStepDays" type="number" min="1" max="30" value="3" />
+                </div>
+                <div>
+                  <label for="blogBatchSize">Batch per request</label>
+                  <input id="blogBatchSize" type="number" min="1" max="5" value="1" />
+                </div>
+              </div>
+
               <div style="margin-top:12px;">
                 <div class="status" id="blogStatus"></div>
                 <div class="muted" id="blogMeta" style="margin-top:6px;"></div>
+                <div class="muted" id="blogEstimate" style="margin-top:6px;"></div>
                 <div class="muted" id="blogLast" style="margin-top:6px;"></div>
               </div>
             </div>
 
             <div>
-              <label>Cadence</label>
-              <div class="status ok" style="margin-top:8px;">Every 3 days • Backfill range: past 2 years</div>
-              <p class="muted" style="margin-top:10px;">Backfill generates one post at a time, starting 2 years ago and moving forward every 3 days.</p>
+              <label>Notes</label>
+              <div class="status ok" style="margin-top:8px;">Backfill generates real posts into storage</div>
+              <p class="muted" style="margin-top:10px;">If KV isn’t configured on Vercel, generation will fail. “Generate backfill (all)” loops until the API returns done.</p>
             </div>
           </div>
         </section>
@@ -236,9 +265,16 @@
 
         btnBlogGenerate: $('btnBlogGenerate'),
         btnBlogBackfill: $('btnBlogBackfill'),
+        btnBlogBackfillAll: $('btnBlogBackfillAll'),
+        btnBlogDeleteAll: $('btnBlogDeleteAll'),
         btnBlogRefresh: $('btnBlogRefresh'),
+        blogStartDate: $('blogStartDate'),
+        blogEndDate: $('blogEndDate'),
+        blogStepDays: $('blogStepDays'),
+        blogBatchSize: $('blogBatchSize'),
         blogStatus: $('blogStatus'),
         blogMeta: $('blogMeta'),
+        blogEstimate: $('blogEstimate'),
         blogLast: $('blogLast'),
       };
 
@@ -249,6 +285,7 @@
       }catch{}
 
       const BLOG_CURSOR_KEY = 'ps_blog_backfill_cursor';
+      const BLOG_CFG_KEY = 'ps_blog_backfill_cfg_v2';
 
       function readBlogCursor(){
         try{ return (localStorage.getItem(BLOG_CURSOR_KEY) || '').trim(); }catch{ return ''; }
@@ -261,6 +298,87 @@
           else localStorage.setItem(BLOG_CURSOR_KEY, s);
         }catch{}
       }
+
+      function readBlogCfg(){
+        try{
+          const raw = localStorage.getItem(BLOG_CFG_KEY) || '';
+          const j = raw ? JSON.parse(raw) : null;
+          return j && typeof j === 'object' ? j : {};
+        }catch{ return {}; }
+      }
+
+      function writeBlogCfg(cfg){
+        try{ localStorage.setItem(BLOG_CFG_KEY, JSON.stringify(cfg || {})); }catch{}
+      }
+
+      function yyyyMmDd(d){
+        const pad = (n)=>String(n).padStart(2,'0');
+        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+      }
+
+      function defaultRange(){
+        const end = new Date();
+        const start = new Date(end);
+        start.setFullYear(start.getFullYear() - 2);
+        return { startDate: yyyyMmDd(start), endDate: yyyyMmDd(end) };
+      }
+
+      function getBackfillInputs(){
+        const startDate = (fields.blogStartDate.value || '').trim();
+        const endDate = (fields.blogEndDate.value || '').trim();
+        const stepDays = Number(fields.blogStepDays.value || 3);
+        const batchSize = Number(fields.blogBatchSize.value || 1);
+        return { startDate, endDate, stepDays, batchSize };
+      }
+
+      function persistBackfillInputs(){
+        writeBlogCfg(getBackfillInputs());
+      }
+
+      function loadBackfillInputs(){
+        const d = defaultRange();
+        const cfg = readBlogCfg();
+
+        fields.blogStartDate.value = (cfg.startDate || fields.blogStartDate.value || d.startDate);
+        fields.blogEndDate.value = (cfg.endDate || fields.blogEndDate.value || d.endDate);
+        fields.blogStepDays.value = String(cfg.stepDays || fields.blogStepDays.value || 3);
+        fields.blogBatchSize.value = String(cfg.batchSize || fields.blogBatchSize.value || 1);
+
+        updateBackfillEstimate();
+      }
+
+      function parseDateOnly(s){
+        const raw = String(s || '').trim();
+        const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if(!m) return null;
+        const d = new Date(`${m[1]}-${m[2]}-${m[3]}T12:00:00.000Z`);
+        return Number.isNaN(d.getTime()) ? null : d;
+      }
+
+      function updateBackfillEstimate(){
+        const v = getBackfillInputs();
+        const start = parseDateOnly(v.startDate);
+        const end = parseDateOnly(v.endDate);
+        const step = Number(v.stepDays || 0);
+        if(!start || !end || !Number.isFinite(step) || step <= 0) {
+          fields.blogEstimate.textContent = '';
+          return;
+        }
+        const ms = end.getTime() - start.getTime();
+        if(ms < 0) {
+          fields.blogEstimate.textContent = 'Range looks reversed (start is after end).';
+          return;
+        }
+        const days = Math.floor(ms / (24*60*60*1000));
+        const count = Math.floor(days / step) + 1;
+        fields.blogEstimate.textContent = `Estimate: ~${count} posts (every ${step} days).`;
+      }
+
+      ['input','change'].forEach((evt)=>{
+        fields.blogStartDate.addEventListener(evt, updateBackfillEstimate);
+        fields.blogEndDate.addEventListener(evt, updateBackfillEstimate);
+        fields.blogStepDays.addEventListener(evt, updateBackfillEstimate);
+      });
 
 
       function setStatus(msg, ok=true){
@@ -330,10 +448,19 @@
         fields.blogStatus.className = 'status ' + (ok ? 'ok' : 'bad');
       }
 
+      function blogSetBusy(isBusy){
+        fields.btnBlogGenerate.disabled = isBusy;
+        fields.btnBlogBackfill.disabled = isBusy;
+        fields.btnBlogBackfillAll.disabled = isBusy;
+        fields.btnBlogDeleteAll.disabled = isBusy;
+        fields.btnBlogRefresh.disabled = isBusy;
+      }
+
       async function blogLoadStatus(){
         const token = (fields.adminToken.value || '').trim();
         blogSetStatus('Loading blogs…', true);
         fields.blogMeta.textContent = '';
+        fields.blogEstimate.textContent = '';
         fields.blogLast.textContent = '';
         try{
           const r = await fetch('/api/blogs/status', {
@@ -346,15 +473,11 @@
           if(!r.ok || !j || !j.ok) throw new Error('status_failed');
 
           const total = Number(j.total || 0);
-          const mode = String(j.mode || 'scheduled');
+          const mode = String(j.mode || 'disabled');
 
           blogSetStatus('Ready.', true);
-          if(mode === 'scheduled'){
-            const sched = j.schedule || {};
-            const stepDays = Number(sched.stepDays || 3);
-            const years = Number(sched.years || 2);
-            const cursor = readBlogCursor();
-            fields.blogMeta.textContent = `Mode: Scheduled (no database) • Total: ${total} • Every ${stepDays} days • ${years} years back • Backfill: ${cursor ? cursor.slice(0,10) : 'not started'}`;
+          if(mode !== 'kv'){
+            fields.blogMeta.textContent = 'Mode: Not configured (KV missing on Vercel).';
           } else {
             fields.blogMeta.textContent = `Mode: Stored (KV) • Total posts: ${total}`;
           }
@@ -363,7 +486,7 @@
           if(latest && latest.slug){
             fields.blogLast.innerHTML = `Latest: <a href="/blogs/${latest.slug}" style="text-decoration:underline;">${latest.title || latest.slug}</a>`;
           } else {
-            if(mode !== 'scheduled') fields.blogLast.textContent = 'No posts yet.';
+            if(mode === 'kv') fields.blogLast.textContent = 'No posts yet.';
           }
 
         }catch{
@@ -384,56 +507,142 @@
             body: JSON.stringify({ publishedAt: new Date().toISOString() }),
           });
           const j = await r.json().catch(()=>null);
-          if(!r.ok || !j || !j.ok) throw new Error('generate_failed');
+          if(!r.ok || !j || !j.ok) throw new Error((j && j.error) ? String(j.error) : 'generate_failed');
           blogSetStatus('Generated.', true);
           if(j.slug){
             fields.blogLast.innerHTML = `Latest: <a href="/blogs/${j.slug}" style="text-decoration:underline;">Open generated post</a>`;
           }
           await blogLoadStatus();
-        }catch{
-          blogSetStatus('Generation failed. Check AI_API_KEY.', false);
+        }catch(e){
+          blogSetStatus(`Generation failed: ${e && e.message ? e.message : 'unknown'}`, false);
         }
       }
 
       async function blogBackfillNext(){
         const token = (fields.adminToken.value || '').trim();
-        const years = 2;
-        const stepDays = 3;
         blogSetStatus('Generating backfill…', true);
         try{
           const cursor = readBlogCursor();
+          persistBackfillInputs();
+          const cfg = getBackfillInputs();
           const r = await fetch('/api/blogs/backfill-next', {
             method:'POST',
             headers:{
               'Content-Type':'application/json',
               ...(token ? { 'Authorization': 'Bearer ' + token } : {}),
             },
-            body: JSON.stringify({ years, stepDays, ...(cursor ? { cursor } : {}) }),
+            body: JSON.stringify({ ...cfg, ...(cursor ? { cursor } : {}) }),
           });
           const j = await r.json().catch(()=>null);
-          if(!r.ok || !j || !j.ok) throw new Error('backfill_failed');
+          if(!r.ok || !j || !j.ok) throw new Error((j && j.error) ? String(j.error) : 'backfill_failed');
 
           if(j.nextCursor) writeBlogCursor(String(j.nextCursor));
           if(j.done){
             blogSetStatus('Backfill complete.', true);
             writeBlogCursor('');
           } else {
-            blogSetStatus('Backfill generated.', true);
+            const n = Array.isArray(j.generated) ? j.generated.length : 1;
+            blogSetStatus(`Backfill generated (${n}).`, true);
           }
-          if(j.slug){
+
+          const last = Array.isArray(j.generated) && j.generated.length ? j.generated[j.generated.length - 1] : null;
+          if(last && last.slug){
+            fields.blogLast.innerHTML = `Latest: <a href="/blogs/${last.slug}" style="text-decoration:underline;">Open generated post</a>`;
+          } else if(j.slug){
             fields.blogLast.innerHTML = `Latest: <a href="/blogs/${j.slug}" style="text-decoration:underline;">Open generated post</a>`;
           }
           await blogLoadStatus();
-        }catch{
-          blogSetStatus('Backfill failed. Check AI_API_KEY.', false);
+        }catch(e){
+          blogSetStatus(`Backfill failed: ${e && e.message ? e.message : 'unknown'}`, false);
+        }
+      }
+
+      async function blogBackfillAll(){
+        const token = (fields.adminToken.value || '').trim();
+        blogSetBusy(true);
+        blogSetStatus('Backfilling (loop)…', true);
+
+        try{
+          persistBackfillInputs();
+          const cfg = getBackfillInputs();
+          let cursor = readBlogCursor();
+          let total = 0;
+
+          for(let i = 0; i < 20000; i++){
+            const r = await fetch('/api/blogs/backfill-next', {
+              method:'POST',
+              headers:{
+                'Content-Type':'application/json',
+                ...(token ? { 'Authorization': 'Bearer ' + token } : {}),
+              },
+              body: JSON.stringify({ ...cfg, ...(cursor ? { cursor } : {}) }),
+            });
+            const j = await r.json().catch(()=>null);
+            if(!r.ok || !j || !j.ok) throw new Error((j && j.error) ? String(j.error) : 'backfill_failed');
+
+            const n = Array.isArray(j.generated) ? j.generated.length : 0;
+            total += n;
+
+            if(j.nextCursor) {
+              cursor = String(j.nextCursor);
+              writeBlogCursor(cursor);
+            }
+
+            const last = Array.isArray(j.generated) && j.generated.length ? j.generated[j.generated.length - 1] : null;
+            if(last && last.slug){
+              fields.blogLast.innerHTML = `Latest: <a href="/blogs/${last.slug}" style="text-decoration:underline;">Open generated post</a>`;
+            }
+
+            if(j.done){
+              blogSetStatus(`Backfill complete (${total} posts).`, true);
+              writeBlogCursor('');
+              break;
+            }
+            blogSetStatus(`Generated ${total}…`, true);
+          }
+
+          await blogLoadStatus();
+        }catch(e){
+          blogSetStatus(`Backfill failed: ${e && e.message ? e.message : 'unknown'}`, false);
+        }finally{
+          blogSetBusy(false);
+        }
+      }
+
+      async function blogDeleteAll(){
+        const token = (fields.adminToken.value || '').trim();
+        if(!confirm('Delete ALL blog posts? This cannot be undone.')) return;
+        blogSetBusy(true);
+        blogSetStatus('Deleting…', true);
+        try{
+          const r = await fetch('/api/blogs/delete-all', {
+            method:'POST',
+            headers:{
+              'Content-Type':'application/json',
+              ...(token ? { 'Authorization': 'Bearer ' + token } : {}),
+            },
+            body: JSON.stringify({}),
+          });
+          const j = await r.json().catch(()=>null);
+          if(!r.ok || !j || !j.ok) throw new Error((j && j.error) ? String(j.error) : 'delete_failed');
+          writeBlogCursor('');
+          blogSetStatus(`Deleted ${Number(j.deleted || 0)} posts.`, true);
+          await blogLoadStatus();
+        }catch(e){
+          blogSetStatus(`Delete failed: ${e && e.message ? e.message : 'unknown'}`, false);
+        }finally{
+          blogSetBusy(false);
         }
       }
 
       fields.btnBlogGenerate.addEventListener('click', blogGenerateNext);
       fields.btnBlogBackfill.addEventListener('click', blogBackfillNext);
+      fields.btnBlogBackfillAll.addEventListener('click', blogBackfillAll);
+      fields.btnBlogDeleteAll.addEventListener('click', blogDeleteAll);
       fields.btnBlogRefresh.addEventListener('click', blogLoadStatus);
 
       load();
+      loadBackfillInputs();
       blogLoadStatus();
     })();
   </script>

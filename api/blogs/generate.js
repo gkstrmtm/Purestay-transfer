@@ -1,6 +1,8 @@
 const { sendJson, handleCors, bearerToken, readJson } = require('../../lib/vercelApi');
-const { getSiteUrl } = require('../../lib/blogs');
+const { getSiteUrl, putPost } = require('../../lib/blogs');
+const { hasKvEnv } = require('../../lib/storage');
 const { scheduledMeta, intervalDays, startDateAligned, sequenceForDate } = require('../../lib/blogSchedule');
+const { generateBlogPost } = require('../../lib/aiBlog');
 
 function nowIso() {
   return new Date().toISOString();
@@ -22,6 +24,10 @@ module.exports = async (req, res) => {
   const auth = await requireAdminIfConfigured(req);
   if (!auth.ok) return sendJson(res, 401, { ok: false, error: 'unauthorized' });
 
+  if (!hasKvEnv()) {
+    return sendJson(res, 400, { ok: false, error: 'kv_required' });
+  }
+
   const payload = await readJson(req);
   const publishedAt = String(payload?.publishedAt || '').trim() || nowIso();
 
@@ -31,12 +37,34 @@ module.exports = async (req, res) => {
   const seq = sequenceForDate(new Date(publishedAt), { start, stepDays });
   const meta = scheduledMeta({ sequence: seq, publishedAt: new Date(publishedAt).toISOString(), stepDays, start });
 
-  // Warm the cached HTML page at /blogs/:slug (the rewrite points to api/blogs/page)
-  const warmUrl = `${siteUrl}/blogs/${meta.slug}?ssr=1`;
-  const r = await fetch(warmUrl, { method: 'GET', headers: { 'User-Agent': 'PureStay-Blog-Warmer' } }).catch(() => null);
-  if (!r || !r.ok) {
-    return sendJson(res, 503, { ok: false, error: 'warm_failed', slug: meta.slug, url: warmUrl });
+  const gen = await generateBlogPost({
+    sequence: seq,
+    publishedAt: meta.publishedAt,
+    siteUrl,
+    forced: {
+      title: meta.title,
+      slug: meta.slug,
+      topic: meta.topic,
+      primaryKeyword: meta.topic,
+    },
+  });
+
+  if (!gen.ok) {
+    return sendJson(res, 503, { ok: false, error: 'ai_failed', detail: gen.error, slug: meta.slug });
   }
 
-  return sendJson(res, 200, { ok: true, mode: 'scheduled', warmed: true, slug: meta.slug, url: warmUrl, ...(auth.warning ? { warning: auth.warning } : {}) });
+  const post = {
+    ...gen.data,
+    slug: meta.slug,
+    title: meta.title,
+    excerpt: meta.excerpt,
+    publishedAt: meta.publishedAt,
+    createdAt: nowIso(),
+    updatedAt: nowIso(),
+  };
+
+  const stored = await putPost(post);
+  if (!stored) return sendJson(res, 503, { ok: false, error: 'kv_store_failed', slug: meta.slug });
+
+  return sendJson(res, 200, { ok: true, stored: true, slug: meta.slug, url: `${siteUrl}/blogs/${meta.slug}`, ...(auth.warning ? { warning: auth.warning } : {}) });
 };

@@ -28,9 +28,6 @@ module.exports = async (req, res) => {
   if (hasKvEnv()) {
     const data = await listPosts({ limit: 500, offset: 0 });
     posts = data.posts || [];
-  } else {
-    const data = listScheduled({ limit: 500, offset: 0 });
-    posts = data.posts || [];
   }
 
   const staticUrls = [
