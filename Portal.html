@@ -1483,4 +1483,35 @@
       state.token = '';
       localStorage.removeItem('portal_access_token');
       await refreshMe();
+    });
 
+    on('refreshBtn', 'click', () => refreshMe().catch(() => {}));
+
+    on('loadLeadsBtn', 'click', () => loadLeads().catch(() => {}));
+    on('newLeadToggle', 'click', () => { $('newLeadBox').hidden = !$('newLeadBox').hidden; });
+    on('createLeadBtn', 'click', () => createLead().catch(() => {}));
+
+    on('pickFromLeads', 'click', () => setTab('leads'));
+    on('logCallBtn', 'click', () => logCall().catch(() => {}));
+    on('aiFollowupBtn', 'click', () => aiFollowup().catch(() => {}));
+
+    on('loadEventsBtn', 'click', () => loadEvents().catch(() => {}));
+    on('newEventToggle', 'click', () => { $('newEventBox').hidden = !$('newEventBox').hidden; });
+    on('createEventBtn', 'click', () => createEvent().catch(() => {}));
+
+    on('closeSubmitBtn', 'click', () => submitClose().catch(() => {}));
+    on('closeQuoteBtn', 'click', () => fillTierPrice());
+
+    on('submitRecapBtn', 'click', () => submitRecap().catch(() => {}));
+    on('closeRecapBtn', 'click', () => setSelectedEvent(null));
+
+    on('loadPayoutsBtn', 'click', () => loadPayouts().catch(() => {}));
+
+    on('loadUsersBtn', 'click', () => loadUsers().catch(() => {}));
+
+    boot().catch((e) => {
+      $('authMsg').textContent = String(e.message || e);
+    });
+  </script>
+</body>
+</html>
