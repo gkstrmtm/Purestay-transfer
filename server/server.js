@@ -208,13 +208,20 @@ const server = http.createServer(async (req, res) => {
     return json(res, 200, { ok: true, now: new Date().toISOString() });
   }
 
-  // --- Blogs (local dev parity with Vercel rewrites) ---
-  if (pathname === '/blogs' || pathname === '/blogs/') {
+  // --- Blogs + sitemap ---
+  // If you generate static files (blogs/index.html, blogs/<slug>/index.html, sitemap.xml),
+  // the static handler below will serve them automatically.
+  // For local dev parity before generation, fall back to API handlers.
+  const hasStaticBlogsIndex = fs.existsSync(path.join(ROOT_DIR, 'blogs', 'index.html'));
+  const hasStaticSitemap = fs.existsSync(path.join(ROOT_DIR, 'sitemap.xml'));
+
+  if (!hasStaticBlogsIndex && (pathname === '/blogs' || pathname === '/blogs/')) {
     const handler = require('../api/blogs/page');
     req.url = `/api/blogs/page${u.search || ''}`;
     return handler(req, res);
   }
-  if (pathname.startsWith('/blogs/')) {
+
+  if (!hasStaticBlogsIndex && pathname.startsWith('/blogs/')) {
     const slug = pathname.slice('/blogs/'.length);
     const handler = require('../api/blogs/page');
     const qs = new URLSearchParams(u.searchParams);
@@ -222,7 +229,8 @@ const server = http.createServer(async (req, res) => {
     req.url = `/api/blogs/page?${qs.toString()}`;
     return handler(req, res);
   }
-  if (pathname === '/sitemap.xml') {
+
+  if (!hasStaticSitemap && pathname === '/sitemap.xml') {
     const handler = require('../api/sitemap.xml');
     req.url = `/api/sitemap.xml${u.search || ''}`;
     return handler(req, res);
@@ -510,31 +518,63 @@ const server = http.createServer(async (req, res) => {
   }
 
   // --- Static ---
-  let filePath = pathname;
-  if (filePath === '/') filePath = '/Home.html';
+  function resolveStaticCandidates(p) {
+    const candidates = [];
+    const clean = p || '/';
 
-  const abs = path.join(ROOT_DIR, filePath);
-  const normalized = path.normalize(abs);
+    // Default document
+    if (clean === '/') {
+      candidates.push('/Home.html');
+      return candidates;
+    }
 
-  // block path traversal
-  if (!withinRoot(normalized)) {
-    return json(res, 400, { ok: false, error: 'bad_path' });
+    // Exact path
+    candidates.push(clean);
+
+    // If trailing slash, try index.html
+    if (clean.endsWith('/')) {
+      candidates.push(clean + 'index.html');
+      return candidates;
+    }
+
+    // Clean URL -> directory index
+    candidates.push(clean + '/index.html');
+
+    // Legacy: allow /foo -> /foo.html when present
+    if (!path.extname(clean)) candidates.push(clean + '.html');
+
+    return candidates;
   }
 
-  fs.stat(normalized, (err, st) => {
-    if (err || !st.isFile()) {
-      // basic 404
+  const candidates = resolveStaticCandidates(pathname);
+
+  function tryNext(i) {
+    if (i >= candidates.length) {
       return send(res, 404, { 'Content-Type': 'text/plain; charset=utf-8' }, 'Not Found');
     }
 
-    const type = contentType(normalized);
-    res.writeHead(200, {
-      'Content-Type': type,
-      'Cache-Control': 'no-store'
-    });
+    const abs = path.join(ROOT_DIR, candidates[i]);
+    const normalized = path.normalize(abs);
 
-    fs.createReadStream(normalized).pipe(res);
-  });
+    // block path traversal
+    if (!withinRoot(normalized)) {
+      return json(res, 400, { ok: false, error: 'bad_path' });
+    }
+
+    fs.stat(normalized, (err, st) => {
+      if (err || !st.isFile()) return tryNext(i + 1);
+
+      const type = contentType(normalized);
+      res.writeHead(200, {
+        'Content-Type': type,
+        'Cache-Control': 'no-store'
+      });
+
+      fs.createReadStream(normalized).pipe(res);
+    });
+  }
+
+  return tryNext(0);
 });
 
 server.listen(PORT, () => {

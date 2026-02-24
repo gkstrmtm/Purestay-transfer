@@ -28,10 +28,6 @@
     { "source": "/culture-shift", "destination": "/CultureShift.html" },
     { "source": "/signature-stay", "destination": "/SignatureStay.html" },
 
-    { "source": "/blogs", "destination": "/api/blogs/page" },
-    { "source": "/blogs/:slug", "destination": "/api/blogs/page?slug=:slug" },
-    { "source": "/sitemap.xml", "destination": "/api/sitemap.xml" },
-
     { "source": "/ec-toolkit", "destination": "/ECtoolkit.html" },
     { "source": "/eventcc", "destination": "/eventcc.html" },
     { "source": "/budget-calculator", "destination": "/budgetcal.html" },
