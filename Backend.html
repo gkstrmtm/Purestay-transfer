@@ -233,7 +233,7 @@
             <div>
               <label>Notes</label>
               <div class="status ok" style="margin-top:8px;">Backfill generates real posts into storage</div>
-              <p class="muted" style="margin-top:10px;">If KV isn’t configured on Vercel, generation will fail. “Generate backfill (all)” loops until the API returns done.</p>
+              <p class="muted" style="margin-top:10px;">If storage isn’t configured (Supabase recommended), generation will fail. “Generate backfill (all)” loops until the API returns done.</p>
             </div>
           </div>
         </section>
@@ -476,17 +476,17 @@
           const mode = String(j.mode || 'disabled');
 
           blogSetStatus('Ready.', true);
-          if(mode !== 'kv'){
-            fields.blogMeta.textContent = 'Mode: Not configured (KV missing on Vercel).';
+          if(mode !== 'supabase' && mode !== 'kv'){
+            fields.blogMeta.textContent = 'Mode: Not configured (storage missing).';
           } else {
-            fields.blogMeta.textContent = `Mode: Stored (KV) • Total posts: ${total}`;
+            fields.blogMeta.textContent = `Mode: Stored (${mode}) • Total posts: ${total}`;
           }
 
           const latest = j.latest;
           if(latest && latest.slug){
             fields.blogLast.innerHTML = `Latest: <a href="/blogs/${latest.slug}" style="text-decoration:underline;">${latest.title || latest.slug}</a>`;
           } else {
-            if(mode === 'kv') fields.blogLast.textContent = 'No posts yet.';
+            if(mode === 'supabase' || mode === 'kv') fields.blogLast.textContent = 'No posts yet.';
           }
 
         }catch{
