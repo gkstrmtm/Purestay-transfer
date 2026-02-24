@@ -163,9 +163,15 @@
             <button id="loginBtn" class="btn">Sign in</button>
             <span class="small muted">Uses your Supabase Auth users.</span>
           </div>
+          <div style="height:10px"></div>
+          <div class="row">
+            <button id="seedBtn" class="btn secondary">Seed demo users</button>
+            <span class="small muted">First run only. Creates a manager user too.</span>
+          </div>
           <div style="height:12px"></div>
           <div id="authMsg" class="err"></div>
           <div id="authOk" class="ok"></div>
+          <div id="seedMsg" class="ok"></div>
         </div>
       </section>
 
@@ -434,7 +440,10 @@
               <div class="muted small">Manager view</div>
               <div style="font-weight:700; margin-top:4px;">Role access matrix + users</div>
             </div>
-            <button id="loadUsersBtn" class="btn secondary">Load users</button>
+            <div class="row">
+              <button id="seedBtnMgr" class="btn secondary">Seed demo users</button>
+              <button id="loadUsersBtn" class="btn secondary">Load users</button>
+            </div>
           </div>
           <div style="height:12px"></div>
           <div class="card" style="background: rgba(11,20,38,.35);">
@@ -452,6 +461,7 @@
           </div>
           <div style="height:14px"></div>
           <div id="usersMsg" class="err"></div>
+          <div id="seedMsgMgr" class="ok"></div>
           <div style="overflow:auto; border:1px solid var(--line); border-radius: 12px;">
             <table>
               <thead>
@@ -938,6 +948,49 @@
         .replace(/'/g, '&#039;');
     }
 
+    function renderSeedResult(j) {
+      const users = Array.isArray(j?.users) ? j.users : [];
+      const okUsers = users.filter((u) => u && u.ok);
+      const lines = [];
+      lines.push(`Seed complete. bootstrap=${String(!!j?.bootstrap)}`);
+      lines.push('Default password is PurestayDemo!234 unless you set PORTAL_DEMO_PASSWORD.');
+      const mgr = okUsers.find((u) => u.role === 'manager');
+      if (mgr?.email) lines.push(`Manager login: ${mgr.email}`);
+      if (okUsers.length) {
+        lines.push('Users:');
+        for (const u of okUsers) lines.push(`- ${u.role}: ${u.email}`);
+      }
+      return lines.join('\n');
+    }
+
+    async function seedDemoSignedOut() {
+      $('seedMsg').textContent = '';
+      $('authMsg').textContent = '';
+      try {
+        const r = await fetch('/api/portal/seed', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        });
+        const j = await r.json().catch(() => null);
+        if (!j || !j.ok) throw new Error(j?.error || ('http_' + r.status));
+        $('seedMsg').textContent = renderSeedResult(j);
+      } catch (e) {
+        $('authMsg').textContent = String(e.message || e);
+      }
+    }
+
+    async function seedDemoManager() {
+      $('seedMsgMgr').textContent = '';
+      $('usersMsg').textContent = '';
+      try {
+        const j = await api('/api/portal/seed', { method: 'POST', body: {} });
+        $('seedMsgMgr').textContent = renderSeedResult(j);
+      } catch (e) {
+        $('usersMsg').textContent = String(e.message || e);
+      }
+    }
+
     async function boot(){
       $('authMsg').textContent = '';
       $('authOk').textContent = '';
@@ -1002,6 +1055,9 @@
     $('createDocBtn').addEventListener('click', () => createDoc().catch(() => {}));
 
     $('loadUsersBtn').addEventListener('click', () => loadUsers().catch(() => {}));
+
+    $('seedBtn').addEventListener('click', () => seedDemoSignedOut().catch(() => {}));
+    $('seedBtnMgr').addEventListener('click', () => seedDemoManager().catch(() => {}));
 
     boot().catch((e) => {
       $('authMsg').textContent = String(e.message || e);
