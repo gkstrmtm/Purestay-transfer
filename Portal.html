@@ -463,7 +463,7 @@
               <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
                 <div>
                   <div style="font-weight:900;">My queue</div>
-                  <div class="muted small">Leads assigned to you or your inbox</div>
+                  <div class="muted small">Leads assigned to you or unassigned</div>
                 </div>
                 <div class="row">
                   <button id="loadQueueBtn" class="btn secondary" type="button">Load</button>
@@ -640,11 +640,11 @@
                 <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
                   <div>
                     <div style="font-weight:900;">Dispatch tasks</div>
-                    <div class="muted small">Open and assigned tasks in your inbox</div>
+                    <div class="muted small">Open tasks assigned to you or unassigned</div>
                   </div>
                   <div class="row">
                     <select id="dialerTasksScope" style="max-width:220px">
-                      <option value="role">Inbox</option>
+                      <option value="role">Role</option>
                       <option value="mine">My tasks</option>
                     </select>
                     <label class="muted small" style="display:flex; align-items:center; gap:8px; margin:0;">
@@ -995,11 +995,11 @@
                 <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
                   <div>
                     <div style="font-weight:900;">Dispatch tasks</div>
-                    <div class="muted small">Open and assigned tasks in your inbox</div>
+                    <div class="muted small">Open tasks assigned to you or unassigned</div>
                   </div>
                   <div class="row">
                     <select id="closerTasksScope" style="max-width:220px">
-                      <option value="role">Inbox</option>
+                      <option value="role">Role</option>
                       <option value="mine">My tasks</option>
                     </select>
                     <label class="muted small" style="display:flex; align-items:center; gap:8px; margin:0;">
@@ -1506,8 +1506,6 @@
       availability: { monthOffset: 0, selectedDate: '', byDate: {}, tz: '' },
     };
 
-    const INBOX_USER_SENTINEL = '__inbox__';
-
     function setBadge(kind, text){
       const b = $('viewBadge');
       if (!b) return;
@@ -1570,7 +1568,7 @@
 
     function viewAsUserLabel(userId){
       const id = String(userId || '').trim();
-      if (!id || id === INBOX_USER_SENTINEL) return '';
+      if (!id) return '';
       const u = (state.usersCache || []).find((x) => String(x.userId) === id);
       if (!u) return '';
       return String(u.fullName || u.email || '').trim();
@@ -1626,7 +1624,7 @@
 
     function setViewAsUserId(nextUserId){
       const v = String(nextUserId || '').trim();
-      state.viewAsUserId = v ? v : INBOX_USER_SENTINEL;
+      state.viewAsUserId = v;
       refreshMe().catch(() => {});
     }
 
@@ -1850,8 +1848,7 @@
       // Manager-only: pass effective view-as role to the server so it can
       // enforce scoping (and read-only) server-side.
       const viewAs = isManagerUser() ? String(state.viewAsRole || '').trim() : '';
-      const viewAsUserIdRaw = isManagerUser() ? String(state.viewAsUserId || '').trim() : '';
-      const viewAsUserId = viewAsUserIdRaw === INBOX_USER_SENTINEL ? '' : viewAsUserIdRaw;
+      const viewAsUserId = isManagerUser() ? String(state.viewAsUserId || '').trim() : '';
       const p = String(path || '');
       const exclude = [
         '/api/portal/me',
@@ -1925,7 +1922,7 @@
       }
 
       $('roleLine').textContent = realRole === 'manager' && er !== 'manager'
-        ? `Operations • viewing ${viewingLabel(er)}${(state.viewAsUserId && state.viewAsUserId !== INBOX_USER_SENTINEL) ? (' — ' + (viewAsUserLabel(state.viewAsUserId) || '')) : ''}`.trim()
+        ? `Operations • viewing ${viewingLabel(er)}${(state.viewAsUserId ? (' — ' + (viewAsUserLabel(state.viewAsUserId) || '')) : '')}`.trim()
         : viewingLabel(realRole);
       $('appUser').textContent = me.user.email;
 
@@ -1952,7 +1949,7 @@
 
       const viewAsHtml = isManagerUser() ? (() => {
         const items = [
-          { role: 'manager', label: 'All', tab: 'overview' },
+          { role: 'manager', label: 'My view', tab: 'overview' },
           { role: 'keep', label: 'Overview', tab: 'overview' },
           { role: 'keep', label: 'Leads', tab: 'leads' },
           { role: 'dialer', label: 'Calls', tab: 'calls', dialerSubtab: 'call' },
@@ -1985,11 +1982,10 @@
         }).join('');
 
         const people = er === 'manager' ? [] : usersForViewAsRole(er);
-        const isInbox = (!state.viewAsUserId || state.viewAsUserId === INBOX_USER_SENTINEL);
+        const isSelected = !!String(state.viewAsUserId || '').trim();
         const peopleBtns = er === 'manager' ? '' : `
           <div class="navTitle" style="margin-top:8px;">Person</div>
           <div style="max-height:240px; overflow:auto; padding-right:4px;">
-            <button class="navBtn ${isInbox ? 'active' : ''}" type="button" data-viewas-user="">Inbox</button>
             ${people.map((u) => {
               const label = String(u.fullName || u.email || u.userId || '').trim() || u.userId;
               const active = String(u.userId) === String(state.viewAsUserId || '');
@@ -2065,7 +2061,7 @@
           <div>
             <div class="muted small">Workspace</div>
             <div style="margin-top:4px;"><span class="badge ok">${escapeHtml(realRole === 'manager' && er !== 'manager' ? viewingLabel(er) : viewingLabel(realRole))}</span></div>
-            ${realRole === 'manager' && er !== 'manager' && state.viewAsUserId && state.viewAsUserId !== INBOX_USER_SENTINEL ? `<div class="muted small" style="margin-top:6px;">${escapeHtml(viewAsUserLabel(state.viewAsUserId) || '')}</div>` : ''}
+            ${realRole === 'manager' && er !== 'manager' && state.viewAsUserId ? `<div class="muted small" style="margin-top:6px;">${escapeHtml(viewAsUserLabel(state.viewAsUserId) || '')}</div>` : ''}
           </div>
         </div>
         <div style="height:12px"></div>
