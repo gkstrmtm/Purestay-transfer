@@ -58,7 +58,7 @@ module.exports = async (req, res) => {
   const s = await requirePortalSession(req);
   if (!s.ok) return sendJson(res, s.status || 401, { ok: false, error: s.error });
 
-  if (!hasRole(s.profile, ['closer', 'account_manager'])) {
+  if (!hasRole(s.profile, ['closer', 'account_manager', 'dialer', 'in_person_setter', 'remote_setter', 'manager'])) {
     return sendJson(res, 403, { ok: false, error: 'forbidden' });
   }
 
@@ -82,7 +82,13 @@ module.exports = async (req, res) => {
     if (leadId) query = query.contains('meta', { kind: 'appointment', leadId });
 
     if (!isManager(s.profile)) {
-      query = query.or([`assigned_user_id.eq.${s.user.id}`, `created_by.eq.${s.user.id}`].join(','));
+      const role = String(s.profile?.role || '');
+      if (['closer', 'account_manager'].includes(role)) {
+        query = query.or([`assigned_user_id.eq.${s.user.id}`, `created_by.eq.${s.user.id}`].join(','));
+      } else {
+        // Dialers/setters only see appointments they created (handoffs they booked).
+        query = query.eq('created_by', s.user.id);
+      }
     }
 
     const { data, error } = await query;
@@ -108,8 +114,14 @@ module.exports = async (req, res) => {
     const startTime = cleanStr(body.startTime, 20);
     if (!startTime) return sendJson(res, 422, { ok: false, error: 'missing_start_time' });
 
+    const role = String(s.profile?.role || '');
     let assignedUserId = cleanStr(body.assignedUserId, 80) || null;
-    if (!isManager(s.profile)) assignedUserId = s.user.id;
+    // Closers scheduling for themselves: keep behavior.
+    if (!isManager(s.profile) && ['closer', 'account_manager'].includes(role)) assignedUserId = s.user.id;
+    // Dialers/setters scheduling for closers: do NOT force assignment to the caller.
+    if (!isManager(s.profile) && ['dialer', 'in_person_setter', 'remote_setter'].includes(role)) {
+      assignedUserId = assignedUserId || null;
+    }
 
     const { data: leadRows, error: leadErr } = await s.sbAdmin
       .from('portal_leads')
@@ -183,6 +195,10 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === 'PATCH') {
+    if (!hasRole(s.profile, ['closer', 'account_manager', 'manager'])) {
+      return sendJson(res, 403, { ok: false, error: 'forbidden' });
+    }
+
     const body = await readJson(req);
     if (!body) return sendJson(res, 400, { ok: false, error: 'invalid_body' });
 
