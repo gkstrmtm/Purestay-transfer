@@ -29,6 +29,19 @@ async function canTouchLead(sbAdmin, { profile, userId, leadId }) {
   );
 }
 
+async function userIdsForRole(sbAdmin, role, { limit = 200 } = {}) {
+  const r = String(role || '').trim();
+  if (!r) return [];
+  const { data, error } = await sbAdmin
+    .from('portal_profiles')
+    .select('user_id')
+    .eq('role', r)
+    .order('created_at', { ascending: true })
+    .limit(limit);
+  if (error) return [];
+  return (Array.isArray(data) ? data : []).map((x) => x.user_id).filter(Boolean);
+}
+
 function canSeeEvent({ profile, userId, event }) {
   if (isManager(profile)) return true;
   const role = String(profile?.role || '');
@@ -83,16 +96,42 @@ module.exports = async (req, res) => {
 
     if (!isManager(s.profile)) {
       const role = String(s.profile?.role || '');
-      if (['closer', 'account_manager'].includes(role)) {
-        query = query.or([`assigned_user_id.eq.${s.user.id}`, `created_by.eq.${s.user.id}`].join(','));
+
+      if (s.viewAsRole && role) {
+        const ids = await userIdsForRole(s.sbAdmin, role, { limit: 220 });
+        if (!ids.length) {
+          return sendJson(res, 200, { ok: true, appointments: [] });
+        }
+
+        if (['dialer', 'in_person_setter', 'remote_setter'].includes(role)) {
+          query = query.in('created_by', ids);
+        } else if (['closer', 'account_manager'].includes(role)) {
+          // Role-wide appointment view (assigned to role members or created by them).
+          query = query.or([
+            `assigned_user_id.in.(${ids.join(',')})`,
+            `created_by.in.(${ids.join(',')})`,
+          ].join(','));
+        } else {
+          return sendJson(res, 200, { ok: true, appointments: [] });
+        }
       } else {
-        // Dialers/setters only see appointments they created (handoffs they booked).
-        query = query.eq('created_by', s.user.id);
+        if (['closer', 'account_manager'].includes(role)) {
+          query = query.or([`assigned_user_id.eq.${s.user.id}`, `created_by.eq.${s.user.id}`].join(','));
+        } else {
+          // Dialers/setters only see appointments they created (handoffs they booked).
+          query = query.eq('created_by', s.user.id);
+        }
       }
     }
 
     const { data, error } = await query;
     if (error) return sendJson(res, 500, { ok: false, error: 'appointments_query_failed' });
+
+    // In view-as mode, the query is already role-scoped; don't re-filter by
+    // userId/role ownership checks.
+    if (s.viewAsRole) {
+      return sendJson(res, 200, { ok: true, appointments: Array.isArray(data) ? data : [] });
+    }
 
     const filtered = (Array.isArray(data) ? data : []).filter((ev) => canSeeEvent({ profile: s.profile, userId: s.user.id, event: ev }));
     return sendJson(res, 200, { ok: true, appointments: filtered });

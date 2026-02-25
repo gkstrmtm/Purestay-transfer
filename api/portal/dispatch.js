@@ -90,22 +90,29 @@ module.exports = async (req, res) => {
     if (!isManager(s.profile)) {
       const role = String(s.profile.role || '');
 
-      if (scope === 'mine') {
-        query = query.eq('assigned_user_id', s.user.id);
-      } else if (scope === 'role') {
-        if (!role) {
-          query = query.eq('assigned_user_id', s.user.id);
-        } else {
-          query = query.eq('assigned_role', role);
-          query = query.or([`assigned_user_id.is.null`, `assigned_user_id.eq.${s.user.id}`].join(','));
-        }
+      // Manager view-as mode: simulate the role inbox (unassigned).
+      if (s.viewAsRole && role) {
+        query = query.eq('assigned_role', role);
+        query = query.eq('assigned_user_id', null);
       } else {
-        const parts = [
-          `assigned_user_id.eq.${s.user.id}`,
-          `created_by.eq.${s.user.id}`,
-        ];
-        if (role) parts.push(`assigned_role.eq.${role}`);
-        query = query.or(parts.join(','));
+
+        if (scope === 'mine') {
+          query = query.eq('assigned_user_id', s.user.id);
+        } else if (scope === 'role') {
+          if (!role) {
+            query = query.eq('assigned_user_id', s.user.id);
+          } else {
+            query = query.eq('assigned_role', role);
+            query = query.or([`assigned_user_id.is.null`, `assigned_user_id.eq.${s.user.id}`].join(','));
+          }
+        } else {
+          const parts = [
+            `assigned_user_id.eq.${s.user.id}`,
+            `created_by.eq.${s.user.id}`,
+          ];
+          if (role) parts.push(`assigned_role.eq.${role}`);
+          query = query.or(parts.join(','));
+        }
       }
     }
 

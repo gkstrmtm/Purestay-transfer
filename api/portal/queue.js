@@ -40,12 +40,18 @@ module.exports = async (req, res) => {
 
   if (!isManager(s.profile)) {
     const role = String(s.profile.role || '');
-    const parts = [
-      `assigned_user_id.eq.${s.user.id}`,
-      `created_by.eq.${s.user.id}`,
-    ];
-    if (role) parts.push(`assigned_role.eq.${role}`);
-    query = query.or(parts.join(','));
+
+    // Manager view-as mode: show the role inbox (unassigned) instead of manager-owned data.
+    if (s.viewAsRole && role) {
+      query = query.eq('assigned_role', role).is('assigned_user_id', null);
+    } else {
+      const parts = [
+        `assigned_user_id.eq.${s.user.id}`,
+        `created_by.eq.${s.user.id}`,
+      ];
+      if (role) parts.push(`assigned_role.eq.${role}`);
+      query = query.or(parts.join(','));
+    }
   }
 
   const { data, error } = await query;
