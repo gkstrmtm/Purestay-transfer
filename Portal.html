@@ -297,7 +297,42 @@
               </select>
               <button id="loadLeadsBtn" class="btn secondary">Load</button>
             </div>
-            <button id="newLeadToggle" class="btn secondary">New lead</button>
+            <div class="row" style="gap:8px;">
+              <button id="pullLeadsToggle" class="btn secondary hide" type="button">Pull leads</button>
+              <button id="newLeadToggle" class="btn secondary" type="button">+ New lead</button>
+            </div>
+          </div>
+
+          <div id="pullLeadsBox" class="card" style="margin-top:14px; background: #fff;" hidden>
+            <div class="bd">
+              <div style="font-weight:900;">Pull leads (Google Maps)</div>
+              <div class="muted small" style="margin-top:4px;">Apartment / multi-family offices. Phone + website included when available.</div>
+              <div style="height:10px"></div>
+              <div class="two">
+                <div>
+                  <label>City, State</label>
+                  <input id="plCityState" placeholder="Raleigh, NC" />
+                </div>
+                <div>
+                  <label>Keyword</label>
+                  <input id="plKeyword" placeholder="apartment leasing office" />
+                </div>
+              </div>
+              <div class="two" style="margin-top:10px;">
+                <div>
+                  <label>Max leads</label>
+                  <input id="plLimit" type="number" min="1" max="25" step="1" value="10" />
+                </div>
+                <div>
+                  <label>Notes (optional)</label>
+                  <input id="plNotes" placeholder="Any context to store on the leads" />
+                </div>
+              </div>
+              <div class="row" style="margin-top:10px;">
+                <button id="pullLeadsBtn" class="btn" type="button">Pull now</button>
+                <div id="pullLeadsMsg" class="err"></div>
+              </div>
+            </div>
           </div>
 
           <div id="newLeadBox" class="card" style="margin-top:14px; background: #fff;" hidden>
@@ -327,6 +362,7 @@
 
           <div style="height:14px"></div>
           <div id="leadsMsg" class="err"></div>
+          <div id="leadsEmpty" class="muted small" style="margin-top:6px;"></div>
           <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
             <table>
               <thead>
@@ -739,71 +775,9 @@
         <div id="viewCloser" class="hide">
           <div class="row" style="justify-content:space-between; gap:12px; margin-bottom:12px;">
             <div class="segTabs" style="gap:8px;">
-              <button id="closerSegMeetings" class="segBtn" type="button">Meetings</button>
               <button id="closerSegDisposition" class="segBtn" type="button">Disposition</button>
               <button id="closerSegAvailability" class="segBtn" type="button">Availability</button>
-              <button id="closerSegTasks" class="segBtn" type="button">Dispatch</button>
               <button id="closerSegPipeline" class="segBtn" type="button">Pipeline</button>
-            </div>
-          </div>
-
-          <div id="closerPaneMeetings">
-            <div class="card" style="background:#fff;">
-              <div class="bd">
-                <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
-                  <div>
-                    <div style="font-weight:900;">Appointments</div>
-                    <div class="muted small">Upcoming and recent appointments</div>
-                  </div>
-                  <button id="loadApptsBtn" class="btn secondary" type="button">Load</button>
-                </div>
-
-                <div style="height:10px"></div>
-                <div id="apptsMsg" class="err"></div>
-
-                <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Lead</th>
-                        <th>Status</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody id="apptsTbody"></tbody>
-                  </table>
-                </div>
-
-                <div style="height:12px"></div>
-                <div class="card" style="background:#fff; border-color: rgba(199,154,59,.35);">
-                  <div class="bd">
-                    <div style="font-weight:900;">Reschedule / add (optional)</div>
-                    <div class="muted small" style="margin-top:4px;">For the currently selected lead</div>
-
-                    <div style="height:10px"></div>
-                    <div class="two">
-                      <div>
-                        <label>Date</label>
-                        <input id="apptDate" type="date" />
-                      </div>
-                      <div>
-                        <label>Start time</label>
-                        <input id="apptStart" type="time" />
-                      </div>
-                    </div>
-                    <div style="margin-top:10px;">
-                      <label>Notes (optional)</label>
-                      <textarea id="apptNotes" placeholder="Agenda and next steps."></textarea>
-                    </div>
-                    <div class="row" style="margin-top:10px;">
-                      <button id="scheduleApptBtn" class="btn" type="button">Schedule for selected lead</button>
-                      <div id="scheduleApptMsg" class="err"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -988,45 +962,6 @@
             </div>
           </div>
 
-          <div id="closerPaneTasks" class="hide">
-            <div class="card" style="background:#fff;">
-              <div class="bd">
-                <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
-                  <div>
-                    <div style="font-weight:900;">Dispatch tasks</div>
-                    <div class="muted small">Open tasks assigned to you or unassigned</div>
-                  </div>
-                  <div class="row">
-                    <select id="closerTasksScope" style="max-width:220px">
-                      <option value="role">Role</option>
-                      <option value="mine">My tasks</option>
-                    </select>
-                    <label class="muted small" style="display:flex; align-items:center; gap:8px; margin:0;">
-                      <input id="closerTasksOverdue" type="checkbox" style="width:auto;" />
-                      Overdue only
-                    </label>
-                    <button id="loadCloserTasksBtn" class="btn secondary" type="button">Load</button>
-                  </div>
-                </div>
-                <div style="height:10px"></div>
-                <div id="closerTasksMsg" class="err"></div>
-                <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Due</th>
-                        <th>Title</th>
-                        <th>Lead</th>
-                        <th>Status</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody id="closerTasksTbody"></tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
 
           <div id="closerPanePipeline" class="hide"></div>
 
@@ -1172,6 +1107,7 @@
           </div>
           <div style="height:14px"></div>
           <div id="payoutsMsg" class="err"></div>
+          <div id="payoutsEmpty" class="muted small" style="margin-top:6px;"></div>
           <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
             <table>
               <thead>
@@ -1493,7 +1429,7 @@
       viewAsRole: '',
       viewAsUserId: '',
       dialerSubtab: 'call',
-      closerSubtab: 'meetings',
+      closerSubtab: 'disposition',
       leads: [],
       selectedLead: null,
       events: [],
@@ -1686,12 +1622,10 @@
     }
 
     function renderCloserSubtab(){
-      const t = String(state.closerSubtab || 'meetings');
+      const t = String(state.closerSubtab || 'disposition');
       const map = {
-        meetings: { btn: 'closerSegMeetings', pane: 'closerPaneMeetings' },
         disposition: { btn: 'closerSegDisposition', pane: 'closerPaneDisposition' },
         availability: { btn: 'closerSegAvailability', pane: 'closerPaneAvailability' },
-        tasks: { btn: 'closerSegTasks', pane: 'closerPaneTasks' },
         pipeline: { btn: 'closerSegPipeline', pane: 'closerPanePipeline' },
       };
       const keys = Object.keys(map);
@@ -1783,7 +1717,7 @@
         if (state.closerSubtab === 'meetings') loadAppointments().catch(()=>{});
         if (state.closerSubtab === 'availability') loadAvailability().catch(()=>{});
         if (state.closerSubtab === 'pipeline') loadCloserQueue().catch(()=>{});
-        if (state.closerSubtab === 'tasks') loadDispatchInto('closerTasksTbody', 'closerTasksMsg', { overdueOnly: !!$('closerTasksOverdue')?.checked, scope: String($('closerTasksScope')?.value || 'role') }).catch(()=>{});
+        // Closer Dispatch removed from Sales.
       }
       if (tab === 'calls') {
         renderDialerSubtab();
@@ -1833,7 +1767,7 @@
         if (state.closerSubtab === 'meetings') await loadAppointments().catch(()=>{});
         if (state.closerSubtab === 'availability') await loadAvailability().catch(()=>{});
         if (state.closerSubtab === 'pipeline') await loadCloserQueue().catch(()=>{});
-        if (state.closerSubtab === 'tasks') await loadDispatchInto('closerTasksTbody', 'closerTasksMsg', { overdueOnly: !!$('closerTasksOverdue')?.checked, scope: String($('closerTasksScope')?.value || 'role') }).catch(()=>{});
+        // Closer Dispatch removed from Sales.
       }
       if (tab === 'meetings') {
         await loadAppointmentsInto('meetingsTbody', 'meetingsMsg').catch(()=>{});
@@ -1970,14 +1904,21 @@
         const inViewAs = !!String(state.viewAsRole || '').trim() || !!String(state.viewAsUserId || '').trim();
         const currentRole = String(state.viewAsRole || '').trim() || 'manager';
 
+        const activeOpt = MANAGER_VIEW_OPTIONS.find((o) => String(o.role) === String(currentRole)) || MANAGER_VIEW_OPTIONS[0];
         const viewSelect = `
           <div class="navTitle">Views</div>
-          <select id="viewRoleSelect" class="select" style="width:100%; margin-top:6px;">
-            ${MANAGER_VIEW_OPTIONS.map((o) => {
-              const sel = String(o.role) === String(currentRole) ? ' selected' : '';
-              return `<option value="${escapeHtml(o.role)}"${sel}>${escapeHtml(o.label)}</option>`;
-            }).join('')}
-          </select>
+          <div class="dd" id="viewRoleDd" style="margin-top:6px;">
+            <button id="viewRoleBtn" class="ddBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
+              <span>${escapeHtml(activeOpt?.label || 'Manager')}</span>
+              <span class="muted small">▼</span>
+            </button>
+            <div id="viewRoleMenu" class="ddMenu hide" role="listbox" aria-label="Views">
+              ${MANAGER_VIEW_OPTIONS.map((o) => {
+                const active = String(o.role) === String(currentRole);
+                return `<button class="ddItem ${active ? 'active' : ''}" type="button" data-view-role="${escapeHtml(o.role)}">${escapeHtml(o.label)}</button>`;
+              }).join('')}
+            </div>
+          </div>
         `;
 
         const selectedRole = String(state.viewAsRole || '').trim();
@@ -2013,17 +1954,57 @@
       const mgrStats = $('mgrStatsCard');
       if (mgrStats) mgrStats.classList.toggle('hide', effectiveRole() !== 'manager');
 
+      // Setter-only: show Pull Leads button.
+      try {
+        const canPull = !isManagerUser() && ['remote_setter','in_person_setter'].includes(er);
+        const pl = $('pullLeadsToggle');
+        if (pl) pl.classList.toggle('hide', !canPull);
+      } catch(_e) {}
+
       for (const el of document.querySelectorAll('.navBtn[data-tab]')){
         el.addEventListener('click', () => setTab(el.dataset.tab));
       }
 
-      const viewRoleSelect = $('viewRoleSelect');
-      if (viewRoleSelect) {
-        viewRoleSelect.addEventListener('change', () => {
-          const role = String(viewRoleSelect.value || '').trim();
-          setViewAsRole(role);
-        });
-      }
+      // Custom Views dropdown (manager)
+      try {
+        const ddBtn = $('viewRoleBtn');
+        const ddMenu = $('viewRoleMenu');
+        if (ddBtn && ddMenu) {
+          const close = () => {
+            ddMenu.classList.add('hide');
+            ddBtn.setAttribute('aria-expanded', 'false');
+          };
+          const toggle = () => {
+            const open = !ddMenu.classList.contains('hide');
+            if (open) close();
+            else {
+              ddMenu.classList.remove('hide');
+              ddBtn.setAttribute('aria-expanded', 'true');
+            }
+          };
+
+          ddBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggle();
+          });
+          for (const item of ddMenu.querySelectorAll('button[data-view-role]')) {
+            item.addEventListener('click', () => {
+              const role = String(item.dataset.viewRole || '').trim();
+              close();
+              setViewAsRole(role);
+            });
+          }
+
+          if (window.__portalViewDdCloser) document.removeEventListener('click', window.__portalViewDdCloser, true);
+          window.__portalViewDdCloser = (ev) => {
+            const dd = $('viewRoleDd');
+            if (!dd) return;
+            if (dd.contains(ev.target)) return;
+            close();
+          };
+          document.addEventListener('click', window.__portalViewDdCloser, true);
+        }
+      } catch(_e) {}
 
       for (const item of document.querySelectorAll('button[data-viewas-user]')) {
         item.addEventListener('click', () => {
@@ -3281,6 +3262,7 @@
     async function loadLeads(){
       setBadge('warn', 'loading');
       $('leadsMsg').textContent = '';
+      if ($('leadsEmpty')) $('leadsEmpty').textContent = '';
 
       const q = $('leadQ').value.trim();
       const status = $('leadStatus').value;
@@ -3293,7 +3275,15 @@
         const j = await api('/api/portal/leads?' + qs.toString());
         state.leads = j.leads || [];
 
+        if ($('leadsEmpty')) $('leadsEmpty').textContent = state.leads.length ? '' : 'No leads yet.';
+
         const tb = $('leadsTbody');
+        if (!state.leads.length) {
+          tb.innerHTML = '<tr><td colspan="7" class="muted">No leads yet.</td></tr>';
+          setBadge('ok', 'loaded');
+          return;
+        }
+
         tb.innerHTML = state.leads.map((l) => {
           const name = [l.first_name, l.last_name].filter(Boolean).join(' ') || '(no name)';
           const prop = l.property_name || l.company || '';
@@ -3326,6 +3316,39 @@
         setBadge('ok', 'loaded');
       } catch(e){
         $('leadsMsg').textContent = String(e.message || e);
+        setBadge('warn', 'error');
+      }
+    }
+
+    async function pullLeads(){
+      const msg = $('pullLeadsMsg');
+      if (msg) msg.textContent = '';
+
+      const cityState = String($('plCityState')?.value || '').trim();
+      if (!cityState) {
+        if (msg) msg.textContent = 'Enter City, State.';
+        return;
+      }
+      const keyword = String($('plKeyword')?.value || '').trim() || 'apartment leasing office';
+      const limit = Number($('plLimit')?.value || 10) || 10;
+      const notes = String($('plNotes')?.value || '').trim();
+
+      setBadge('warn', 'loading');
+      try {
+        const j = await api('/api/portal/pull_leads', {
+          method: 'POST',
+          body: { cityState, keyword, limit, notes },
+        });
+        const inserted = Number(j.inserted || 0);
+        const skipped = Number(j.skipped || 0);
+        if (msg) msg.textContent = inserted
+          ? `Pulled ${inserted} leads. ${skipped ? (skipped + ' skipped (missing phone).') : ''}`.trim()
+          : `No leads pulled. ${skipped ? (skipped + ' skipped (missing phone).') : ''}`.trim();
+        $('pullLeadsBox').hidden = true;
+        await loadLeads();
+        setBadge('ok', 'loaded');
+      } catch (e) {
+        if (msg) msg.textContent = String(e.message || e);
         setBadge('warn', 'error');
       }
     }
@@ -3450,6 +3473,12 @@
         state.events = j.events || [];
 
         const tb = $('eventsTbody');
+        if (!state.events.length) {
+          tb.innerHTML = '<tr><td colspan="7" class="muted">No events yet.</td></tr>';
+          setBadge('ok', 'loaded');
+          return;
+        }
+
         tb.innerHTML = state.events.map((ev) => {
           const date = ev.event_date || '';
           const city = [ev.city, ev.state].filter(Boolean).join(', ');
@@ -3529,9 +3558,16 @@
     async function loadPayouts(){
       setBadge('warn', 'loading');
       $('payoutsMsg').textContent = '';
+      if ($('payoutsEmpty')) $('payoutsEmpty').textContent = '';
       try{
         const j = await api('/api/portal/payouts?limit=120');
         const payouts = j.payouts || [];
+        if ($('payoutsEmpty')) $('payoutsEmpty').textContent = payouts.length ? '' : 'No payments yet.';
+        if (!payouts.length) {
+          $('payoutsTbody').innerHTML = '<tr><td colspan="4" class="muted">No payments yet.</td></tr>';
+          setBadge('ok', 'loaded');
+          return;
+        }
         $('payoutsTbody').innerHTML = payouts.map((p) => `
           <tr>
             <td class="muted">${(p.created_at || '').slice(0,10)}</td>
@@ -3762,6 +3798,8 @@
     on('loadLeadsBtn', 'click', () => loadLeads().catch(() => {}));
     on('newLeadToggle', 'click', () => { $('newLeadBox').hidden = !$('newLeadBox').hidden; });
     on('createLeadBtn', 'click', () => createLead().catch(() => {}));
+    on('pullLeadsToggle', 'click', () => { $('pullLeadsBox').hidden = !$('pullLeadsBox').hidden; });
+    on('pullLeadsBtn', 'click', () => pullLeads().catch(() => {}));
 
     on('closerPickLead', 'click', () => { state.pickLeadReturnTab = 'closer'; setTab('leads'); });
     on('pickFromLeads', 'click', () => { state.pickLeadReturnTab = 'calls'; setTab('leads'); });
@@ -3791,10 +3829,8 @@
     on('meetingScheduleBtn', 'click', () => scheduleMeeting().catch(() => {}));
     on('saveAvailBtn', 'click', () => saveAvailability().catch(() => {}));
 
-    on('closerSegMeetings', 'click', () => setCloserSubtab('meetings'));
     on('closerSegDisposition', 'click', () => setCloserSubtab('disposition'));
     on('closerSegAvailability', 'click', () => setCloserSubtab('availability'));
-    on('closerSegTasks', 'click', () => setCloserSubtab('tasks'));
     on('closerSegPipeline', 'click', () => { hydrateCloserPipelinePane(); setCloserSubtab('pipeline'); });
 
     on('availPrevMonth', 'click', () => { state.availability.monthOffset -= 1; renderAvailCalendar(); renderAvailSlots(); });
@@ -3828,7 +3864,7 @@
     on('dispatchCreateBtn', 'click', () => createDispatchTask().catch(() => {}));
 
     on('loadDialerTasksBtn', 'click', () => loadDispatchInto('dialerTasksTbody', 'dialerTasksMsg', { overdueOnly: !!$('dialerTasksOverdue')?.checked, scope: String($('dialerTasksScope')?.value || 'role') }).catch(() => {}));
-    on('loadCloserTasksBtn', 'click', () => loadDispatchInto('closerTasksTbody', 'closerTasksMsg', { overdueOnly: !!$('closerTasksOverdue')?.checked, scope: String($('closerTasksScope')?.value || 'role') }).catch(() => {}));
+    // Closer Dispatch removed from Sales.
 
     boot().catch((e) => {
       $('authMsg').textContent = String(e.message || e);
