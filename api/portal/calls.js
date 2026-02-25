@@ -1,5 +1,6 @@
 const { sendJson, handleCors, readJson } = require('../../lib/vercelApi');
 const { requirePortalSession, hasRole, isManager } = require('../../lib/portalAuth');
+const { roleMatchesAny } = require('../../lib/portalRoleAliases');
 
 function clampInt(n, min, max, fallback) {
   const x = Number(n);
@@ -25,7 +26,7 @@ async function canTouchLead(sbAdmin, { profile, userId, leadId }) {
   return (
     (lead.assigned_user_id && lead.assigned_user_id === userId) ||
     (lead.created_by && lead.created_by === userId) ||
-    (role && lead.assigned_role && lead.assigned_role === role)
+    (role && lead.assigned_role && roleMatchesAny(lead.assigned_role, role))
   );
 }
 

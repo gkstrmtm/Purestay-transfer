@@ -1,5 +1,6 @@
 const { sendJson, handleCors } = require('../../lib/vercelApi');
 const { requirePortalSession, isManager } = require('../../lib/portalAuth');
+const { buildRoleOrParts } = require('../../lib/portalRoleAliases');
 
 function cleanStr(v, maxLen) {
   return String(v || '').trim().slice(0, maxLen);
@@ -85,7 +86,7 @@ module.exports = async (req, res) => {
       `assigned_user_id.eq.${s.user.id}`,
       `created_by.eq.${s.user.id}`,
     ];
-    if (role) parts.push(`assigned_role.eq.${role}`);
+    if (role) parts.push(...buildRoleOrParts('assigned_role', role));
     whereOr = parts.join(',');
   }
 

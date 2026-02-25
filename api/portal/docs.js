@@ -1,5 +1,6 @@
 const { sendJson, handleCors, readJson } = require('../../lib/vercelApi');
 const { requirePortalSession, isManager } = require('../../lib/portalAuth');
+const { applyRoleFilter, buildRoleOrParts } = require('../../lib/portalRoleAliases');
 
 function clampInt(n, min, max, fallback) {
   const x = Number(n);
@@ -34,9 +35,10 @@ module.exports = async (req, res) => {
       .limit(limit);
 
     if (!isManager(s.profile)) {
-      query = query.or(`audience_role.is.null,audience_role.eq.${s.profile.role}`);
+      const roleParts = buildRoleOrParts('audience_role', s.profile.role);
+      query = query.or(['audience_role.is.null', ...roleParts].join(','));
     } else if (audienceRole) {
-      query = query.eq('audience_role', audienceRole);
+      query = applyRoleFilter(query, 'audience_role', audienceRole);
     }
 
     const { data, error } = await query;

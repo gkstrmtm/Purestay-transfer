@@ -1,5 +1,6 @@
 const { sendJson, handleCors, readJson } = require('../../lib/vercelApi');
 const { requirePortalSession, hasRole, isManager } = require('../../lib/portalAuth');
+const { roleMatchesAny } = require('../../lib/portalRoleAliases');
 
 function clampInt(n, min, max, fallback) {
   const x = Number(n);
@@ -25,7 +26,7 @@ async function canSeeEvent(sbAdmin, { profile, userId, eventId }) {
   return (
     (event.assigned_user_id && event.assigned_user_id === userId) ||
     (event.created_by && event.created_by === userId) ||
-    (role && event.assigned_role && event.assigned_role === role)
+    (role && event.assigned_role && roleMatchesAny(event.assigned_role, role))
   );
 }
 

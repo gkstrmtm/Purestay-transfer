@@ -1,5 +1,6 @@
 const { sendJson, handleCors, readJson } = require('../../lib/vercelApi');
 const { requirePortalSession, hasRole, isManager } = require('../../lib/portalAuth');
+const { applyRoleFilter, buildRoleOrParts, roleMatchesAny } = require('../../lib/portalRoleAliases');
 
 function clampInt(n, min, max, fallback) {
   const x = Number(n);
@@ -17,7 +18,7 @@ function canSeeEvent({ profile, userId, event }) {
   return (
     (event.assigned_user_id && event.assigned_user_id === userId) ||
     (event.created_by && event.created_by === userId) ||
-    (role && event.assigned_role && event.assigned_role === role)
+    (role && event.assigned_role && roleMatchesAny(event.assigned_role, role))
   );
 }
 
@@ -43,7 +44,7 @@ module.exports = async (req, res) => {
       .limit(limit);
 
     if (status) query = query.eq('status', status);
-    if (assignedRole) query = query.eq('assigned_role', assignedRole);
+    if (assignedRole) query = applyRoleFilter(query, 'assigned_role', assignedRole);
     if (areaTag) query = query.eq('area_tag', areaTag);
 
     if (!isManager(s.profile)) {
@@ -51,13 +52,13 @@ module.exports = async (req, res) => {
       const uid = String(s.effectiveUserId || s.user.id || '');
 
       if (s.viewAsRole && role && !s.effectiveUserId) {
-        query = query.eq('assigned_role', role);
+        query = applyRoleFilter(query, 'assigned_role', role);
       } else {
         const parts = [
           `assigned_user_id.eq.${uid}`,
           `created_by.eq.${uid}`,
         ];
-        if (role) parts.push(`assigned_role.eq.${role}`);
+        if (role) parts.push(...buildRoleOrParts('assigned_role', role));
         query = query.or(parts.join(','));
       }
     }
@@ -134,7 +135,7 @@ module.exports = async (req, res) => {
       && !row.assigned_user_id
       && row.assigned_role
       && role
-      && row.assigned_role === role
+      && roleMatchesAny(row.assigned_role, role)
       && String(row.status || 'open') === 'open';
 
     if (!canEdit && !canClaim) return sendJson(res, 403, { ok: false, error: 'forbidden' });

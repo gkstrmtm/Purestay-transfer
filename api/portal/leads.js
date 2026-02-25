@@ -1,5 +1,6 @@
 const { sendJson, handleCors, readJson } = require('../../lib/vercelApi');
 const { requirePortalSession, isManager } = require('../../lib/portalAuth');
+const { applyRoleFilter, buildRoleOrParts, roleMatchesAny } = require('../../lib/portalRoleAliases');
 
 function clampInt(n, min, max, fallback) {
   const x = Number(n);
@@ -17,7 +18,7 @@ function canSeeLead({ profile, userId, lead }) {
   return (
     (lead.assigned_user_id && lead.assigned_user_id === userId) ||
     (lead.created_by && lead.created_by === userId) ||
-    (role && lead.assigned_role && lead.assigned_role === role)
+    (role && lead.assigned_role && roleMatchesAny(lead.assigned_role, role))
   );
 }
 
@@ -44,7 +45,7 @@ module.exports = async (req, res) => {
       .limit(limit);
 
     if (status) query = query.eq('status', status);
-    if (assignedRole) query = query.eq('assigned_role', assignedRole);
+    if (assignedRole) query = applyRoleFilter(query, 'assigned_role', assignedRole);
     if (state) query = query.eq('state', state);
     if (city) query = query.ilike('city', `%${city}%`);
 
@@ -54,13 +55,13 @@ module.exports = async (req, res) => {
 
       // View-as role without a specific user: constrain to the role.
       if (s.viewAsRole && role && !s.effectiveUserId) {
-        query = query.eq('assigned_role', role);
+        query = applyRoleFilter(query, 'assigned_role', role);
       } else {
         const parts = [
           `assigned_user_id.eq.${uid}`,
           `created_by.eq.${uid}`,
         ];
-        if (role) parts.push(`assigned_role.eq.${role}`);
+        if (role) parts.push(...buildRoleOrParts('assigned_role', role));
         query = query.or(parts.join(','));
       }
     }

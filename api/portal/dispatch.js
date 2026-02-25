@@ -1,5 +1,6 @@
 const { sendJson, handleCors, readJson } = require('../../lib/vercelApi');
 const { requirePortalSession, hasRole, isManager } = require('../../lib/portalAuth');
+const { applyRoleFilter, buildRoleOrParts, roleMatchesAny } = require('../../lib/portalRoleAliases');
 
 function clampInt(n, min, max, fallback) {
   const x = Number(n);
@@ -25,7 +26,7 @@ function canSeeTask({ profile, userId, task }) {
   return (
     (task.assigned_user_id && task.assigned_user_id === userId) ||
     (task.created_by && task.created_by === userId) ||
-    (role && task.assigned_role && task.assigned_role === role)
+    (role && task.assigned_role && roleMatchesAny(task.assigned_role, role))
   );
 }
 
@@ -84,7 +85,7 @@ module.exports = async (req, res) => {
       .limit(limit);
 
     if (status) query = query.eq('status', status);
-    if (assignedRole) query = query.eq('assigned_role', assignedRole);
+    if (assignedRole) query = applyRoleFilter(query, 'assigned_role', assignedRole);
     if (leadId) query = query.contains('meta', { kind: 'dispatch', leadId });
 
     if (!isManager(s.profile)) {
@@ -93,7 +94,7 @@ module.exports = async (req, res) => {
 
       // Manager view-as mode: simulate the role inbox (unassigned).
       if (s.viewAsRole && role && !s.effectiveUserId) {
-        query = query.eq('assigned_role', role);
+        query = applyRoleFilter(query, 'assigned_role', role);
         query = query.eq('assigned_user_id', null);
       } else {
 
@@ -103,7 +104,7 @@ module.exports = async (req, res) => {
           if (!role) {
             query = query.eq('assigned_user_id', uid);
           } else {
-            query = query.eq('assigned_role', role);
+            query = applyRoleFilter(query, 'assigned_role', role);
             query = query.or([`assigned_user_id.is.null`, `assigned_user_id.eq.${uid}`].join(','));
           }
         } else {
@@ -111,7 +112,7 @@ module.exports = async (req, res) => {
             `assigned_user_id.eq.${uid}`,
             `created_by.eq.${uid}`,
           ];
-          if (role) parts.push(`assigned_role.eq.${role}`);
+          if (role) parts.push(...buildRoleOrParts('assigned_role', role));
           query = query.or(parts.join(','));
         }
       }
@@ -277,7 +278,7 @@ module.exports = async (req, res) => {
       && !row.assigned_user_id
       && row.assigned_role
       && role
-      && row.assigned_role === role
+      && roleMatchesAny(row.assigned_role, role)
       && String(row.status || 'open') === 'open';
 
     if (!canEdit && !canClaim) return sendJson(res, 403, { ok: false, error: 'forbidden' });

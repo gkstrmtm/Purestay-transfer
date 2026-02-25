@@ -1,5 +1,6 @@
 const { sendJson, handleCors } = require('../../lib/vercelApi');
 const { requirePortalSession, isManager } = require('../../lib/portalAuth');
+const { applyRoleFilter, buildRoleOrParts } = require('../../lib/portalRoleAliases');
 
 function clampInt(n, min, max, fallback) {
   const x = Number(n);
@@ -44,13 +45,13 @@ module.exports = async (req, res) => {
 
     // Manager view-as mode: show the role inbox (unassigned) instead of manager-owned data.
     if (s.viewAsRole && role && !s.effectiveUserId) {
-      query = query.eq('assigned_role', role).is('assigned_user_id', null);
+      query = applyRoleFilter(query, 'assigned_role', role).is('assigned_user_id', null);
     } else {
       const parts = [
         `assigned_user_id.eq.${uid}`,
         `created_by.eq.${uid}`,
       ];
-      if (role) parts.push(`assigned_role.eq.${role}`);
+      if (role) parts.push(...buildRoleOrParts('assigned_role', role));
       query = query.or(parts.join(','));
     }
   }

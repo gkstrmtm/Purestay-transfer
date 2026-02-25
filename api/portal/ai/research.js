@@ -1,6 +1,7 @@
 const { sendJson, handleCors, readJson } = require('../../../lib/vercelApi');
 const { requirePortalSession, isManager, hasRole } = require('../../../lib/portalAuth');
 const { generateResearch } = require('../../../lib/aiPortal');
+const { roleMatchesAny } = require('../../../lib/portalRoleAliases');
 
 function clampInt(n, min, max, fallback) {
   const x = Number(n);
@@ -14,7 +15,7 @@ function canSeeLead({ profile, userId, lead }) {
   return (
     (lead.assigned_user_id && lead.assigned_user_id === userId) ||
     (lead.created_by && lead.created_by === userId) ||
-    (role && lead.assigned_role && lead.assigned_role === role)
+    (role && lead.assigned_role && roleMatchesAny(lead.assigned_role, role))
   );
 }
 

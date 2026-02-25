@@ -399,10 +399,8 @@
                   <select id="leadEditAssignedRole">
                     <option value="">(unchanged)</option>
                     <option value="dialer">Calls</option>
-                    <option value="remote_setter">Calls</option>
                     <option value="in_person_setter">Booked</option>
                     <option value="closer">Sales</option>
-                    <option value="account_manager">Sales</option>
                     <option value="event_host">Events</option>
                     <option value="event_coordinator">Operations</option>
                     <option value="media_team">Media</option>
@@ -1242,10 +1240,8 @@
                   <select id="dispatchRole">
                     <option value="">All workspaces</option>
                     <option value="dialer">Calls</option>
-                    <option value="remote_setter">Calls</option>
                     <option value="in_person_setter">Booked</option>
                     <option value="closer">Sales</option>
-                    <option value="account_manager">Sales</option>
                     <option value="event_host">Events</option>
                     <option value="event_coordinator">Operations</option>
                     <option value="media_team">Media</option>
@@ -1270,10 +1266,8 @@
                       <select id="dispatchAssignedRole">
                         <option value="">Select…</option>
                         <option value="dialer">Calls</option>
-                        <option value="remote_setter">Calls</option>
                         <option value="in_person_setter">Booked</option>
                         <option value="closer">Sales</option>
-                        <option value="account_manager">Sales</option>
                         <option value="event_host">Events</option>
                         <option value="event_coordinator">Operations</option>
                         <option value="media_team">Media</option>
@@ -1369,10 +1363,8 @@
                   <select id="mgrAssignedRole">
                     <option value="">(no change)</option>
                     <option value="dialer">Calls</option>
-                    <option value="remote_setter">Calls</option>
                     <option value="in_person_setter">Booked</option>
                     <option value="closer">Sales</option>
-                    <option value="account_manager">Sales</option>
                     <option value="event_host">Events</option>
                     <option value="event_coordinator">Operations</option>
                     <option value="media_team">Media</option>
@@ -1586,6 +1578,8 @@
       const r = String(role || '').trim();
       if (!r) return [];
       if (r === 'dialer' || r === 'remote_setter') return ['dialer','remote_setter'];
+      if (r === 'closer' || r === 'account_manager') return ['closer','account_manager'];
+      if (r === 'event_host' || r === 'event_coordinator' || r === 'media_team') return ['event_host','event_coordinator','media_team'];
       return [r];
     }
 
@@ -1611,7 +1605,8 @@
     }
 
     function setViewAsRole(nextRole){
-      const v = String(nextRole || '').trim();
+      const raw = String(nextRole || '').trim();
+      const v = raw === 'remote_setter' ? 'dialer' : raw;
       state.viewAsRole = v === 'manager' ? '' : v;
       state.viewAsUserId = '';
 
@@ -1921,7 +1916,9 @@
         await ensureUsersCache();
         if (String(state.viewAsRole || '').trim() && !String(state.viewAsUserId || '').trim()) {
           const users = usersForViewAsRole(state.viewAsRole);
-          if (users.length) state.viewAsUserId = String(users[0].userId || '').trim();
+          if (users.length) {
+            state.viewAsUserId = String(users[0].userId || '').trim();
+          }
         }
       }
 
