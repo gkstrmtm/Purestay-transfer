@@ -49,6 +49,7 @@
     { "source": "/admin", "destination": "/Backend.html" }
   ],
   "crons": [
-    { "path": "/api/cron/blogs", "schedule": "15 14 * * *" }
+    { "path": "/api/cron/blogs", "schedule": "15 14 * * *" },
+    { "path": "/api/cron/dispatch-escalate", "schedule": "*/15 * * * *" }
   ]
 }

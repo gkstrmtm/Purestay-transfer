@@ -547,6 +547,10 @@
                   <div class="muted small">Open and assigned tasks for your role</div>
                 </div>
                 <div class="row">
+                  <select id="dialerTasksScope" style="max-width:220px">
+                    <option value="role">Role inbox</option>
+                    <option value="mine">My tasks</option>
+                  </select>
                   <label class="muted small" style="display:flex; align-items:center; gap:8px; margin:0;">
                     <input id="dialerTasksOverdue" type="checkbox" style="width:auto;" />
                     Overdue only
@@ -792,6 +796,10 @@
                       <div class="muted small">Open and assigned tasks for your role</div>
                     </div>
                     <div class="row">
+                      <select id="closerTasksScope" style="max-width:220px">
+                        <option value="role">Role inbox</option>
+                        <option value="mine">My tasks</option>
+                      </select>
                       <label class="muted small" style="display:flex; align-items:center; gap:8px; margin:0;">
                         <input id="closerTasksOverdue" type="checkbox" style="width:auto;" />
                         Overdue only
@@ -1005,6 +1013,7 @@
                     <input id="dispatchOverdueOnly" type="checkbox" style="width:auto;" />
                     Overdue only
                   </label>
+                  <button id="scanDispatchBtn" class="btn secondary" type="button">Scan overdue</button>
                   <button id="loadDispatchBtn" class="btn secondary" type="button">Load tasks</button>
                 </div>
               </div>
@@ -1337,14 +1346,14 @@
         loadAppointments().catch(()=>{});
         loadAvailability().catch(()=>{});
         loadCloserQueue().catch(()=>{});
-        loadDispatchInto('closerTasksTbody', 'closerTasksMsg', { overdueOnly: !!$('closerTasksOverdue')?.checked }).catch(()=>{});
+        loadDispatchInto('closerTasksTbody', 'closerTasksMsg', { overdueOnly: !!$('closerTasksOverdue')?.checked, scope: String($('closerTasksScope')?.value || 'role') }).catch(()=>{});
       }
       if (tab === 'calls') {
         loadQueue().catch(()=>{});
         if (state.selectedLead && state.selectedLead.id) {
           loadTimelineInto('dialerTimelineList', 'dialerTimelineMsg').catch(()=>{});
         }
-        loadDispatchInto('dialerTasksTbody', 'dialerTasksMsg', { overdueOnly: !!$('dialerTasksOverdue')?.checked }).catch(()=>{});
+        loadDispatchInto('dialerTasksTbody', 'dialerTasksMsg', { overdueOnly: !!$('dialerTasksOverdue')?.checked, scope: String($('dialerTasksScope')?.value || 'role') }).catch(()=>{});
       }
       if (tab === 'manager') {
         loadDispatchManager().catch(()=>{});
@@ -1791,14 +1800,18 @@
       return d < today;
     }
 
-    async function loadDispatchInto(tbodyId, msgId, { overdueOnly = false } = {}){
+    async function loadDispatchInto(tbodyId, msgId, { overdueOnly = false, scope = '' } = {}){
       const tb = $(tbodyId);
       const msgEl = $(msgId);
       if (!tb) return;
       if (msgEl) msgEl.textContent = '';
       setBadge('warn', 'loading');
       try{
-        const j = await api('/api/portal/dispatch?limit=80' + (overdueOnly ? '&overdue=1' : ''));
+        const qs = [];
+        qs.push('limit=80');
+        if (overdueOnly) qs.push('overdue=1');
+        if (scope) qs.push('scope=' + encodeURIComponent(scope));
+        const j = await api('/api/portal/dispatch?' + qs.join('&'));
         const tasks = (j.tasks || []).filter((t) => !['completed','cancelled'].includes(String(t.status || '')));
         state.dispatch = tasks;
         if (!tasks.length) {
@@ -2019,6 +2032,18 @@
         setBadge('ok', 'created');
       } catch(e){
         $('dispatchCreateMsg').textContent = String(e.message || e);
+      }
+    }
+
+    async function scanDispatchOverdue(){
+      $('dispatchMsg').textContent = '';
+      try{
+        const j = await api('/api/portal/dispatch_scan', { method:'POST', body: {} });
+        $('dispatchMsg').textContent = `Scanned ${Number(j.scanned || 0)}; escalated ${Number(j.escalated || 0)}`;
+        await loadDispatchManager();
+        setBadge('ok', 'scanned');
+      } catch(e){
+        $('dispatchMsg').textContent = String(e.message || e);
       }
     }
 
@@ -2844,10 +2869,11 @@
     on('loadTeamAvailBtn', 'click', () => loadTeamAvailability().catch(() => {}));
 
     on('loadDispatchBtn', 'click', () => loadDispatchManager().catch(() => {}));
+    on('scanDispatchBtn', 'click', () => scanDispatchOverdue().catch(() => {}));
     on('dispatchCreateBtn', 'click', () => createDispatchTask().catch(() => {}));
 
-    on('loadDialerTasksBtn', 'click', () => loadDispatchInto('dialerTasksTbody', 'dialerTasksMsg', { overdueOnly: !!$('dialerTasksOverdue')?.checked }).catch(() => {}));
-    on('loadCloserTasksBtn', 'click', () => loadDispatchInto('closerTasksTbody', 'closerTasksMsg', { overdueOnly: !!$('closerTasksOverdue')?.checked }).catch(() => {}));
+    on('loadDialerTasksBtn', 'click', () => loadDispatchInto('dialerTasksTbody', 'dialerTasksMsg', { overdueOnly: !!$('dialerTasksOverdue')?.checked, scope: String($('dialerTasksScope')?.value || 'role') }).catch(() => {}));
+    on('loadCloserTasksBtn', 'click', () => loadDispatchInto('closerTasksTbody', 'closerTasksMsg', { overdueOnly: !!$('closerTasksOverdue')?.checked, scope: String($('closerTasksScope')?.value || 'role') }).catch(() => {}));
 
     boot().catch((e) => {
       $('authMsg').textContent = String(e.message || e);
