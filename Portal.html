@@ -403,7 +403,7 @@
                     <option value="closer">Sales</option>
                     <option value="event_host">Events</option>
                     <option value="event_coordinator">Operations</option>
-                    <option value="media_team">Media</option>
+                    <option value="media_team">Content</option>
                   </select>
                 </div>
                 <div>
@@ -1244,7 +1244,7 @@
                     <option value="closer">Sales</option>
                     <option value="event_host">Events</option>
                     <option value="event_coordinator">Operations</option>
-                    <option value="media_team">Media</option>
+                    <option value="media_team">Content</option>
                   </select>
                 </div>
               </div>
@@ -1270,7 +1270,7 @@
                         <option value="closer">Sales</option>
                         <option value="event_host">Events</option>
                         <option value="event_coordinator">Operations</option>
-                        <option value="media_team">Media</option>
+                        <option value="media_team">Content</option>
                       </select>
                     </div>
                   </div>
@@ -1367,7 +1367,7 @@
                     <option value="closer">Sales</option>
                     <option value="event_host">Events</option>
                     <option value="event_coordinator">Operations</option>
-                    <option value="media_team">Media</option>
+                    <option value="media_team">Content</option>
                   </select>
                 </div>
               </div>
@@ -1548,7 +1548,7 @@
         account_manager: 'Sales',
         event_host: 'Events',
         event_coordinator: 'Operations',
-        media_team: 'Media',
+        media_team: 'Content',
         manager: 'Operations',
       };
       return map[r] || (r ? r.replaceAll('_', ' ') : '—');
@@ -1930,69 +1930,76 @@
       $('appUser').textContent = me.user.email;
 
       const navItems = [];
-      navItems.push({ id:'overview', label:'Overview' });
-
-      if (['dialer','remote_setter'].includes(er)) {
-        navItems.push({ id:'calls', label:'Calls' });
-      } else if (er === 'in_person_setter') {
-        navItems.push({ id:'calls', label:'Booked' });
-      } else if (['closer','account_manager'].includes(er)) {
-        navItems.push({ id:'closer', label:'Sales' });
-      } else if (['event_host','media_team'].includes(er)) {
-        navItems.push({ id:'events', label: er === 'media_team' ? 'Media' : 'Events' });
-      } else if (er === 'event_coordinator') {
-        navItems.push({ id:'events', label:'Events' });
-        navItems.push({ id:'manager', label:'Operations' });
-      } else {
-        // manager (or unknown)
+      if (!isManagerUser()) {
+        navItems.push({ id:'overview', label:'Overview' });
         navItems.push({ id:'leads', label:'Leads' });
-        navItems.push({ id:'events', label:'Events' });
-        navItems.push({ id:'manager', label:'Operations' });
+        if (['dialer','remote_setter','in_person_setter'].includes(er)) {
+          navItems.push({ id:'calls', label: er === 'in_person_setter' ? 'Booked' : 'Calls' });
+          navItems.push({ id:'meetings', label:'Meetings' });
+        }
+        if (['closer','account_manager'].includes(er)) {
+          navItems.push({ id:'closer', label:'Sales' });
+          navItems.push({ id:'meetings', label:'Meetings' });
+        }
+        if (['event_host','media_team','event_coordinator'].includes(er)) {
+          navItems.push({ id:'events', label: er === 'media_team' ? 'Content' : 'Events' });
+        }
+        if (er === 'event_coordinator') {
+          navItems.push({ id:'manager', label:'Operations' });
+        }
+        navItems.push({ id:'payments', label:'Payments' });
       }
 
-      navItems.push({ id:'payments', label:'Payments' });
-
       const viewAsHtml = isManagerUser() ? (() => {
-        const workspaces = [
-          { role: 'manager', label: 'All' },
-          { role: 'dialer', label: 'Calls' },
-          { role: 'in_person_setter', label: 'Booked' },
-          { role: 'closer', label: 'Sales' },
-          { role: 'event_host', label: 'Events' },
-          { role: 'event_coordinator', label: 'Operations' },
-          { role: 'media_team', label: 'Media' },
+        const items = [
+          { role: 'manager', label: 'All', tab: 'overview' },
+          { role: 'keep', label: 'Overview', tab: 'overview' },
+          { role: 'keep', label: 'Leads', tab: 'leads' },
+          { role: 'dialer', label: 'Calls', tab: 'calls', dialerSubtab: 'call' },
+          { role: 'in_person_setter', label: 'Booked', tab: 'calls', dialerSubtab: 'booked' },
+          { role: 'closer', label: 'Sales', tab: 'closer' },
+          { role: 'keep', label: 'Meetings', tab: 'meetings' },
+          { role: 'event_host', label: 'Events', tab: 'events' },
+          { role: 'event_coordinator', label: 'Operations', tab: 'manager' },
+          { role: 'media_team', label: 'Content', tab: 'events' },
+          { role: 'keep', label: 'Payments', tab: 'payments' },
         ];
-        const wsBtns = workspaces.map((w) => {
-          const active = (w.role === 'manager' ? 'manager' : w.role) === er;
-          return `<button class="segBtn ${active ? 'active' : ''}" type="button" data-viewas-role="${escapeHtml(w.role)}">${escapeHtml(w.label)}</button>`;
+
+        const menuBtns = items.map((v) => {
+          const roleKey = (v.role === 'manager' ? 'manager' : v.role);
+          const tabKey = String(v.tab || '');
+          const isTabActive = String(state.activeTab || '') === tabKey;
+          const active = (
+            (v.role === 'keep' && isTabActive)
+            || (v.role === 'manager' && er === 'manager' && isTabActive)
+            || (v.role !== 'keep' && v.role !== 'manager' && er === roleKey && isTabActive)
+          );
+          const attrs = [
+            `data-viewas-role="${escapeHtml(v.role)}"`,
+            `data-view-tab="${escapeHtml(tabKey)}"`,
+            `data-tab="${escapeHtml(tabKey)}"`,
+          ];
+          if (v.dialerSubtab) attrs.push(`data-view-dialer-subtab="${escapeHtml(v.dialerSubtab)}"`);
+          if (v.closerSubtab) attrs.push(`data-view-closer-subtab="${escapeHtml(v.closerSubtab)}"`);
+          return `<button class="navBtn ${active ? 'active' : ''}" type="button" ${attrs.join(' ')}>${escapeHtml(v.label)}</button>`;
         }).join('');
 
         const people = er === 'manager' ? [] : usersForViewAsRole(er);
         const isInbox = (!state.viewAsUserId || state.viewAsUserId === INBOX_USER_SENTINEL);
         const peopleBtns = er === 'manager' ? '' : `
-          <div style="height:10px"></div>
-          <div class="muted" style="font-size:11px; font-weight:900; letter-spacing:.08em; text-transform:uppercase;">Person</div>
-          <div style="height:8px"></div>
-          <div class="slotGrid">
-            <button class="slotBtn ${isInbox ? 'active' : ''}" type="button" data-viewas-user="">Inbox</button>
+          <div class="navTitle" style="margin-top:8px;">Person</div>
+          <div style="max-height:240px; overflow:auto; padding-right:4px;">
+            <button class="navBtn ${isInbox ? 'active' : ''}" type="button" data-viewas-user="">Inbox</button>
             ${people.map((u) => {
               const label = String(u.fullName || u.email || u.userId || '').trim() || u.userId;
               const active = String(u.userId) === String(state.viewAsUserId || '');
-              return `<button class="slotBtn ${active ? 'active' : ''}" type="button" data-viewas-user="${escapeHtml(u.userId)}">${escapeHtml(label)}</button>`;
+              return `<button class="navBtn ${active ? 'active' : ''}" type="button" data-viewas-user="${escapeHtml(u.userId)}">${escapeHtml(label)}</button>`;
             }).join('')}
           </div>
         `;
 
-        return `
-          <div class="navTitle" style="margin-top:6px;">Workspace</div>
-          <div style="padding:0 6px 10px;">
-            <div class="segTabs" style="gap:8px;">
-              ${wsBtns}
-            </div>
-            ${peopleBtns}
-          </div>
-        `;
-      })() : '<div class="navTitle">Workspace</div>';
+        return `${menuBtns}${peopleBtns}<div style="height:10px"></div>`;
+      })() : '';
 
       $('nav').innerHTML = viewAsHtml + navItems
         .map((t) => `<button class="navBtn" type="button" data-tab="${t.id}">${t.label}</button>`)
@@ -2011,14 +2018,30 @@
       const mgrStats = $('mgrStatsCard');
       if (mgrStats) mgrStats.classList.toggle('hide', effectiveRole() !== 'manager');
 
-      for (const el of document.querySelectorAll('.navBtn')){
+      for (const el of document.querySelectorAll('.navBtn[data-tab]:not([data-viewas-role])')){
         el.addEventListener('click', () => setTab(el.dataset.tab));
+      }
+
+      function setManagerViewFromBtn(btn){
+        const rawRole = String(btn?.dataset?.viewasRole || '').trim();
+        const rawTab = String(btn?.dataset?.viewTab || '').trim();
+        const dialerSubtab = String(btn?.dataset?.viewDialerSubtab || '').trim();
+        const closerSubtab = String(btn?.dataset?.viewCloserSubtab || '').trim();
+
+        const roleNorm = rawRole === 'remote_setter' ? 'dialer' : rawRole;
+        if (roleNorm && roleNorm !== 'keep') {
+          state.viewAsRole = (roleNorm === 'manager') ? '' : roleNorm;
+          state.viewAsUserId = '';
+        }
+        if (dialerSubtab) state.dialerSubtab = dialerSubtab;
+        if (closerSubtab) state.closerSubtab = closerSubtab;
+        if (rawTab) state.activeTab = rawTab;
+        refreshMe().catch(() => {});
       }
 
       for (const item of document.querySelectorAll('button[data-viewas-role]')) {
         item.addEventListener('click', () => {
-          const r = String(item.dataset.viewasRole || '').trim() || 'manager';
-          setViewAsRole(r);
+          setManagerViewFromBtn(item);
         });
       }
 
