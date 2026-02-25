@@ -1524,6 +1524,16 @@
       'manager',
     ];
 
+    const MANAGER_VIEW_OPTIONS = [
+      { role: 'manager', label: 'Manager' },
+      { role: 'remote_setter', label: 'Remote setter' },
+      { role: 'in_person_setter', label: 'In-person setter' },
+      { role: 'closer', label: 'Closer' },
+      { role: 'account_manager', label: 'Account manager' },
+      { role: 'event_host', label: 'Event host' },
+      { role: 'event_coordinator', label: 'Event coordinator' },
+    ];
+
     function roleViewLabel(role){
       const r = String(role || '').trim();
       const map = {
@@ -1960,14 +1970,15 @@
         const inViewAs = !!String(state.viewAsRole || '').trim() || !!String(state.viewAsUserId || '').trim();
         const currentRole = String(state.viewAsRole || '').trim() || 'manager';
 
-        const exitBtn = inViewAs
-          ? `<button class="navBtn" type="button" data-action="exit-view">Exit view</button>`
-          : '';
-
-        const viewBtns = ROLE_ORDER.map((role) => {
-          const active = String(role) === String(currentRole);
-          return `<button class="navBtn ${active ? 'active' : ''}" type="button" data-view-role="${escapeHtml(role)}">${escapeHtml(roleViewLabel(role))}</button>`;
-        }).join('');
+        const viewSelect = `
+          <div class="navTitle">Views</div>
+          <select id="viewRoleSelect" class="select" style="width:100%; margin-top:6px;">
+            ${MANAGER_VIEW_OPTIONS.map((o) => {
+              const sel = String(o.role) === String(currentRole) ? ' selected' : '';
+              return `<option value="${escapeHtml(o.role)}"${sel}>${escapeHtml(o.label)}</option>`;
+            }).join('')}
+          </select>
+        `;
 
         const selectedRole = String(state.viewAsRole || '').trim();
         const people = selectedRole ? usersForViewAsRole(selectedRole) : [];
@@ -1982,7 +1993,7 @@
           </div>
         ` : '';
 
-        return `<div class="navTitle">Views</div>${exitBtn}${viewBtns}${peopleBtns}<div style="height:10px"></div><div class="navTitle">Menu</div>`;
+        return `${viewSelect}${peopleBtns}<div style="height:10px"></div><div class="navTitle">Menu</div>`;
       })() : '<div class="navTitle">Menu</div>';
 
       $('nav').innerHTML = viewAsHtml + navItems
@@ -2006,9 +2017,10 @@
         el.addEventListener('click', () => setTab(el.dataset.tab));
       }
 
-      for (const item of document.querySelectorAll('button[data-view-role]')) {
-        item.addEventListener('click', () => {
-          const role = String(item.dataset.viewRole || '').trim();
+      const viewRoleSelect = $('viewRoleSelect');
+      if (viewRoleSelect) {
+        viewRoleSelect.addEventListener('change', () => {
+          const role = String(viewRoleSelect.value || '').trim();
           setViewAsRole(role);
         });
       }
@@ -2020,14 +2032,7 @@
         });
       }
 
-      for (const item of document.querySelectorAll('button[data-action="exit-view"]')) {
-        item.addEventListener('click', () => {
-          state.viewAsRole = '';
-          state.viewAsUserId = '';
-          state.activeTab = 'overview';
-          refreshMe().catch(() => {});
-        });
-      }
+      // No explicit exit button: managers can switch back to Manager in the Views dropdown.
 
       // Manager-only controls
       $('newEventToggle').classList.toggle('hide', !(me.profile.role === 'manager' || me.profile.role === 'event_coordinator'));
