@@ -266,7 +266,6 @@
 
     <div class="layout">
       <nav class="sidebar">
-        <div class="navTitle">Menu</div>
         <div id="nav"></div>
       </nav>
 
@@ -1515,6 +1514,7 @@
 
     const ROLE_ORDER = [
       'dialer',
+      'remote_setter',
       'in_person_setter',
       'closer',
       'account_manager',
@@ -1524,6 +1524,22 @@
       'manager',
     ];
 
+    function roleViewLabel(role){
+      const r = String(role || '').trim();
+      const map = {
+        dialer: 'Dialer',
+        remote_setter: 'Remote setter',
+        in_person_setter: 'In-person setter',
+        closer: 'Closer',
+        account_manager: 'Account manager',
+        event_host: 'Event host',
+        event_coordinator: 'Event coordinator',
+        media_team: 'Content',
+        manager: 'Manager',
+      };
+      return map[r] || (r ? r.replaceAll('_', ' ') : '—');
+    }
+
     function viewingLabel(role){
       const r = String(role || '').trim();
       if (['dialer','remote_setter'].includes(r)) return 'Calls';
@@ -1531,7 +1547,7 @@
       if (['closer','account_manager'].includes(r)) return 'Sales';
       if (r === 'event_host') return 'Events';
       if (r === 'event_coordinator') return 'Operations';
-      if (r === 'media_team') return 'Media';
+      if (r === 'media_team') return 'Content';
       if (r === 'manager') return 'Operations';
       return roleLabel(r);
     }
@@ -1577,8 +1593,6 @@
     function roleKeysForPeople(role){
       const r = String(role || '').trim();
       if (!r) return [];
-      if (r === 'dialer' || r === 'remote_setter') return ['dialer','remote_setter'];
-      if (r === 'closer' || r === 'account_manager') return ['closer','account_manager'];
       return [r];
     }
 
@@ -1605,8 +1619,7 @@
 
     function setViewAsRole(nextRole){
       const raw = String(nextRole || '').trim();
-      const v = raw === 'remote_setter' ? 'dialer' : raw;
-      state.viewAsRole = v === 'manager' ? '' : v;
+      state.viewAsRole = raw === 'manager' ? '' : raw;
       state.viewAsUserId = '';
 
       const er = effectiveRole();
@@ -1625,6 +1638,11 @@
     function setViewAsUserId(nextUserId){
       const v = String(nextUserId || '').trim();
       state.viewAsUserId = v;
+      if (v) {
+        const u = (Array.isArray(state.usersCache) ? state.usersCache : []).find((x) => String(x.userId) === v);
+        const theirRole = String(u?.role || '').trim();
+        if (theirRole) state.viewAsRole = theirRole;
+      }
       refreshMe().catch(() => {});
     }
 
@@ -1910,80 +1928,50 @@
       const realRole = String(me.profile.role || '').trim();
       const er = effectiveRole();
 
-      // Manager view-as needs the user roster to provide true "see what they see".
-      if (isManagerUser()) {
-        await ensureUsersCache();
-        if (String(state.viewAsRole || '').trim() && !String(state.viewAsUserId || '').trim()) {
-          const users = usersForViewAsRole(state.viewAsRole);
-          if (users.length) {
-            state.viewAsUserId = String(users[0].userId || '').trim();
-          }
-        }
-      }
+      // Manager view-as needs the user roster to offer a person picker.
+      if (isManagerUser()) await ensureUsersCache();
 
-      $('roleLine').textContent = realRole === 'manager' && er !== 'manager'
-        ? `Operations • viewing ${viewingLabel(er)}${(state.viewAsUserId ? (' — ' + (viewAsUserLabel(state.viewAsUserId) || '')) : '')}`.trim()
-        : viewingLabel(realRole);
+      const inViewAs = isManagerUser() && (!!String(state.viewAsRole || '').trim() || !!String(state.viewAsUserId || '').trim());
+      $('roleLine').textContent = inViewAs
+        ? `Viewing ${roleViewLabel(er)}${(state.viewAsUserId ? (' — ' + (viewAsUserLabel(state.viewAsUserId) || '')) : '')}`.trim()
+        : roleViewLabel(realRole);
       $('appUser').textContent = me.user.email;
 
       const navItems = [];
-      if (!isManagerUser()) {
-        navItems.push({ id:'overview', label:'Overview' });
-        navItems.push({ id:'leads', label:'Leads' });
-        if (['dialer','remote_setter','in_person_setter'].includes(er)) {
-          navItems.push({ id:'calls', label: er === 'in_person_setter' ? 'Booked' : 'Calls' });
-          navItems.push({ id:'meetings', label:'Meetings' });
-        }
-        if (['closer','account_manager'].includes(er)) {
-          navItems.push({ id:'closer', label:'Sales' });
-          navItems.push({ id:'meetings', label:'Meetings' });
-        }
-        if (['event_host','media_team','event_coordinator'].includes(er)) {
-          navItems.push({ id:'events', label: er === 'media_team' ? 'Content' : 'Events' });
-        }
-        if (er === 'event_coordinator') {
-          navItems.push({ id:'manager', label:'Operations' });
-        }
-        navItems.push({ id:'payments', label:'Payments' });
+      navItems.push({ id:'overview', label:'Overview' });
+      navItems.push({ id:'leads', label:'Leads' });
+      if (['dialer','remote_setter','in_person_setter'].includes(er)) {
+        navItems.push({ id:'calls', label: er === 'in_person_setter' ? 'Booked' : 'Calls' });
+        navItems.push({ id:'meetings', label:'Meetings' });
       }
+      if (['closer','account_manager'].includes(er)) {
+        navItems.push({ id:'closer', label:'Sales' });
+        navItems.push({ id:'meetings', label:'Meetings' });
+      }
+      if (['event_host','media_team','event_coordinator'].includes(er)) {
+        navItems.push({ id:'events', label: er === 'media_team' ? 'Content' : 'Events' });
+      }
+      if (er === 'event_coordinator' || er === 'manager') {
+        navItems.push({ id:'manager', label:'Operations' });
+      }
+      navItems.push({ id:'payments', label:'Payments' });
 
       const viewAsHtml = isManagerUser() ? (() => {
-        const items = [
-          { role: 'manager', label: 'My view', tab: 'overview' },
-          { role: 'keep', label: 'Overview', tab: 'overview' },
-          { role: 'keep', label: 'Leads', tab: 'leads' },
-          { role: 'dialer', label: 'Calls', tab: 'calls', dialerSubtab: 'call' },
-          { role: 'in_person_setter', label: 'Booked', tab: 'calls', dialerSubtab: 'booked' },
-          { role: 'closer', label: 'Sales', tab: 'closer' },
-          { role: 'keep', label: 'Meetings', tab: 'meetings' },
-          { role: 'event_host', label: 'Events', tab: 'events' },
-          { role: 'event_coordinator', label: 'Operations', tab: 'manager' },
-          { role: 'media_team', label: 'Content', tab: 'events' },
-          { role: 'keep', label: 'Payments', tab: 'payments' },
-        ];
+        const inViewAs = !!String(state.viewAsRole || '').trim() || !!String(state.viewAsUserId || '').trim();
+        const currentRole = String(state.viewAsRole || '').trim() || 'manager';
 
-        const menuBtns = items.map((v) => {
-          const roleKey = (v.role === 'manager' ? 'manager' : v.role);
-          const tabKey = String(v.tab || '');
-          const isTabActive = String(state.activeTab || '') === tabKey;
-          const active = (
-            (v.role === 'keep' && isTabActive)
-            || (v.role === 'manager' && er === 'manager' && isTabActive)
-            || (v.role !== 'keep' && v.role !== 'manager' && er === roleKey && isTabActive)
-          );
-          const attrs = [
-            `data-viewas-role="${escapeHtml(v.role)}"`,
-            `data-view-tab="${escapeHtml(tabKey)}"`,
-            `data-tab="${escapeHtml(tabKey)}"`,
-          ];
-          if (v.dialerSubtab) attrs.push(`data-view-dialer-subtab="${escapeHtml(v.dialerSubtab)}"`);
-          if (v.closerSubtab) attrs.push(`data-view-closer-subtab="${escapeHtml(v.closerSubtab)}"`);
-          return `<button class="navBtn ${active ? 'active' : ''}" type="button" ${attrs.join(' ')}>${escapeHtml(v.label)}</button>`;
+        const exitBtn = inViewAs
+          ? `<button class="navBtn" type="button" data-action="exit-view">Exit view</button>`
+          : '';
+
+        const viewBtns = ROLE_ORDER.map((role) => {
+          const active = String(role) === String(currentRole);
+          return `<button class="navBtn ${active ? 'active' : ''}" type="button" data-view-role="${escapeHtml(role)}">${escapeHtml(roleViewLabel(role))}</button>`;
         }).join('');
 
-        const people = er === 'manager' ? [] : usersForViewAsRole(er);
-        const isSelected = !!String(state.viewAsUserId || '').trim();
-        const peopleBtns = er === 'manager' ? '' : `
+        const selectedRole = String(state.viewAsRole || '').trim();
+        const people = selectedRole ? usersForViewAsRole(selectedRole) : [];
+        const peopleBtns = selectedRole ? `
           <div class="navTitle" style="margin-top:8px;">Person</div>
           <div style="max-height:240px; overflow:auto; padding-right:4px;">
             ${people.map((u) => {
@@ -1992,10 +1980,10 @@
               return `<button class="navBtn ${active ? 'active' : ''}" type="button" data-viewas-user="${escapeHtml(u.userId)}">${escapeHtml(label)}</button>`;
             }).join('')}
           </div>
-        `;
+        ` : '';
 
-        return `${menuBtns}${peopleBtns}<div style="height:10px"></div>`;
-      })() : '';
+        return `<div class="navTitle">Views</div>${exitBtn}${viewBtns}${peopleBtns}<div style="height:10px"></div><div class="navTitle">Menu</div>`;
+      })() : '<div class="navTitle">Menu</div>';
 
       $('nav').innerHTML = viewAsHtml + navItems
         .map((t) => `<button class="navBtn" type="button" data-tab="${t.id}">${t.label}</button>`)
@@ -2014,30 +2002,14 @@
       const mgrStats = $('mgrStatsCard');
       if (mgrStats) mgrStats.classList.toggle('hide', effectiveRole() !== 'manager');
 
-      for (const el of document.querySelectorAll('.navBtn[data-tab]:not([data-viewas-role])')){
+      for (const el of document.querySelectorAll('.navBtn[data-tab]')){
         el.addEventListener('click', () => setTab(el.dataset.tab));
       }
 
-      function setManagerViewFromBtn(btn){
-        const rawRole = String(btn?.dataset?.viewasRole || '').trim();
-        const rawTab = String(btn?.dataset?.viewTab || '').trim();
-        const dialerSubtab = String(btn?.dataset?.viewDialerSubtab || '').trim();
-        const closerSubtab = String(btn?.dataset?.viewCloserSubtab || '').trim();
-
-        const roleNorm = rawRole === 'remote_setter' ? 'dialer' : rawRole;
-        if (roleNorm && roleNorm !== 'keep') {
-          state.viewAsRole = (roleNorm === 'manager') ? '' : roleNorm;
-          state.viewAsUserId = '';
-        }
-        if (dialerSubtab) state.dialerSubtab = dialerSubtab;
-        if (closerSubtab) state.closerSubtab = closerSubtab;
-        if (rawTab) state.activeTab = rawTab;
-        refreshMe().catch(() => {});
-      }
-
-      for (const item of document.querySelectorAll('button[data-viewas-role]')) {
+      for (const item of document.querySelectorAll('button[data-view-role]')) {
         item.addEventListener('click', () => {
-          setManagerViewFromBtn(item);
+          const role = String(item.dataset.viewRole || '').trim();
+          setViewAsRole(role);
         });
       }
 
@@ -2045,6 +2017,15 @@
         item.addEventListener('click', () => {
           const uid = String(item.dataset.viewasUser || '').trim();
           setViewAsUserId(uid);
+        });
+      }
+
+      for (const item of document.querySelectorAll('button[data-action="exit-view"]')) {
+        item.addEventListener('click', () => {
+          state.viewAsRole = '';
+          state.viewAsUserId = '';
+          state.activeTab = 'overview';
+          refreshMe().catch(() => {});
         });
       }
 
@@ -2060,8 +2041,8 @@
           </div>
           <div>
             <div class="muted small">Workspace</div>
-            <div style="margin-top:4px;"><span class="badge ok">${escapeHtml(realRole === 'manager' && er !== 'manager' ? viewingLabel(er) : viewingLabel(realRole))}</span></div>
-            ${realRole === 'manager' && er !== 'manager' && state.viewAsUserId ? `<div class="muted small" style="margin-top:6px;">${escapeHtml(viewAsUserLabel(state.viewAsUserId) || '')}</div>` : ''}
+            <div style="margin-top:4px;"><span class="badge ok">${escapeHtml(inViewAs ? roleViewLabel(er) : roleViewLabel(realRole))}</span></div>
+            ${inViewAs && state.viewAsUserId ? `<div class="muted small" style="margin-top:6px;">${escapeHtml(viewAsUserLabel(state.viewAsUserId) || '')}</div>` : ''}
           </div>
         </div>
         <div style="height:12px"></div>
