@@ -244,6 +244,30 @@
     .stageBtn.active{background: rgba(15,118,110,.08); border-color: rgba(15,118,110,.22); color: rgba(15,118,110,1)}
     .stageCount{font-family: var(--mono); font-size:12px; color: var(--muted); font-weight:900;}
 
+    .pipe{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+    .pipeStage{display:flex; align-items:center; gap:10px;}
+    .pipeNode{appearance:none; border:1px solid var(--border); background:#fff; padding:10px 12px; border-radius: 14px; cursor:pointer; box-shadow: none; display:flex; align-items:center; gap:10px; font-weight:900; color:#3a2f2c;}
+    .pipeNode:hover{border-color: rgba(199,154,59,.55)}
+    .pipeCount{font-family: var(--mono); font-size:12px; color: var(--muted); font-weight:900;}
+    .pipeLine{height:2px; width:28px; background: rgba(0,0,0,.10); border-radius:999px;}
+
+    .modalBackdrop{position:fixed; inset:0; background: rgba(0,0,0,.38); z-index: 80; display:none; padding: 20px;}
+    .modalBackdrop.show{display:block;}
+    .modal{max-width: 1040px; margin: 30px auto; background:#fff; border:1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow); overflow:hidden;}
+    .modalHd{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; border-bottom:1px solid var(--border);}
+    .modalHd .t{font-weight:900;}
+    .modalBd{padding:16px;}
+    .modalTwo{display:grid; grid-template-columns: 1fr 1fr; gap:12px; min-width:0;}
+    @media (max-width: 860px){ .modalTwo{grid-template-columns: 1fr;} }
+    .modalList{border:1px solid var(--border); border-radius: 14px; overflow:auto; max-height: 420px;}
+    .modalList button{width:100%; text-align:left; background:#fff; border:0; border-bottom:1px solid var(--border); padding:10px 12px; cursor:pointer;}
+    .modalList button:hover{background: rgba(199,154,59,.10)}
+    .modalList button.active{background: rgba(15,118,110,.08)}
+    .modalDetail{border:1px solid var(--border); border-radius: 14px; padding:12px; min-width:0;}
+    .modalDetail .kv{display:grid; grid-template-columns: 120px 1fr; gap:8px 10px; font-size:13px;}
+    .modalDetail .kv div:nth-child(odd){color:var(--muted); font-weight:800;}
+    .modalDetail .kv div:nth-child(even){word-break:break-word;}
+
     .spin{
       width: 12px;
       height: 12px;
@@ -350,7 +374,7 @@
           </div>
 
           <div style="height:10px"></div>
-          <div class="stageBar" id="leadsStageBar"></div>
+          <div class="pipe" id="leadsPipeline"></div>
 
           <div id="pullLeadsBox" class="card" style="margin-top:14px; background: #fff;" hidden>
             <div class="bd">
@@ -992,7 +1016,7 @@
                   <button id="loadCloserQueueBtn" class="btn secondary" type="button">Load</button>
                 </div>
                 <div style="height:10px"></div>
-                <div class="stageBar" id="closerStageBar"></div>
+                <div class="pipe" id="closerPipeline"></div>
                 <div style="height:10px"></div>
                 <div id="closerQueueMsg" class="err"></div>
                 <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
@@ -1412,6 +1436,40 @@
         </div>
       </div>
         </section>
+
+    <div id="pipelineModal" class="modalBackdrop" role="dialog" aria-modal="true" aria-label="Pipeline stage">
+      <div class="modal">
+        <div class="modalHd">
+          <div>
+            <div class="t" id="pipelineModalTitle">Pipeline</div>
+            <div class="muted small" id="pipelineModalSub">—</div>
+          </div>
+          <div class="row" style="gap:8px;">
+            <button id="pipelinePrev" class="btn secondary" type="button">Prev</button>
+            <button id="pipelineNext" class="btn secondary" type="button">Next</button>
+            <button id="pipelineClose" class="btn secondary" type="button">Close</button>
+          </div>
+        </div>
+        <div class="modalBd">
+          <div class="modalTwo">
+            <div>
+              <div class="muted small" style="font-weight:900;">Leads</div>
+              <div style="height:8px"></div>
+              <div id="pipelineModalList" class="modalList"></div>
+            </div>
+            <div>
+              <div class="muted small" style="font-weight:900;">Lead</div>
+              <div style="height:8px"></div>
+              <div id="pipelineModalDetail" class="modalDetail"></div>
+              <div class="row" style="margin-top:10px;">
+                <button id="pipelineOpenLead" class="btn" type="button">Open lead</button>
+              </div>
+              <div class="muted small" style="margin-top:8px;">Tip: click a lead, then Prev/Next to browse.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
       </main>
     </div>
   </div>
@@ -1490,7 +1548,6 @@
       pickLeadReturnTab: 'calls',
       usersCache: [],
       closerQueue: [],
-      closerPipelineFilter: '',
       ui: { sidebarCollapsed: false },
       availability: { weekOffset: 0, byDate: {}, tz: '', drag: { active: false, mode: '' } },
     };
@@ -3033,24 +3090,15 @@
         const leads = j.leads || [];
         state.closerQueue = leads;
         const tb = $('closerQueueTbody');
-        const active = String(state.closerPipelineFilter || '').trim();
-        renderStageBar('closerStageBar', leads, {
-          activeKey: active,
-          onPick: (k) => {
-            state.closerPipelineFilter = String(k || '');
-            loadCloserQueue().catch(()=>{});
-          }
-        });
+        renderPipelineTimeline('closerPipeline', leads, { context: 'closer' });
 
-        const items = filteredLeadsByStatus(leads, active);
-
-        if (!items.length) {
+        if (!leads.length) {
           tb.innerHTML = '<tr><td colspan="7" class="muted">No pipeline items.</td></tr>';
           setBadge('ok', 'loaded');
           return;
         }
 
-        tb.innerHTML = items.map((l) => {
+        tb.innerHTML = leads.map((l) => {
           const name = [l.first_name, l.last_name].filter(Boolean).join(' ') || '(no name)';
           const prop = l.property_name || l.company || '';
           const fu = l.meta && typeof l.meta === 'object' ? String(l.meta.followup || '') : '';
@@ -3471,9 +3519,9 @@
       return n.toLocaleString(undefined, { style:'currency', currency:'USD' });
     }
 
-    function stageDefs(){
+    function pipelineStages(){
+      // Order matters: this is the visual timeline.
       return [
-        { key: '', label: 'All' },
         { key: 'new', label: 'New' },
         { key: 'working', label: 'Working' },
         { key: 'booked', label: 'Booked' },
@@ -3483,56 +3531,168 @@
     }
 
     function countByStatus(leads){
-      const out = { '': 0 };
+      const out = {};
       const arr = Array.isArray(leads) ? leads : [];
-      out[''] = arr.length;
       for (const l of arr) {
-        const st = String(l?.status || '');
+        const st = String(l?.status || '').trim();
         if (!st) continue;
         out[st] = Number(out[st] || 0) + 1;
       }
       return out;
     }
 
-    function renderStageBar(containerId, leads, { activeKey = '', onPick } = {}){
+    function leadsForStage(leads, stageKey){
+      const st = String(stageKey || '').trim();
+      return (Array.isArray(leads) ? leads : []).filter((l) => String(l?.status || '').trim() === st);
+    }
+
+    function leadLabelLine(l){
+      const name = [l?.first_name, l?.last_name].filter(Boolean).join(' ').trim() || '(no name)';
+      const prop = String(l?.property_name || l?.company || '').trim();
+      return [name, prop].filter(Boolean).join(' • ');
+    }
+
+    function renderPipelineTimeline(containerId, leads, { context = 'leads' } = {}){
       const el = $(containerId);
       if (!el) return;
+      const defs = pipelineStages();
       const counts = countByStatus(leads);
-      const defs = stageDefs();
-      el.innerHTML = defs.map((d) => {
+      el.innerHTML = defs.map((d, idx) => {
         const c = Number(counts[d.key] || 0);
-        const cls = ['stageBtn'];
-        if (String(activeKey || '') === String(d.key || '')) cls.push('active');
-        return `<button type="button" class="${cls.join(' ')}" data-stage="${escapeHtml(d.key)}">${escapeHtml(d.label)} <span class="stageCount">${c}</span></button>`;
+        const line = (idx < defs.length - 1) ? `<span class="pipeLine" aria-hidden="true"></span>` : '';
+        return `
+          <div class="pipeStage">
+            <button type="button" class="pipeNode" data-pipe-stage="${escapeHtml(d.key)}" data-pipe-context="${escapeHtml(context)}">
+              <span>${escapeHtml(d.label)}</span>
+              <span class="pipeCount">${c}</span>
+            </button>
+            ${line}
+          </div>
+        `;
       }).join('');
-      for (const btn of el.querySelectorAll('button[data-stage]')){
+
+      for (const btn of el.querySelectorAll('button[data-pipe-stage]')){
         btn.addEventListener('click', () => {
-          const k = String(btn.dataset.stage || '');
-          if (onPick) onPick(k);
+          const stage = String(btn.dataset.pipeStage || '');
+          const ctx = String(btn.dataset.pipeContext || 'leads');
+          openPipelineModal({ stage, context: ctx });
         });
       }
     }
 
-    function filteredLeadsByStatus(leads, status){
-      const st = String(status || '').trim();
-      if (!st) return Array.isArray(leads) ? leads : [];
-      return (Array.isArray(leads) ? leads : []).filter((l) => String(l?.status || '') === st);
+    const pipelineModalState = {
+      stage: '',
+      context: 'leads',
+      leads: [],
+      idx: 0,
+    };
+
+    function openPipelineModal({ stage, context } = {}){
+      const modal = $('pipelineModal');
+      if (!modal) return;
+
+      const st = String(stage || '').trim();
+      if (!st) return;
+      const ctx = String(context || 'leads');
+
+      const pool = (ctx === 'closer') ? (state.closerQueue || []) : (state.leads || []);
+      const items = leadsForStage(pool, st);
+      items.sort((a, b) => {
+        const an = leadLabelLine(a);
+        const bn = leadLabelLine(b);
+        return an.localeCompare(bn);
+      });
+
+      pipelineModalState.stage = st;
+      pipelineModalState.context = ctx;
+      pipelineModalState.leads = items;
+      pipelineModalState.idx = 0;
+
+      const title = $('pipelineModalTitle');
+      const sub = $('pipelineModalSub');
+      if (title) title.textContent = (ctx === 'closer' ? 'Sales pipeline' : 'Pipeline') + ` — ${st}`;
+      if (sub) sub.textContent = `${items.length} lead${items.length === 1 ? '' : 's'}`;
+
+      renderPipelineModal();
+      modal.classList.add('show');
+    }
+
+    function closePipelineModal(){
+      const modal = $('pipelineModal');
+      if (!modal) return;
+      modal.classList.remove('show');
+    }
+
+    function selectPipelineIdx(nextIdx){
+      const n = pipelineModalState.leads.length;
+      if (!n) { pipelineModalState.idx = 0; return; }
+      let i = Number(nextIdx || 0);
+      if (i < 0) i = 0;
+      if (i >= n) i = n - 1;
+      pipelineModalState.idx = i;
+      renderPipelineModal();
+    }
+
+    function renderPipelineModal(){
+      const list = $('pipelineModalList');
+      const detail = $('pipelineModalDetail');
+      if (!list || !detail) return;
+
+      const items = pipelineModalState.leads || [];
+      if (!items.length) {
+        list.innerHTML = '<div class="muted small" style="padding:12px;">No leads in this stage.</div>';
+        detail.innerHTML = '<div class="muted small">—</div>';
+        return;
+      }
+
+      const idx = Number(pipelineModalState.idx || 0);
+      const safeIdx = Math.max(0, Math.min(idx, items.length - 1));
+      pipelineModalState.idx = safeIdx;
+
+      list.innerHTML = items.map((l, i) => {
+        const active = i === safeIdx ? 'active' : '';
+        const line = leadLabelLine(l);
+        const phone = String(l?.phone || '').trim();
+        const followup = (l?.meta && typeof l.meta === 'object') ? String(l.meta.followup || '').trim() : '';
+        const extra = [phone ? ('☎ ' + phone) : '', followup ? ('FU ' + followup) : ''].filter(Boolean).join(' • ');
+        return `<button type="button" class="${active}" data-pm-pick="${i}">
+          <div style="font-weight:900;">${escapeHtml(line)}</div>
+          ${extra ? `<div class="muted small" style="margin-top:2px;">${escapeHtml(extra)}</div>` : ''}
+        </button>`;
+      }).join('');
+
+      for (const btn of list.querySelectorAll('button[data-pm-pick]')){
+        btn.addEventListener('click', () => selectPipelineIdx(Number(btn.dataset.pmPick || 0)));
+      }
+
+      const l = items[safeIdx];
+      const meta = (l?.meta && typeof l.meta === 'object') ? l.meta : {};
+      const website = String(meta?.website || '').trim();
+      const mapsUrl = String(meta?.maps_url || '').trim();
+
+      detail.innerHTML = `
+        <div class="kv">
+          <div>ID</div><div>${escapeHtml(String(l?.id || ''))}</div>
+          <div>Name</div><div>${escapeHtml([l?.first_name, l?.last_name].filter(Boolean).join(' ') || '')}</div>
+          <div>Property</div><div>${escapeHtml(String(l?.property_name || l?.company || ''))}</div>
+          <div>Phone</div><div>${escapeHtml(String(l?.phone || ''))}</div>
+          <div>Email</div><div>${escapeHtml(String(l?.email || ''))}</div>
+          <div>City</div><div>${escapeHtml([l?.city, l?.state].filter(Boolean).join(', '))}</div>
+          <div>Status</div><div><span class="badge">${escapeHtml(String(l?.status || ''))}</span></div>
+          <div>Follow up</div><div>${escapeHtml(String(meta?.followup || ''))}</div>
+          <div>Website</div><div>${website ? `<a href="${escapeHtml(website)}" target="_blank" rel="noopener">${escapeHtml(website)}</a>` : '<span class="muted">—</span>'}</div>
+          <div>Maps</div><div>${mapsUrl ? `<a href="${escapeHtml(mapsUrl)}" target="_blank" rel="noopener">Open</a>` : '<span class="muted">—</span>'}</div>
+        </div>
+      `;
     }
 
     function renderLeadsTable(){
       const tb = $('leadsTbody');
       if (!tb) return;
       const status = String($('leadStatus')?.value || '').trim();
-      const items = filteredLeadsByStatus(state.leads || [], status);
+      const items = (Array.isArray(state.leads) ? state.leads : []).filter((l) => !status || String(l?.status || '') === status);
 
-      renderStageBar('leadsStageBar', state.leads || [], {
-        activeKey: status,
-        onPick: (k) => {
-          const sel = $('leadStatus');
-          if (sel) sel.value = String(k || '');
-          renderLeadsTable();
-        }
-      });
+      renderPipelineTimeline('leadsPipeline', state.leads || [], { context: 'leads' });
 
       if ($('leadsEmpty')) $('leadsEmpty').textContent = items.length ? '' : 'No leads yet.';
       if (!items.length) {
@@ -3579,24 +3739,15 @@
       const qs = new URLSearchParams();
       if (q) qs.set('q', q);
       // Always fetch without status so the stage bar can show counts.
-      qs.set('limit', '200');
+        renderPipelineTimeline('closerPipeline', leads, { context: 'closer' });
 
-      try{
-        const j = await api('/api/portal/leads?' + qs.toString());
-        state.leads = j.leads || [];
-
-        renderLeadsTable();
-
-        setBadge('ok', 'loaded');
-      } catch(e){
-        $('leadsMsg').textContent = String(e.message || e);
-        setBadge('warn', 'error');
+        if (!leads.length) {
       }
     }
 
     async function pullLeads(){
       const msg = $('pullLeadsMsg');
-      if (msg) msg.textContent = '';
+        tb.innerHTML = leads.map((l) => {
 
       const cityState = String($('plCityState')?.value || '').trim();
       if (!cityState) {
@@ -4123,6 +4274,40 @@
 
     on('submitRecapBtn', 'click', () => submitRecap().catch(() => {}));
     on('closeRecapBtn', 'click', () => setSelectedEvent(null));
+
+    on('pipelineClose', 'click', () => closePipelineModal());
+    on('pipelinePrev', 'click', () => selectPipelineIdx(Number(pipelineModalState.idx || 0) - 1));
+    on('pipelineNext', 'click', () => selectPipelineIdx(Number(pipelineModalState.idx || 0) + 1));
+    on('pipelineOpenLead', 'click', async () => {
+      const items = pipelineModalState.leads || [];
+      const idx = Number(pipelineModalState.idx || 0);
+      const l = items[idx];
+      if (!l || !l.id) return;
+      state.selectedLead = l;
+      setSelectedLeadLine();
+      closePipelineModal();
+      if (pipelineModalState.context === 'closer') {
+        setTab('closer');
+        setCloserSubtab('disposition');
+      } else {
+        setTab('leads');
+      }
+      await loadTimelineInto('timelineList', 'timelineMsg').catch(()=>{});
+      await loadTimelineInto('dialerTimelineList', 'dialerTimelineMsg').catch(()=>{});
+    });
+
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape') {
+        const m = $('pipelineModal');
+        if (m && m.classList.contains('show')) closePipelineModal();
+      }
+    });
+
+    on('pipelineModal', 'click', (ev) => {
+      const m = $('pipelineModal');
+      if (!m) return;
+      if (ev.target === m) closePipelineModal();
+    });
 
     on('loadPayoutsBtn', 'click', () => loadPayouts().catch(() => {}));
 
