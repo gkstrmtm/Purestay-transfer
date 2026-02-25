@@ -40,6 +40,7 @@
       background: #f7f4f0;
       color:var(--ink);
       min-height:100vh;
+      overflow-x:hidden;
     }
     a{color:var(--maroon); text-decoration:none}
     a:hover{text-decoration:underline}
@@ -109,8 +110,12 @@
     .appbrand img{height:46px; width:auto; display:block;}
     .appbrand .t{font-weight: 900; letter-spacing:.2px;}
 
-    .layout{max-width:1180px; margin:0 auto; display:grid; grid-template-columns: 240px 1fr; gap: 16px; padding: 16px 18px 28px;}
+    .layout{max-width:1180px; margin:0 auto; display:grid; grid-template-columns: var(--sbw, 240px) 1fr; gap: 16px; padding: 16px 18px 28px;}
     @media (max-width: 900px){ .layout{grid-template-columns: 1fr;} }
+
+    body.sbCollapsed .layout{--sbw:72px;}
+
+    main{min-width:0;}
 
     .sidebar{
       background: #fff;
@@ -118,7 +123,15 @@
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       padding: 12px;
-      height: fit-content;
+      position: sticky;
+      top: 78px;
+      max-height: calc(100vh - 98px);
+      overflow:auto;
+      min-width:0;
+    }
+
+    @media (max-width: 900px){
+      .sidebar{position:relative; top:auto; max-height:none;}
     }
 
     .navTitle{font-size:12px; color:var(--muted); font-weight:900; letter-spacing:.08em; text-transform:uppercase; padding: 6px 8px 10px;}
@@ -133,9 +146,24 @@
       font-weight: 900;
       color: #3a2f2c;
       transition: background .15s ease, border-color .15s ease;
+      display:flex;
+      align-items:center;
+      gap:10px;
     }
     .navBtn:hover{background: rgba(199,154,59,.10); border-color: rgba(199,154,59,.22)}
     .navBtn.active{background: rgba(122,46,38,.08); border-color: rgba(122,46,38,.22); color: var(--maroon)}
+
+    .navIco{width:22px; height:22px; border:1px solid var(--border); border-radius:8px; display:grid; place-items:center; font-size:12px; color:var(--muted); flex:0 0 auto; background:#fff;}
+    .navLbl{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    body.sbCollapsed .navTitle{display:none;}
+    body.sbCollapsed .navLbl{display:none;}
+    body.sbCollapsed .sidebar{padding:10px;}
+    body.sbCollapsed .ddBtn{padding:10px 10px; justify-content:center;}
+    body.sbCollapsed .ddBtn span:first-child{display:none;}
+    body.sbCollapsed .ddBtn span:last-child{margin:0;}
+
+    .iconBtn{appearance:none; border:1px solid var(--border); background:#fff; color: var(--maroon); border-radius: 12px; padding: 10px 12px; cursor:pointer; font-weight:900;}
+    .iconBtn:hover{border-color: rgba(199,154,59,.55)}
 
     .card{
       background: var(--card);
@@ -268,6 +296,7 @@
     <div class="appbar">
       <div class="appbarInner">
         <div class="appbrand">
+          <button id="sidebarToggle" class="iconBtn" type="button" aria-label="Toggle sidebar">☰</button>
           <img src="brand/purestay_exact_SVG.svg" alt="PureStay" />
           <div>
             <div class="t">Portal</div>
@@ -733,6 +762,12 @@
         <div id="viewMeetings" class="hide">
           <div class="card" style="background:#fff;">
             <div class="bd">
+              <div class="segTabs" style="gap:8px; margin-bottom:12px;">
+                <button id="meetingsSegList" class="segBtn" type="button">Meetings</button>
+                <button id="meetingsSegAvailability" class="segBtn" type="button">Availability</button>
+              </div>
+
+              <div id="meetingsPaneList" class="hide">
               <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
                 <div>
                   <div style="font-weight:900;">My meetings</div>
@@ -789,7 +824,10 @@
                 </div>
               </div>
 
-              <div id="meetingsAvailabilityCard" class="card" style="margin-top:14px; background:#fff; border-color: rgba(199,154,59,.35);">
+              </div>
+
+              <div id="meetingsPaneAvailability" class="hide">
+              <div id="meetingsAvailabilityCard" class="card" style="background:#fff; border-color: rgba(199,154,59,.35);">
                 <div class="bd">
                   <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
                     <div>
@@ -818,6 +856,7 @@
                   </div>
                 </div>
               </div>
+              </div>
             </div>
           </div>
         </div>
@@ -831,38 +870,6 @@
           </div>
 
           <div id="closerPaneDisposition" class="hide">
-          <div class="card" id="closerPipelineCard" style="background:#fff; margin-bottom:14px;">
-            <div class="bd">
-              <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
-                <div>
-                  <div style="font-weight:900;">Pipeline</div>
-                  <div class="muted small">Working and booked leads for closing</div>
-                </div>
-                <button id="loadCloserQueueBtn" class="btn secondary" type="button">Load</button>
-              </div>
-              <div style="height:10px"></div>
-              <div class="stageBar" id="closerStageBar"></div>
-              <div style="height:10px"></div>
-              <div id="closerQueueMsg" class="err"></div>
-              <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Name</th>
-                      <th>Property</th>
-                      <th>Status</th>
-                      <th>Priority</th>
-                      <th>Follow up</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody id="closerQueueTbody"></tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
           <div class="card" style="background: #fff;">
             <div class="bd">
               <div class="row" style="justify-content:space-between;">
@@ -974,7 +981,39 @@
               </div>
 
           </div>
-          <div id="closerPanePipeline" class="hide"></div>
+          <div id="closerPanePipeline" class="hide">
+            <div class="card" id="closerPipelineCard" style="background:#fff; margin-bottom:14px;">
+              <div class="bd">
+                <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
+                  <div>
+                    <div style="font-weight:900;">Pipeline</div>
+                    <div class="muted small">Working and booked leads for closing</div>
+                  </div>
+                  <button id="loadCloserQueueBtn" class="btn secondary" type="button">Load</button>
+                </div>
+                <div style="height:10px"></div>
+                <div class="stageBar" id="closerStageBar"></div>
+                <div style="height:10px"></div>
+                <div id="closerQueueMsg" class="err"></div>
+                <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Property</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Follow up</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody id="closerQueueTbody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
 
             </div>
           </div>
@@ -1437,6 +1476,7 @@
       token: '',
       me: null,
       activeTab: 'overview',
+      meetingsSubtab: 'list',
       viewAsRole: '',
       viewAsUserId: '',
       dialerSubtab: 'call',
@@ -1451,8 +1491,48 @@
       usersCache: [],
       closerQueue: [],
       closerPipelineFilter: '',
+      ui: { sidebarCollapsed: false },
       availability: { weekOffset: 0, byDate: {}, tz: '', drag: { active: false, mode: '' } },
     };
+
+    function setSidebarCollapsed(next){
+      const v = !!next;
+      state.ui.sidebarCollapsed = v;
+      document.body.classList.toggle('sbCollapsed', v);
+      try { localStorage.setItem('portal_sidebar_collapsed', v ? '1' : '0'); } catch(_e) {}
+    }
+
+    function restoreUiPrefs(){
+      try {
+        const v = localStorage.getItem('portal_sidebar_collapsed');
+        setSidebarCollapsed(v === '1');
+      } catch(_e) {}
+    }
+
+    function setMeetingsSubtab(next){
+      state.meetingsSubtab = String(next || 'list');
+      renderMeetingsSubtab();
+      // Load data for the active pane.
+      if (state.activeTab === 'meetings') {
+        if (state.meetingsSubtab === 'availability') loadAvailability().catch(()=>{});
+        else loadAppointmentsInto('meetingsTbody', 'meetingsMsg').catch(()=>{});
+      }
+    }
+
+    function renderMeetingsSubtab(){
+      const t = String(state.meetingsSubtab || 'list');
+      const map = {
+        list: { btn: 'meetingsSegList', pane: 'meetingsPaneList' },
+        availability: { btn: 'meetingsSegAvailability', pane: 'meetingsPaneAvailability' },
+      };
+      const keys = Object.keys(map);
+      for (const k of keys) {
+        const btn = $(map[k].btn);
+        const pane = $(map[k].pane);
+        if (btn) btn.classList.toggle('active', k === t);
+        if (pane) pane.classList.toggle('hide', k !== t);
+      }
+    }
 
     function setBadge(kind, text){
       const b = $('viewBadge');
@@ -1724,9 +1804,9 @@
       if (tab === 'leads') loadLeads().catch(()=>{});
       if (tab === 'events') loadEvents().catch(()=>{});
       if (tab === 'meetings') {
-        loadAppointmentsInto('meetingsTbody', 'meetingsMsg').catch(()=>{});
-        // Load availability once when entering Meetings.
-        loadAvailability().catch(()=>{});
+        renderMeetingsSubtab();
+        if (state.meetingsSubtab === 'availability') loadAvailability().catch(()=>{});
+        else loadAppointmentsInto('meetingsTbody', 'meetingsMsg').catch(()=>{});
       }
       if (tab === 'closer') {
         renderCloserSubtab();
@@ -1949,8 +2029,19 @@
         return `${viewSelect}${peopleBtns}<div style="height:10px"></div><div class="navTitle">Menu</div>`;
       })() : '<div class="navTitle">Menu</div>';
 
+      const ico = {
+        overview: 'O',
+        leads: 'L',
+        calls: 'C',
+        meetings: 'M',
+        closer: 'S',
+        events: 'E',
+        payments: '$',
+        manager: '⚙',
+      };
+
       $('nav').innerHTML = viewAsHtml + navItems
-        .map((t) => `<button class="navBtn" type="button" data-tab="${t.id}">${t.label}</button>`)
+        .map((t) => `<button class="navBtn" type="button" data-tab="${t.id}"><span class="navIco">${escapeHtml(ico[t.id] || '•')}</span><span class="navLbl">${escapeHtml(t.label)}</span></button>`)
         .join('');
 
       // Role-specific UI tweaks
@@ -3875,24 +3966,18 @@
       if (el) el.addEventListener(eventName, handler);
     }
 
-    function hydrateCloserPipelinePane(){
-      const card = $('closerPipelineCard');
-      const pane = $('closerPanePipeline');
-      if (!card || !pane) return;
-      if (pane.contains(card)) return;
-      pane.appendChild(card);
-    }
-
     async function boot(){
       $('authMsg').textContent = '';
       $('authOk').textContent = '';
 
+      restoreUiPrefs();
+
       // Restore prior session token if present.
       state.token = localStorage.getItem('portal_access_token') || '';
       await refreshMe();
-      hydrateCloserPipelinePane();
       renderDialerSubtab();
       renderCloserSubtab();
+      renderMeetingsSubtab();
     }
 
     on('loginBtn', 'click', async () => {
@@ -4011,6 +4096,10 @@
     on('scheduleApptBtn', 'click', () => scheduleAppointment().catch(() => {}));
     on('meetingsRefreshBtn', 'click', () => loadAppointmentsInto('meetingsTbody', 'meetingsMsg').catch(() => {}));
     on('meetingScheduleBtn', 'click', () => scheduleMeeting().catch(() => {}));
+
+    on('meetingsSegList', 'click', () => setMeetingsSubtab('list'));
+    on('meetingsSegAvailability', 'click', () => setMeetingsSubtab('availability'));
+
     on('availSaveBtn', 'click', () => saveAvailability().catch(() => {}));
     on('availPrevWeek', 'click', () => { ensureAvailInit(); state.availability.weekOffset -= 1; renderAvailWeekGrid(); });
     on('availNextWeek', 'click', () => { ensureAvailInit(); state.availability.weekOffset += 1; renderAvailWeekGrid(); });
@@ -4026,7 +4115,9 @@
     });
 
     on('closerSegDisposition', 'click', () => setCloserSubtab('disposition'));
-    on('closerSegPipeline', 'click', () => { hydrateCloserPipelinePane(); setCloserSubtab('pipeline'); });
+    on('closerSegPipeline', 'click', () => setCloserSubtab('pipeline'));
+
+    on('sidebarToggle', 'click', () => setSidebarCollapsed(!state.ui.sidebarCollapsed));
 
     on('loadCloserQueueBtn', 'click', () => loadCloserQueue().catch(() => {}));
 
