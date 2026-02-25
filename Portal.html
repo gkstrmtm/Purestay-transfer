@@ -67,7 +67,7 @@
     .authTop h1{margin:0; font-family: Fraunces, ui-serif, Georgia, serif; font-weight:800; font-size:26px; letter-spacing:.2px;}
     .authTop .sub{color:var(--muted); font-size:13px; margin-top:2px;}
 
-    .pill{font-family: var(--mono); font-size:12px; color:var(--muted); border:1px solid var(--border); padding:6px 10px; border-radius:999px; background:#fff;}
+    .pill{font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; font-size:12px; font-weight:700; color:var(--muted); border:1px solid var(--border); padding:6px 10px; border-radius:999px; background:#fff;}
 
     .btn{
       appearance:none;
@@ -170,12 +170,16 @@
     th, td{padding:10px 8px; border-bottom:1px solid var(--border); vertical-align:top;}
     th{color:var(--muted); font-weight:600; text-align:left; font-size:12px;}
 
-    .badge{font-family: var(--mono); font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid var(--border); color:var(--muted); background:#fff}
+    .badge{font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; font-size:12px; font-weight:800; padding:4px 10px; border-radius:999px; border:1px solid var(--border); color:var(--muted); background:#fff}
     .badge.ok{border-color: rgba(15,118,110,.25); color: rgba(15,118,110,1)}
     .badge.warn{border-color: rgba(180,83,9,.25); color: rgba(180,83,9,1)}
 
-    .err{color: var(--bad); font-family: var(--mono); font-size:12px; white-space: pre-wrap;}
-    .ok{color: var(--ok); font-family: var(--mono); font-size:12px; white-space: pre-wrap;}
+    .err{color: var(--bad); font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; font-size:12px; white-space: pre-wrap;}
+    .ok{color: var(--ok); font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; font-size:12px; white-space: pre-wrap;}
+
+    .segTabs{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+    .segBtn{appearance:none; border:1px solid var(--border); background:#fff; padding:9px 12px; border-radius:999px; font-weight:900; color:#3a2f2c; cursor:pointer;}
+    .segBtn.active{background: rgba(122,46,38,.08); border-color: rgba(122,46,38,.22); color: var(--maroon)}
 
     .spin{
       width: 12px;
@@ -573,6 +577,68 @@
                   </thead>
                   <tbody id="dialerTasksTbody"></tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="viewMeetings" class="hide">
+          <div class="card" style="background:#fff;">
+            <div class="bd">
+              <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
+                <div>
+                  <div style="font-weight:900;">My meetings</div>
+                  <div class="muted small">Upcoming and recent appointments</div>
+                </div>
+                <div class="row">
+                  <button id="meetingsRefreshBtn" class="btn secondary" type="button">Refresh</button>
+                </div>
+              </div>
+
+              <div style="height:10px"></div>
+              <div id="meetingsMsg" class="err"></div>
+
+              <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Time</th>
+                      <th>Lead</th>
+                      <th>Status</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="meetingsTbody"></tbody>
+                </table>
+              </div>
+
+              <div style="height:12px"></div>
+              <div class="card" style="background:#fff; border-color: rgba(199,154,59,.35);">
+                <div class="bd">
+                  <div style="font-weight:900;">Schedule</div>
+                  <div class="muted small" style="margin-top:4px;">Schedules for the currently selected lead</div>
+
+                  <div style="height:10px"></div>
+                  <div class="two">
+                    <div>
+                      <label>Date</label>
+                      <input id="meetingDate" type="date" />
+                    </div>
+                    <div>
+                      <label>Start time</label>
+                      <input id="meetingStart" type="time" />
+                    </div>
+                  </div>
+                  <div style="margin-top:10px;">
+                    <label>Notes</label>
+                    <textarea id="meetingNotes" placeholder="Agenda and next steps."></textarea>
+                  </div>
+                  <div class="row" style="margin-top:10px;">
+                    <button id="meetingScheduleBtn" class="btn" type="button">Schedule for selected lead</button>
+                    <div id="meetingScheduleMsg" class="err"></div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -984,7 +1050,7 @@
         </div>
 
         <div id="viewManager" class="hide">
-          <div class="card" style="background:#fff;">
+          <div id="mgrStatsCard" class="card" style="background:#fff;">
             <div class="bd">
               <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
                 <div>
@@ -1292,6 +1358,8 @@
       token: '',
       me: null,
       activeTab: 'overview',
+      viewAsRole: '',
+      dialerSubtab: 'leads',
       leads: [],
       selectedLead: null,
       events: [],
@@ -1308,21 +1376,114 @@
       b.className = 'badge ' + (kind || '');
     }
 
+    const ROLE_ORDER = [
+      'dialer',
+      'in_person_setter',
+      'remote_setter',
+      'closer',
+      'account_manager',
+      'event_host',
+      'event_coordinator',
+      'media_team',
+      'manager',
+    ];
+
+    function roleLabel(role){
+      const r = String(role || '').trim();
+      const map = {
+        dialer: 'Dialer',
+        in_person_setter: 'In-person setter',
+        remote_setter: 'Remote setter',
+        closer: 'Closer',
+        account_manager: 'Account manager',
+        event_host: 'Event host',
+        event_coordinator: 'Event coordinator',
+        media_team: 'Media team',
+        manager: 'Manager',
+      };
+      return map[r] || (r ? r.replaceAll('_', ' ') : '—');
+    }
+
+    function myRole(){
+      return String(state.me?.profile?.role || '').trim();
+    }
+
+    function isManagerUser(){
+      return myRole() === 'manager';
+    }
+
+    function effectiveRole(){
+      if (!isManagerUser()) return myRole();
+      const v = String(state.viewAsRole || '').trim();
+      return v || 'manager';
+    }
+
+    function setViewAsRole(nextRole){
+      const v = String(nextRole || '').trim();
+      state.viewAsRole = v === 'manager' ? '' : v;
+
+      const er = effectiveRole();
+      if (['dialer','in_person_setter','remote_setter'].includes(er)) state.activeTab = 'calls';
+      else if (['closer','account_manager'].includes(er)) state.activeTab = 'closer';
+      else if (['event_host','event_coordinator','media_team'].includes(er)) state.activeTab = 'events';
+      else state.activeTab = 'overview';
+
+      refreshMe().catch(() => {});
+    }
+
+    function hideManualLoadButtons(){
+      const ids = [
+        'loadLeadsBtn','loadQueueBtn','loadCloserQueueBtn','loadEventsBtn','loadPayoutsBtn',
+        'loadStatsBtn','loadDispatchBtn','loadDialerTasksBtn','loadCloserTasksBtn','loadApptsBtn',
+        'refreshBtn','loadDialerTimelineBtn','meetingsRefreshBtn',
+      ];
+      for (const id of ids) {
+        const el = $(id);
+        if (el) el.classList.add('hide');
+      }
+    }
+
+    let autoRefreshTimer = null;
+    let autoRefreshQueued = false;
+
+    function queueAutoRefreshSoon(){
+      if (autoRefreshQueued) return;
+      autoRefreshQueued = true;
+      setTimeout(async () => {
+        autoRefreshQueued = false;
+        await autoRefreshActiveView().catch(()=>{});
+      }, 350);
+    }
+
+    function startAutoRefresh(){
+      if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+      autoRefreshTimer = setInterval(() => {
+        autoRefreshActiveView().catch(()=>{});
+      }, 15000);
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) queueAutoRefreshSoon();
+    });
+
     function setTab(tab){
       state.activeTab = tab;
+      const er = effectiveRole();
       const title = {
         overview: 'Overview',
         leads: 'Leads',
         calls: 'Dialer',
+        meetings: 'My meetings',
         closer: 'Closer',
         events: 'Events',
         payments: 'Payments',
-        manager: 'Manager'
+        manager: (er === 'event_coordinator' ? 'Operations' : 'Manager')
       }[tab] || 'Overview';
       const viewKey = {
         overview: 'Overview',
         leads: 'Leads',
         calls: 'Calls',
+        meetings: 'Meetings',
         closer: 'Closer',
         events: 'Events',
         payments: 'Payments',
@@ -1331,7 +1492,7 @@
 
       $('viewTitle').textContent = title;
 
-      const views = ['Overview','Leads','Calls','Closer','Events','Payments','Manager'];
+      const views = ['Overview','Leads','Calls','Meetings','Closer','Events','Payments','Manager'];
       for (const v of views) $('view'+v).classList.add('hide');
       const viewEl = $('view' + viewKey);
       if (viewEl) viewEl.classList.remove('hide');
@@ -1342,6 +1503,7 @@
 
       if (tab === 'leads') loadLeads().catch(()=>{});
       if (tab === 'events') loadEvents().catch(()=>{});
+      if (tab === 'meetings') loadAppointmentsInto('meetingsTbody', 'meetingsMsg').catch(()=>{});
       if (tab === 'closer') {
         loadAppointments().catch(()=>{});
         loadAvailability().catch(()=>{});
@@ -1357,6 +1519,42 @@
       }
       if (tab === 'manager') {
         loadDispatchManager().catch(()=>{});
+      }
+
+      queueAutoRefreshSoon();
+    }
+
+    async function autoRefreshActiveView(){
+      const tab = String(state.activeTab || 'overview');
+      if (!state.token) return;
+      if (tab === 'leads') {
+        await loadLeads().catch(()=>{});
+        if (state.selectedLead?.id) await loadTimelineInto('timelineList', 'timelineMsg').catch(()=>{});
+      }
+      if (tab === 'calls') {
+        await loadQueue().catch(()=>{});
+        if (state.selectedLead?.id) await loadTimelineInto('dialerTimelineList', 'dialerTimelineMsg').catch(()=>{});
+        await loadDispatchInto('dialerTasksTbody', 'dialerTasksMsg', { overdueOnly: !!$('dialerTasksOverdue')?.checked, scope: String($('dialerTasksScope')?.value || 'role') }).catch(()=>{});
+      }
+      if (tab === 'closer') {
+        await loadAppointments().catch(()=>{});
+        await loadAvailability().catch(()=>{});
+        await loadCloserQueue().catch(()=>{});
+        await loadDispatchInto('closerTasksTbody', 'closerTasksMsg', { overdueOnly: !!$('closerTasksOverdue')?.checked, scope: String($('closerTasksScope')?.value || 'role') }).catch(()=>{});
+      }
+      if (tab === 'meetings') {
+        await loadAppointmentsInto('meetingsTbody', 'meetingsMsg').catch(()=>{});
+      }
+      if (tab === 'events') {
+        await loadEvents().catch(()=>{});
+        if (state.selectedEvent?.id) await loadRecaps(state.selectedEvent.id).catch(()=>{});
+      }
+      if (tab === 'payments') {
+        await loadPayouts().catch(()=>{});
+      }
+      if (tab === 'manager') {
+        if (myRole() === 'manager') await loadStats().catch(()=>{});
+        await loadDispatchManager().catch(()=>{});
       }
     }
 
@@ -1387,6 +1585,9 @@
       });
       const j = await r.json().catch(() => null);
       if (!j || !j.ok) throw new Error(j?.error || ('http_' + r.status));
+      if (String(method || 'GET').toUpperCase() !== 'GET') {
+        queueAutoRefreshSoon();
+      }
       return j;
     }
 
@@ -1414,42 +1615,71 @@
 
       showAppView();
 
-  me = state.me;
-      $('roleLine').textContent = me.profile.role;
+      me = state.me;
+      const realRole = String(me.profile.role || '').trim();
+      const er = effectiveRole();
+
+      $('roleLine').textContent = realRole === 'manager' && er !== 'manager'
+        ? `Manager • viewing ${roleLabel(er)}`
+        : roleLabel(realRole);
       $('appUser').textContent = me.user.email;
 
-      const navItems = [
-        { id:'overview', label:'Overview' },
-        { id:'leads', label:'Leads' },
-      ];
+      const navItems = [];
+      navItems.push({ id:'overview', label:'Overview' });
 
-      const role = String(me.profile.role || '');
-      const isManager = role === 'manager';
-
-      // Dialers/setters need call logging.
-      if (['dialer','in_person_setter','remote_setter','closer','account_manager','event_coordinator'].includes(role) || isManager) {
+      if (['dialer','in_person_setter','remote_setter'].includes(er)) {
+        navItems.push({ id:'leads', label:'Leads' });
         navItems.push({ id:'calls', label:'Dialer' });
-      }
-
-      // Closer/account manager workflows.
-      if (['closer','account_manager'].includes(role) || isManager) {
-        navItems.push({ id:'closer', label:'Closer' });
-      }
-
-      // Events workflows.
-      if (['event_host','media_team','event_coordinator'].includes(role) || isManager) {
+        navItems.push({ id:'meetings', label:'My meetings' });
         navItems.push({ id:'events', label:'Events' });
+      } else if (['closer','account_manager'].includes(er)) {
+        navItems.push({ id:'leads', label:'Leads' });
+        navItems.push({ id:'closer', label: er === 'account_manager' ? 'Account manager' : 'Closer' });
+        navItems.push({ id:'meetings', label:'My meetings' });
+        navItems.push({ id:'events', label:'Events' });
+      } else if (['event_host','media_team'].includes(er)) {
+        navItems.push({ id:'events', label: er === 'media_team' ? 'Media' : 'Events' });
+      } else if (er === 'event_coordinator') {
+        navItems.push({ id:'events', label:'Events' });
+        navItems.push({ id:'manager', label:'Operations' });
+      } else {
+        // manager (or unknown)
+        navItems.push({ id:'leads', label:'Leads' });
+        navItems.push({ id:'calls', label:'Dialer' });
+        navItems.push({ id:'closer', label:'Closer' });
+        navItems.push({ id:'events', label:'Events' });
+        navItems.push({ id:'meetings', label:'My meetings' });
+        navItems.push({ id:'manager', label:'Manager' });
       }
 
       navItems.push({ id:'payments', label:'Payments' });
-      if (isManager) navItems.push({ id:'manager', label:'Manager' });
 
-      $('nav').innerHTML = navItems
+      const viewAsHtml = isManagerUser() ? `
+        <div class="navTitle" style="margin-top:6px;">View as</div>
+        <div style="padding:0 6px 10px;">
+          <select id="viewAsRoleSelect">
+            <option value="manager">Manager</option>
+            ${ROLE_ORDER.filter((r) => r !== 'manager').map((r) => `<option value="${r}">${roleLabel(r)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="navTitle">Workspace</div>
+      ` : '<div class="navTitle">Workspace</div>';
+
+      $('nav').innerHTML = viewAsHtml + navItems
         .map((t) => `<button class="navBtn" type="button" data-tab="${t.id}">${t.label}</button>`)
         .join('');
 
+      const mgrStats = $('mgrStatsCard');
+      if (mgrStats) mgrStats.classList.toggle('hide', effectiveRole() !== 'manager');
+
       for (const el of document.querySelectorAll('.navBtn')){
         el.addEventListener('click', () => setTab(el.dataset.tab));
+      }
+
+      const sel = $('viewAsRoleSelect');
+      if (sel) {
+        sel.value = state.viewAsRole || 'manager';
+        sel.addEventListener('change', () => setViewAsRole(sel.value));
       }
 
       // Manager-only controls
@@ -1464,10 +1694,13 @@
           </div>
           <div>
             <div class="muted small">Role</div>
-            <div style="margin-top:4px;"><span class="badge ok">${me.profile.role}</span></div>
+            <div style="margin-top:4px;"><span class="badge ok">${roleLabel(er)}</span></div>
           </div>
         </div>
       `;
+
+      hideManualLoadButtons();
+      startAutoRefresh();
 
       setTab(state.activeTab || 'overview');
     }
@@ -2119,16 +2352,17 @@
       return s;
     }
 
-    async function loadAppointments(){
-      if (!$('apptsTbody')) return;
+    async function loadAppointmentsInto(tbodyId, msgId){
+      const tb = $(tbodyId);
+      const msgEl = $(msgId);
+      if (!tb) return;
+      if (msgEl) msgEl.textContent = '';
       setBadge('warn', 'loading');
-      $('apptsMsg').textContent = '';
       try{
         const j = await api('/api/portal/appointments?limit=80');
         const appts = j.appointments || [];
         state.appointments = appts;
 
-        const tb = $('apptsTbody');
         if (!appts.length){
           tb.innerHTML = '<tr><td colspan="5" class="muted">No appointments yet.</td></tr>';
           setBadge('ok', 'loaded');
@@ -2140,7 +2374,7 @@
           const leadLine = meta.leadLabel || (meta.leadId ? ('Lead #' + meta.leadId) : '');
           const st = a.status || '';
           const doneBtn = st !== 'completed'
-            ? `<button class="btn secondary small" data-appt-done="${a.id}">Mark completed</button>`
+            ? `<button class="btn secondary small" data-appt-done="${a.id}" data-appt-msg="${escapeHtml(msgId)}">Mark completed</button>`
             : '';
           return `
             <tr>
@@ -2155,22 +2389,28 @@
 
         for (const btn of tb.querySelectorAll('button[data-appt-done]')){
           btn.addEventListener('click', async () => {
-            $('apptsMsg').textContent = '';
+            const m = $(msgId);
+            if (m) m.textContent = '';
             try{
               const id = Number(btn.dataset.apptDone);
               await api('/api/portal/appointments', { method:'PATCH', body: { id, status:'completed' } });
-              await loadAppointments();
+              await loadAppointmentsInto(tbodyId, msgId);
             } catch(e){
-              $('apptsMsg').textContent = String(e.message || e);
+              if (m) m.textContent = String(e.message || e);
             }
           });
         }
 
         setBadge('ok', 'loaded');
       } catch(e){
-        $('apptsMsg').textContent = String(e.message || e);
+        if (msgEl) msgEl.textContent = String(e.message || e);
         setBadge('warn', 'error');
       }
+    }
+
+    async function loadAppointments(){
+      if (!$('apptsTbody')) return;
+      return loadAppointmentsInto('apptsTbody', 'apptsMsg');
     }
 
     async function loadCloserQueue(){
@@ -2221,12 +2461,13 @@
       }
     }
 
-    async function scheduleAppointment(){
-      $('scheduleApptMsg').textContent = '';
+    async function scheduleAppointmentFrom({ dateId, timeId, notesId, msgId, after } = {}){
+      const msgEl = $(msgId);
+      if (msgEl) msgEl.textContent = '';
       try{
-        const lead = requireSelectedLead('Appointment');
-        const eventDate = $('apptDate').value;
-        const startTime = $('apptStart').value;
+        const lead = requireSelectedLead('Meeting');
+        const eventDate = String($(dateId)?.value || '');
+        const startTime = String($(timeId)?.value || '');
         if (!eventDate) throw new Error('Pick a date');
         if (!startTime) throw new Error('Pick a start time');
 
@@ -2236,17 +2477,37 @@
             leadId: lead.id,
             eventDate,
             startTime,
-            notes: $('apptNotes').value || '',
+            notes: String($(notesId)?.value || ''),
           }
         });
 
-        $('apptNotes').value = '';
-        $('scheduleApptMsg').textContent = '';
-        await loadAppointments();
+        const notesEl = $(notesId);
+        if (notesEl) notesEl.value = '';
+        if (after) await after();
         setBadge('ok', 'scheduled');
       } catch(e){
-        $('scheduleApptMsg').textContent = String(e.message || e);
+        if (msgEl) msgEl.textContent = String(e.message || e);
       }
+    }
+
+    async function scheduleAppointment(){
+      return scheduleAppointmentFrom({
+        dateId: 'apptDate',
+        timeId: 'apptStart',
+        notesId: 'apptNotes',
+        msgId: 'scheduleApptMsg',
+        after: () => loadAppointments(),
+      });
+    }
+
+    async function scheduleMeeting(){
+      return scheduleAppointmentFrom({
+        dateId: 'meetingDate',
+        timeId: 'meetingStart',
+        notesId: 'meetingNotes',
+        msgId: 'meetingScheduleMsg',
+        after: () => loadAppointmentsInto('meetingsTbody', 'meetingsMsg'),
+      });
     }
 
     async function loadAvailability(){
@@ -2849,6 +3110,8 @@
 
     on('loadApptsBtn', 'click', () => loadAppointments().catch(() => {}));
     on('scheduleApptBtn', 'click', () => scheduleAppointment().catch(() => {}));
+    on('meetingsRefreshBtn', 'click', () => loadAppointmentsInto('meetingsTbody', 'meetingsMsg').catch(() => {}));
+    on('meetingScheduleBtn', 'click', () => scheduleMeeting().catch(() => {}));
     on('saveAvailBtn', 'click', () => saveAvailability().catch(() => {}));
 
     on('loadCloserQueueBtn', 'click', () => loadCloserQueue().catch(() => {}));
