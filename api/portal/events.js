@@ -48,12 +48,18 @@ module.exports = async (req, res) => {
 
     if (!isManager(s.profile)) {
       const role = String(s.profile.role || '');
-      const parts = [
-        `assigned_user_id.eq.${s.user.id}`,
-        `created_by.eq.${s.user.id}`,
-      ];
-      if (role) parts.push(`assigned_role.eq.${role}`);
-      query = query.or(parts.join(','));
+      const uid = String(s.effectiveUserId || s.user.id || '');
+
+      if (s.viewAsRole && role && !s.effectiveUserId) {
+        query = query.eq('assigned_role', role);
+      } else {
+        const parts = [
+          `assigned_user_id.eq.${uid}`,
+          `created_by.eq.${uid}`,
+        ];
+        if (role) parts.push(`assigned_role.eq.${role}`);
+        query = query.or(parts.join(','));
+      }
     }
 
     const { data, error } = await query;

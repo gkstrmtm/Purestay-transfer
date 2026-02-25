@@ -96,8 +96,10 @@ module.exports = async (req, res) => {
 
     if (!isManager(s.profile)) {
       const role = String(s.profile?.role || '');
+      const uid = String(s.effectiveUserId || s.user.id || '');
 
-      if (s.viewAsRole && role) {
+      if (s.viewAsRole && role && !s.effectiveUserId) {
+        // View-as role without a specific user selected: role-wide preview.
         const ids = await userIdsForRole(s.sbAdmin, role, { limit: 220 });
         if (!ids.length) {
           return sendJson(res, 200, { ok: true, appointments: [] });
@@ -106,7 +108,6 @@ module.exports = async (req, res) => {
         if (['dialer', 'in_person_setter', 'remote_setter'].includes(role)) {
           query = query.in('created_by', ids);
         } else if (['closer', 'account_manager'].includes(role)) {
-          // Role-wide appointment view (assigned to role members or created by them).
           query = query.or([
             `assigned_user_id.in.(${ids.join(',')})`,
             `created_by.in.(${ids.join(',')})`,
@@ -116,10 +117,9 @@ module.exports = async (req, res) => {
         }
       } else {
         if (['closer', 'account_manager'].includes(role)) {
-          query = query.or([`assigned_user_id.eq.${s.user.id}`, `created_by.eq.${s.user.id}`].join(','));
+          query = query.or([`assigned_user_id.eq.${uid}`, `created_by.eq.${uid}`].join(','));
         } else {
-          // Dialers/setters only see appointments they created (handoffs they booked).
-          query = query.eq('created_by', s.user.id);
+          query = query.eq('created_by', uid);
         }
       }
     }
@@ -129,11 +129,12 @@ module.exports = async (req, res) => {
 
     // In view-as mode, the query is already role-scoped; don't re-filter by
     // userId/role ownership checks.
-    if (s.viewAsRole) {
+    if (s.viewAsRole && !s.effectiveUserId) {
       return sendJson(res, 200, { ok: true, appointments: Array.isArray(data) ? data : [] });
     }
 
-    const filtered = (Array.isArray(data) ? data : []).filter((ev) => canSeeEvent({ profile: s.profile, userId: s.user.id, event: ev }));
+    const uid = String(s.effectiveUserId || s.user.id || '');
+    const filtered = (Array.isArray(data) ? data : []).filter((ev) => canSeeEvent({ profile: s.profile, userId: uid, event: ev }));
     return sendJson(res, 200, { ok: true, appointments: filtered });
   }
 

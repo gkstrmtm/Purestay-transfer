@@ -50,12 +50,19 @@ module.exports = async (req, res) => {
 
     if (!isManager(s.profile)) {
       const role = String(s.profile.role || '');
-      const parts = [
-        `assigned_user_id.eq.${s.user.id}`,
-        `created_by.eq.${s.user.id}`,
-      ];
-      if (role) parts.push(`assigned_role.eq.${role}`);
-      query = query.or(parts.join(','));
+      const uid = String(s.effectiveUserId || s.user.id || '');
+
+      // View-as role without a specific user: constrain to the role.
+      if (s.viewAsRole && role && !s.effectiveUserId) {
+        query = query.eq('assigned_role', role);
+      } else {
+        const parts = [
+          `assigned_user_id.eq.${uid}`,
+          `created_by.eq.${uid}`,
+        ];
+        if (role) parts.push(`assigned_role.eq.${role}`);
+        query = query.or(parts.join(','));
+      }
     }
 
     if (q) {
@@ -129,7 +136,8 @@ module.exports = async (req, res) => {
     if (e1) return sendJson(res, 500, { ok: false, error: 'lead_lookup_failed' });
     const row = Array.isArray(existing) ? existing[0] : null;
     if (!row) return sendJson(res, 404, { ok: false, error: 'lead_not_found' });
-    if (!canSeeLead({ profile: s.profile, userId: s.user.id, lead: row })) {
+    const uid = String(s.effectiveUserId || s.user.id || '');
+    if (!canSeeLead({ profile: s.profile, userId: uid, lead: row })) {
       return sendJson(res, 403, { ok: false, error: 'forbidden' });
     }
 

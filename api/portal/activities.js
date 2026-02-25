@@ -50,7 +50,8 @@ module.exports = async (req, res) => {
 
     const l = await loadLead(s.sbAdmin, leadId);
     if (!l.ok) return sendJson(res, l.error === 'lead_not_found' ? 404 : 500, { ok: false, error: l.error });
-    if (!canSeeLead({ profile: s.profile, userId: s.user.id, lead: l.lead })) {
+    const uid = String(s.effectiveUserId || s.user.id || '');
+    if (!canSeeLead({ profile: s.profile, userId: uid, lead: l.lead })) {
       return sendJson(res, 403, { ok: false, error: 'forbidden' });
     }
 

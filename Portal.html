@@ -502,51 +502,53 @@
                 <button id="pickFromLeads" class="btn secondary">Pick from Leads</button>
               </div>
               <div style="height:10px"></div>
-              <div class="two">
-                <div>
-                  <label>Outcome</label>
-                  <select id="callOutcome">
-                    <option value="">Select…</option>
-                    <option>no_answer</option>
-                    <option>left_voicemail</option>
-                    <option>not_interested</option>
-                    <option>call_back</option>
-                    <option>booked_meeting</option>
-                    <option>qualified_handoff</option>
-                  </select>
+              <div id="dialerCallForm">
+                <div class="two">
+                  <div>
+                    <label>Outcome</label>
+                    <select id="callOutcome">
+                      <option value="">Select…</option>
+                      <option>no_answer</option>
+                      <option>left_voicemail</option>
+                      <option>not_interested</option>
+                      <option>call_back</option>
+                      <option>booked_meeting</option>
+                      <option>qualified_handoff</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label>Next status (optional)</label>
+                    <select id="callLeadStatus">
+                      <option value="">No change</option>
+                      <option>working</option>
+                      <option>booked</option>
+                      <option>won</option>
+                      <option>lost</option>
+                    </select>
+                  </div>
                 </div>
-                <div>
-                  <label>Next status (optional)</label>
-                  <select id="callLeadStatus">
-                    <option value="">No change</option>
-                    <option>working</option>
-                    <option>booked</option>
-                    <option>won</option>
-                    <option>lost</option>
-                  </select>
+                <div style="margin-top:10px;">
+                  <label>Next follow up</label>
+                  <input id="callFollowup" placeholder="2026-02-25 14:30 ET" />
                 </div>
-              </div>
-              <div style="margin-top:10px;">
-                <label>Next follow up</label>
-                <input id="callFollowup" placeholder="2026-02-25 14:30 ET" />
-              </div>
-              <div style="margin-top:10px;">
-                <label>Notes</label>
-                <textarea id="callNotes" placeholder="Short, factual notes."></textarea>
-              </div>
-              <div class="row" style="margin-top:10px;">
-                <button id="logCallBtn" class="btn">Log call</button>
-                <button id="aiFollowupBtn" class="btn secondary">AI follow-up</button>
-                <div id="callMsg" class="err"></div>
-              </div>
-              <div id="followupBox" class="card hide" style="margin-top:12px; background: #fff;">
-                <div class="bd">
-                  <div class="muted small">Generated follow-up</div>
-                  <div style="height:8px"></div>
-                  <div><label>Email subject</label><input id="fuSubject" /></div>
-                  <div style="margin-top:10px;"><label>Email body</label><textarea id="fuEmail"></textarea></div>
-                  <div style="margin-top:10px;"><label>SMS</label><textarea id="fuSms"></textarea></div>
-                  <div style="margin-top:10px;"><label>Next step</label><input id="fuNext" /></div>
+                <div style="margin-top:10px;">
+                  <label>Notes</label>
+                  <textarea id="callNotes" placeholder="Short, factual notes."></textarea>
+                </div>
+                <div class="row" style="margin-top:10px;">
+                  <button id="logCallBtn" class="btn">Log call</button>
+                  <button id="aiFollowupBtn" class="btn secondary">AI follow-up</button>
+                  <div id="callMsg" class="err"></div>
+                </div>
+                <div id="followupBox" class="card hide" style="margin-top:12px; background: #fff;">
+                  <div class="bd">
+                    <div class="muted small">Generated follow-up</div>
+                    <div style="height:8px"></div>
+                    <div><label>Email subject</label><input id="fuSubject" /></div>
+                    <div style="margin-top:10px;"><label>Email body</label><textarea id="fuEmail"></textarea></div>
+                    <div style="margin-top:10px;"><label>SMS</label><textarea id="fuSms"></textarea></div>
+                    <div style="margin-top:10px;"><label>Next step</label><input id="fuNext" /></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -813,7 +815,7 @@
             <div class="bd">
               <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
                 <div>
-                  <div style="font-weight:900;">Closer pipeline</div>
+                  <div style="font-weight:900;">Pipeline</div>
                   <div class="muted small">Working and booked leads for closing</div>
                 </div>
                 <button id="loadCloserQueueBtn" class="btn secondary" type="button">Load</button>
@@ -1498,6 +1500,7 @@
       me: null,
       activeTab: 'overview',
       viewAsRole: '',
+      viewAsUserId: '',
       dialerSubtab: 'call',
       closerSubtab: 'meetings',
       leads: [],
@@ -1523,7 +1526,6 @@
     const ROLE_ORDER = [
       'dialer',
       'in_person_setter',
-      'remote_setter',
       'closer',
       'account_manager',
       'event_host',
@@ -1532,12 +1534,22 @@
       'manager',
     ];
 
+    function viewingLabel(role){
+      const r = String(role || '').trim();
+      if (['dialer','remote_setter'].includes(r)) return 'Calls';
+      if (r === 'in_person_setter') return 'Booked';
+      if (['closer','account_manager'].includes(r)) return 'Sales';
+      if (['event_host','event_coordinator','media_team'].includes(r)) return 'Events';
+      if (r === 'manager') return 'Manager';
+      return roleLabel(r);
+    }
+
     function roleLabel(role){
       const r = String(role || '').trim();
       const map = {
         dialer: 'Dialer',
         in_person_setter: 'In-person setter',
-        remote_setter: 'Remote setter',
+        remote_setter: 'Dialer',
         closer: 'Closer',
         account_manager: 'Account manager',
         event_host: 'Event host',
@@ -1562,16 +1574,61 @@
       return v || 'manager';
     }
 
+    function viewAsUserLabel(userId){
+      const id = String(userId || '').trim();
+      if (!id) return '';
+      const u = (state.usersCache || []).find((x) => String(x.userId) === id);
+      if (!u) return '';
+      return String(u.fullName || u.email || '').trim();
+    }
+
+    function roleKeysForPeople(role){
+      const r = String(role || '').trim();
+      if (!r) return [];
+      if (r === 'dialer' || r === 'remote_setter') return ['dialer','remote_setter'];
+      return [r];
+    }
+
+    function usersForViewAsRole(role){
+      const keys = roleKeysForPeople(role);
+      const all = Array.isArray(state.usersCache) ? state.usersCache : [];
+      const users = all.filter((u) => keys.includes(String(u.role || '').trim()));
+      users.sort((a, b) => {
+        const an = String(a.fullName || a.email || a.userId || '');
+        const bn = String(b.fullName || b.email || b.userId || '');
+        return an.localeCompare(bn);
+      });
+      return users;
+    }
+
+    async function ensureUsersCache(){
+      if (!isManagerUser()) return;
+      if (Array.isArray(state.usersCache) && state.usersCache.length) return;
+      try {
+        const j = await api('/api/portal/users');
+        state.usersCache = j.users || [];
+      } catch(_e) {}
+    }
+
     function setViewAsRole(nextRole){
       const v = String(nextRole || '').trim();
       state.viewAsRole = v === 'manager' ? '' : v;
+      state.viewAsUserId = '';
 
       const er = effectiveRole();
-      if (['dialer','in_person_setter','remote_setter'].includes(er)) state.activeTab = 'calls';
+      if (['dialer','in_person_setter','remote_setter'].includes(er)) {
+        state.activeTab = 'calls';
+        if (er === 'in_person_setter') state.dialerSubtab = 'booked';
+      }
       else if (['closer','account_manager'].includes(er)) state.activeTab = 'closer';
       else if (['event_host','event_coordinator','media_team'].includes(er)) state.activeTab = 'events';
       else state.activeTab = 'overview';
 
+      refreshMe().catch(() => {});
+    }
+
+    function setViewAsUserId(nextUserId){
+      state.viewAsUserId = String(nextUserId || '').trim();
       refreshMe().catch(() => {});
     }
 
@@ -1660,12 +1717,13 @@
     function setTab(tab){
       state.activeTab = tab;
       const er = effectiveRole();
+      const callsTitle = er === 'in_person_setter' ? 'Booked' : 'Calls';
       const title = {
         overview: 'Overview',
         leads: 'Leads',
-        calls: 'Calls',
+        calls: callsTitle,
         meetings: 'My meetings',
-        closer: 'Closer',
+        closer: 'Sales',
         events: 'Events',
         payments: 'Payments',
         manager: (er === 'event_coordinator' ? 'Operations' : 'Manager')
@@ -1794,9 +1852,19 @@
       // Manager-only: pass effective view-as role to the server so it can
       // enforce scoping (and read-only) server-side.
       const viewAs = isManagerUser() ? String(state.viewAsRole || '').trim() : '';
+      const viewAsUserId = isManagerUser() ? String(state.viewAsUserId || '').trim() : '';
       const p = String(path || '');
-      if (viewAs && p.startsWith('/api/portal/') && !p.startsWith('/api/portal/me')) {
+      const exclude = [
+        '/api/portal/me',
+        '/api/portal/users',
+        '/api/portal/stats',
+        '/api/portal/dispatch_scan',
+        '/api/portal/seed',
+      ];
+      const excluded = exclude.some((x) => p.startsWith(x));
+      if (viewAs && p.startsWith('/api/portal/') && !excluded) {
         headers['X-Portal-View-As'] = viewAs;
+        if (viewAsUserId) headers['X-Portal-View-As-User'] = viewAsUserId;
       }
 
       const r = await fetch(path, {
@@ -1846,18 +1914,29 @@
       const realRole = String(me.profile.role || '').trim();
       const er = effectiveRole();
 
+      // Manager view-as needs the user roster to provide true "see what they see".
+      if (isManagerUser()) {
+        await ensureUsersCache();
+        if (String(state.viewAsRole || '').trim() && !String(state.viewAsUserId || '').trim()) {
+          const users = usersForViewAsRole(state.viewAsRole);
+          if (users.length) state.viewAsUserId = String(users[0].userId || '').trim();
+        }
+      }
+
       $('roleLine').textContent = realRole === 'manager' && er !== 'manager'
-        ? `Manager • viewing ${roleLabel(er)}`
+        ? `Manager • viewing ${viewingLabel(er)}${state.viewAsUserId ? (' — ' + (viewAsUserLabel(state.viewAsUserId) || '')) : ''}`.trim()
         : roleLabel(realRole);
       $('appUser').textContent = me.user.email;
 
       const navItems = [];
       navItems.push({ id:'overview', label:'Overview' });
 
-      if (['dialer','in_person_setter','remote_setter'].includes(er)) {
+      if (['dialer','remote_setter'].includes(er)) {
         navItems.push({ id:'calls', label:'Calls' });
+      } else if (er === 'in_person_setter') {
+        navItems.push({ id:'calls', label:'Booked' });
       } else if (['closer','account_manager'].includes(er)) {
-        navItems.push({ id:'closer', label: er === 'account_manager' ? 'Account manager' : 'Closer' });
+        navItems.push({ id:'closer', label:'Sales' });
       } else if (['event_host','media_team'].includes(er)) {
         navItems.push({ id:'events', label: er === 'media_team' ? 'Media' : 'Events' });
       } else if (er === 'event_coordinator') {
@@ -1866,10 +1945,8 @@
       } else {
         // manager (or unknown)
         navItems.push({ id:'leads', label:'Leads' });
-        navItems.push({ id:'calls', label:'Calls' });
-        navItems.push({ id:'closer', label:'Closer' });
         navItems.push({ id:'events', label:'Events' });
-        navItems.push({ id:'manager', label:'Manager' });
+        navItems.push({ id:'manager', label:'Operations' });
       }
 
       navItems.push({ id:'payments', label:'Payments' });
@@ -1890,12 +1967,40 @@
             </div>
           </div>
         </div>
+        <div style="padding:0 6px 10px;">
+          <div class="dd" id="viewAsUserDd">
+            <button id="viewAsUserBtn" class="ddBtn" type="button" ${er === 'manager' ? 'disabled' : ''}>
+              <span id="viewAsUserBtnLabel">${escapeHtml(er === 'manager' ? '—' : (viewAsUserLabel(state.viewAsUserId) || 'Role inbox'))}</span>
+              <span class="muted" style="font-weight:900;">▾</span>
+            </button>
+            <div id="viewAsUserMenu" class="ddMenu hide">
+              ${er === 'manager' ? '' : `
+                <button type="button" class="ddItem ${!state.viewAsUserId ? 'active' : ''}" data-viewas-user="">Role inbox</button>
+                ${usersForViewAsRole(er).map((u) => {
+                  const label = String(u.fullName || u.email || u.userId || '').trim() || u.userId;
+                  const active = String(u.userId) === String(state.viewAsUserId || '');
+                  return `<button type="button" class="ddItem ${active ? 'active' : ''}" data-viewas-user="${escapeHtml(u.userId)}">${escapeHtml(label)}</button>`;
+                }).join('')}
+              `}
+            </div>
+          </div>
+        </div>
         <div class="navTitle">Workspace</div>
       ` : '<div class="navTitle">Workspace</div>';
 
       $('nav').innerHTML = viewAsHtml + navItems
         .map((t) => `<button class="navBtn" type="button" data-tab="${t.id}">${t.label}</button>`)
         .join('');
+
+      // Role-specific UI tweaks
+      try {
+        const setterMode = (er === 'in_person_setter');
+        const seg = $('dialerSegCall');
+        if (seg) seg.textContent = setterMode ? 'Queue' : 'Queue & Call';
+        const form = $('dialerCallForm');
+        if (form) form.classList.toggle('hide', setterMode);
+        if (setterMode && state.dialerSubtab === 'call') state.dialerSubtab = 'booked';
+      } catch(_e) {}
 
       const mgrStats = $('mgrStatsCard');
       if (mgrStats) mgrStats.classList.toggle('hide', effectiveRole() !== 'manager');
@@ -1910,10 +2015,24 @@
       const ddLabel = $('viewAsRoleBtnLabel');
       if (ddLabel) ddLabel.textContent = roleLabel(er);
 
+      const ddUbtn = $('viewAsUserBtn');
+      const ddUmenu = $('viewAsUserMenu');
+      const ddUroot = $('viewAsUserDd');
+      const ddUlabel = $('viewAsUserBtnLabel');
+      if (ddUlabel) ddUlabel.textContent = er === 'manager' ? '—' : (viewAsUserLabel(state.viewAsUserId) || 'Role inbox');
+
       if (ddBtn && ddMenu) {
         ddBtn.addEventListener('click', (ev) => {
           ev.preventDefault();
           ddMenu.classList.toggle('hide');
+        });
+      }
+
+      if (ddUbtn && ddUmenu) {
+        ddUbtn.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          if (ddUbtn.disabled) return;
+          ddUmenu.classList.toggle('hide');
         });
       }
 
@@ -1927,15 +2046,32 @@
         }
       }
 
+      if (ddUmenu) {
+        for (const item of ddUmenu.querySelectorAll('button[data-viewas-user]')) {
+          item.addEventListener('click', () => {
+            const uid = String(item.dataset.viewasUser || '').trim();
+            ddUmenu.classList.add('hide');
+            setViewAsUserId(uid);
+          });
+        }
+      }
+
       if (isManagerUser() && !viewAsOutsideBound) {
         viewAsOutsideBound = true;
         window.addEventListener('click', (ev) => {
-          const menu = $('viewAsRoleMenu');
-          const root = $('viewAsRoleDd');
-          if (!menu || menu.classList.contains('hide')) return;
           const t = ev.target;
-          if (root && (t === root || root.contains(t))) return;
-          menu.classList.add('hide');
+
+          const roleMenu = $('viewAsRoleMenu');
+          const roleRoot = $('viewAsRoleDd');
+          if (roleMenu && !roleMenu.classList.contains('hide')) {
+            if (!(roleRoot && (t === roleRoot || roleRoot.contains(t)))) roleMenu.classList.add('hide');
+          }
+
+          const userMenu = $('viewAsUserMenu');
+          const userRoot = $('viewAsUserDd');
+          if (userMenu && !userMenu.classList.contains('hide')) {
+            if (!(userRoot && (t === userRoot || userRoot.contains(t)))) userMenu.classList.add('hide');
+          }
         }, { capture: true });
       }
 
@@ -1950,8 +2086,9 @@
             <div style="font-weight:900; margin-top:4px;">${me.user.email}</div>
           </div>
           <div>
-            <div class="muted small">Role</div>
-            <div style="margin-top:4px;"><span class="badge ok">${roleLabel(er)}</span></div>
+            <div class="muted small">Workspace</div>
+            <div style="margin-top:4px;"><span class="badge ok">${escapeHtml(realRole === 'manager' && er !== 'manager' ? viewingLabel(er) : roleLabel(realRole))}</span></div>
+            ${realRole === 'manager' && er !== 'manager' && state.viewAsUserId ? `<div class="muted small" style="margin-top:6px;">${escapeHtml(viewAsUserLabel(state.viewAsUserId) || '')}</div>` : ''}
           </div>
         </div>
         <div style="height:12px"></div>
@@ -2043,9 +2180,9 @@
           const openTasks = tasks.filter((t) => ['open','assigned'].includes(String(t.status || '')));
           const overdueTasks = openTasks.filter((t) => isOverdue(t));
 
-          cards.push({ title: 'Meetings', sub: 'Scheduled appointments', value: fmtNum(upcoming.length), hint: 'Open Closer → Meetings' });
-          cards.push({ title: 'Availability', sub: 'Days with slots saved', value: fmtNum(days), hint: 'Open Closer → Availability' });
-          cards.push({ title: 'Dispatch', sub: 'Open tasks', value: `${fmtNum(openTasks.length)}${overdueTasks.length ? (` • overdue ${fmtNum(overdueTasks.length)}`) : ''}`, hint: 'Open Closer → Dispatch' });
+          cards.push({ title: 'Meetings', sub: 'Scheduled appointments', value: fmtNum(upcoming.length), hint: 'Open Sales → Meetings' });
+          cards.push({ title: 'Availability', sub: 'Days with slots saved', value: fmtNum(days), hint: 'Open Sales → Availability' });
+          cards.push({ title: 'Dispatch', sub: 'Open tasks', value: `${fmtNum(openTasks.length)}${overdueTasks.length ? (` • overdue ${fmtNum(overdueTasks.length)}`) : ''}`, hint: 'Open Sales → Dispatch' });
           cards.push({ title: 'Commissions', sub: 'Recent payouts', value: `$${sumMoney(payouts).toFixed(2)}`, hint: 'Open Payments' });
         } else if (er === 'manager') {
           cards.push({ title: 'Manager', sub: 'Use Manager tab for ops/stats', value: '—', hint: 'Open Manager' });

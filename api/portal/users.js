@@ -10,7 +10,7 @@ module.exports = async (req, res) => {
 
   const s = await requirePortalSession(req);
   if (!s.ok) return sendJson(res, s.status || 401, { ok: false, error: s.error });
-  if (!isManager(s.profile)) return sendJson(res, 403, { ok: false, error: 'forbidden' });
+  if (!isManager(s.realProfile)) return sendJson(res, 403, { ok: false, error: 'forbidden' });
 
   if (req.method === 'PATCH') {
     const body = await readJson(req);

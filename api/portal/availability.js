@@ -77,7 +77,8 @@ module.exports = async (req, res) => {
   const url = new URL(req.url || '/api/portal/availability', 'http://localhost');
   const requestedUserId = clampUuid(url.searchParams.get('userId'));
 
-  const userId = (isManager(s.profile) && requestedUserId) ? requestedUserId : s.user.id;
+  const baseUserId = String(s.effectiveUserId || s.user.id || '');
+  const userId = (s.realIsManager && requestedUserId) ? requestedUserId : baseUserId;
   const key = `portal:availability:${userId}`;
 
   if (req.method === 'GET') {
@@ -97,7 +98,7 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === 'PUT') {
-    if (!isManager(s.profile) && userId !== s.user.id) {
+    if (!s.realIsManager && userId !== s.user.id) {
       return sendJson(res, 403, { ok: false, error: 'forbidden' });
     }
 

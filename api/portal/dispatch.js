@@ -89,26 +89,27 @@ module.exports = async (req, res) => {
 
     if (!isManager(s.profile)) {
       const role = String(s.profile.role || '');
+      const uid = String(s.effectiveUserId || s.user.id || '');
 
       // Manager view-as mode: simulate the role inbox (unassigned).
-      if (s.viewAsRole && role) {
+      if (s.viewAsRole && role && !s.effectiveUserId) {
         query = query.eq('assigned_role', role);
         query = query.eq('assigned_user_id', null);
       } else {
 
         if (scope === 'mine') {
-          query = query.eq('assigned_user_id', s.user.id);
+          query = query.eq('assigned_user_id', uid);
         } else if (scope === 'role') {
           if (!role) {
-            query = query.eq('assigned_user_id', s.user.id);
+            query = query.eq('assigned_user_id', uid);
           } else {
             query = query.eq('assigned_role', role);
-            query = query.or([`assigned_user_id.is.null`, `assigned_user_id.eq.${s.user.id}`].join(','));
+            query = query.or([`assigned_user_id.is.null`, `assigned_user_id.eq.${uid}`].join(','));
           }
         } else {
           const parts = [
-            `assigned_user_id.eq.${s.user.id}`,
-            `created_by.eq.${s.user.id}`,
+            `assigned_user_id.eq.${uid}`,
+            `created_by.eq.${uid}`,
           ];
           if (role) parts.push(`assigned_role.eq.${role}`);
           query = query.or(parts.join(','));
@@ -122,7 +123,8 @@ module.exports = async (req, res) => {
     const tasks = (Array.isArray(data) ? data : []).filter((t) => {
       const meta = t.meta && typeof t.meta === 'object' ? t.meta : {};
       if (meta.kind !== 'dispatch') return false;
-      if (!canSeeTask({ profile: s.profile, userId: s.user.id, task: t })) return false;
+      const uid = String(s.effectiveUserId || s.user.id || '');
+      if (!canSeeTask({ profile: s.profile, userId: uid, task: t })) return false;
       if (!overdueOnly) return true;
       const due = String(t.event_date || '');
       const st = String(t.status || '');
