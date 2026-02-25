@@ -210,6 +210,12 @@
     .availSlotBtn.active{background: rgba(15,118,110,.18); border-color: rgba(15,118,110,.28)}
     .availSlotBtn[disabled]{cursor:not-allowed; opacity:.6}
 
+    .stageBar{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+    .stageBtn{appearance:none; border:1px solid var(--border); background:#fff; padding:8px 10px; border-radius:999px; cursor:pointer; font-weight:900; color:#3a2f2c; display:flex; align-items:center; gap:8px;}
+    .stageBtn:hover{border-color: rgba(199,154,59,.55)}
+    .stageBtn.active{background: rgba(15,118,110,.08); border-color: rgba(15,118,110,.22); color: rgba(15,118,110,1)}
+    .stageCount{font-family: var(--mono); font-size:12px; color: var(--muted); font-weight:900;}
+
     .spin{
       width: 12px;
       height: 12px;
@@ -313,6 +319,9 @@
               <button id="newLeadToggle" class="btn secondary" type="button">+ New lead</button>
             </div>
           </div>
+
+          <div style="height:10px"></div>
+          <div class="stageBar" id="leadsStageBar"></div>
 
           <div id="pullLeadsBox" class="card" style="margin-top:14px; background: #fff;" hidden>
             <div class="bd">
@@ -831,6 +840,8 @@
                 </div>
                 <button id="loadCloserQueueBtn" class="btn secondary" type="button">Load</button>
               </div>
+              <div style="height:10px"></div>
+              <div class="stageBar" id="closerStageBar"></div>
               <div style="height:10px"></div>
               <div id="closerQueueMsg" class="err"></div>
               <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
@@ -1438,6 +1449,8 @@
       dispatch: [],
       pickLeadReturnTab: 'calls',
       usersCache: [],
+      closerQueue: [],
+      closerPipelineFilter: '',
       availability: { weekOffset: 0, byDate: {}, tz: '', drag: { active: false, mode: '' } },
     };
 
@@ -2927,14 +2940,26 @@
       try{
         const j = await api('/api/portal/queue?kind=closer&limit=60');
         const leads = j.leads || [];
+        state.closerQueue = leads;
         const tb = $('closerQueueTbody');
-        if (!leads.length) {
+        const active = String(state.closerPipelineFilter || '').trim();
+        renderStageBar('closerStageBar', leads, {
+          activeKey: active,
+          onPick: (k) => {
+            state.closerPipelineFilter = String(k || '');
+            loadCloserQueue().catch(()=>{});
+          }
+        });
+
+        const items = filteredLeadsByStatus(leads, active);
+
+        if (!items.length) {
           tb.innerHTML = '<tr><td colspan="7" class="muted">No pipeline items.</td></tr>';
           setBadge('ok', 'loaded');
           return;
         }
 
-        tb.innerHTML = leads.map((l) => {
+        tb.innerHTML = items.map((l) => {
           const name = [l.first_name, l.last_name].filter(Boolean).join(' ') || '(no name)';
           const prop = l.property_name || l.company || '';
           const fu = l.meta && typeof l.meta === 'object' ? String(l.meta.followup || '') : '';
@@ -3355,59 +3380,121 @@
       return n.toLocaleString(undefined, { style:'currency', currency:'USD' });
     }
 
+    function stageDefs(){
+      return [
+        { key: '', label: 'All' },
+        { key: 'new', label: 'New' },
+        { key: 'working', label: 'Working' },
+        { key: 'booked', label: 'Booked' },
+        { key: 'won', label: 'Won' },
+        { key: 'lost', label: 'Lost' },
+      ];
+    }
+
+    function countByStatus(leads){
+      const out = { '': 0 };
+      const arr = Array.isArray(leads) ? leads : [];
+      out[''] = arr.length;
+      for (const l of arr) {
+        const st = String(l?.status || '');
+        if (!st) continue;
+        out[st] = Number(out[st] || 0) + 1;
+      }
+      return out;
+    }
+
+    function renderStageBar(containerId, leads, { activeKey = '', onPick } = {}){
+      const el = $(containerId);
+      if (!el) return;
+      const counts = countByStatus(leads);
+      const defs = stageDefs();
+      el.innerHTML = defs.map((d) => {
+        const c = Number(counts[d.key] || 0);
+        const cls = ['stageBtn'];
+        if (String(activeKey || '') === String(d.key || '')) cls.push('active');
+        return `<button type="button" class="${cls.join(' ')}" data-stage="${escapeHtml(d.key)}">${escapeHtml(d.label)} <span class="stageCount">${c}</span></button>`;
+      }).join('');
+      for (const btn of el.querySelectorAll('button[data-stage]')){
+        btn.addEventListener('click', () => {
+          const k = String(btn.dataset.stage || '');
+          if (onPick) onPick(k);
+        });
+      }
+    }
+
+    function filteredLeadsByStatus(leads, status){
+      const st = String(status || '').trim();
+      if (!st) return Array.isArray(leads) ? leads : [];
+      return (Array.isArray(leads) ? leads : []).filter((l) => String(l?.status || '') === st);
+    }
+
+    function renderLeadsTable(){
+      const tb = $('leadsTbody');
+      if (!tb) return;
+      const status = String($('leadStatus')?.value || '').trim();
+      const items = filteredLeadsByStatus(state.leads || [], status);
+
+      renderStageBar('leadsStageBar', state.leads || [], {
+        activeKey: status,
+        onPick: (k) => {
+          const sel = $('leadStatus');
+          if (sel) sel.value = String(k || '');
+          renderLeadsTable();
+        }
+      });
+
+      if ($('leadsEmpty')) $('leadsEmpty').textContent = items.length ? '' : 'No leads yet.';
+      if (!items.length) {
+        tb.innerHTML = '<tr><td colspan="7" class="muted">No leads yet.</td></tr>';
+        return;
+      }
+
+      tb.innerHTML = items.map((l) => {
+        const name = [l.first_name, l.last_name].filter(Boolean).join(' ') || '(no name)';
+        const prop = l.property_name || l.company || '';
+        const city = [l.city, l.state].filter(Boolean).join(', ');
+        const asg = l.assigned_role || '';
+        return `
+          <tr>
+            <td><span class="badge">${l.id}</span></td>
+            <td>${name}</td>
+            <td>${prop}</td>
+            <td class="muted">${city}</td>
+            <td><span class="badge">${l.status}</span></td>
+            <td class="muted">${asg}</td>
+            <td><button class="btn secondary small" data-pick="${l.id}">Select</button></td>
+          </tr>
+        `;
+      }).join('');
+
+      for (const btn of tb.querySelectorAll('button[data-pick]')){
+        btn.addEventListener('click', () => {
+          const id = Number(btn.dataset.pick);
+          state.selectedLead = (state.leads || []).find((x) => Number(x.id) === id) || null;
+          setSelectedLeadLine();
+          loadTimelineInto('timelineList', 'timelineMsg').catch(()=>{});
+          loadTimelineInto('dialerTimelineList', 'dialerTimelineMsg').catch(()=>{});
+          setTab(state.pickLeadReturnTab || 'calls');
+        });
+      }
+    }
+
     async function loadLeads(){
       setBadge('warn', 'loading');
       $('leadsMsg').textContent = '';
       if ($('leadsEmpty')) $('leadsEmpty').textContent = '';
 
       const q = $('leadQ').value.trim();
-      const status = $('leadStatus').value;
       const qs = new URLSearchParams();
       if (q) qs.set('q', q);
-      if (status) qs.set('status', status);
-      qs.set('limit', '120');
+      // Always fetch without status so the stage bar can show counts.
+      qs.set('limit', '200');
 
       try{
         const j = await api('/api/portal/leads?' + qs.toString());
         state.leads = j.leads || [];
 
-        if ($('leadsEmpty')) $('leadsEmpty').textContent = state.leads.length ? '' : 'No leads yet.';
-
-        const tb = $('leadsTbody');
-        if (!state.leads.length) {
-          tb.innerHTML = '<tr><td colspan="7" class="muted">No leads yet.</td></tr>';
-          setBadge('ok', 'loaded');
-          return;
-        }
-
-        tb.innerHTML = state.leads.map((l) => {
-          const name = [l.first_name, l.last_name].filter(Boolean).join(' ') || '(no name)';
-          const prop = l.property_name || l.company || '';
-          const city = [l.city, l.state].filter(Boolean).join(', ');
-          const asg = l.assigned_role || '';
-          return `
-            <tr>
-              <td><span class="badge">${l.id}</span></td>
-              <td>${name}</td>
-              <td>${prop}</td>
-              <td class="muted">${city}</td>
-              <td><span class="badge">${l.status}</span></td>
-              <td class="muted">${asg}</td>
-              <td><button class="btn secondary small" data-pick="${l.id}">Select</button></td>
-            </tr>
-          `;
-        }).join('');
-
-        for (const btn of tb.querySelectorAll('button[data-pick]')){
-          btn.addEventListener('click', () => {
-            const id = Number(btn.dataset.pick);
-            state.selectedLead = state.leads.find((x) => Number(x.id) === id) || null;
-            setSelectedLeadLine();
-            loadTimelineInto('timelineList', 'timelineMsg').catch(()=>{});
-            loadTimelineInto('dialerTimelineList', 'dialerTimelineMsg').catch(()=>{});
-            setTab(state.pickLeadReturnTab || 'calls');
-          });
-        }
+        renderLeadsTable();
 
         setBadge('ok', 'loaded');
       } catch(e){
@@ -3892,6 +3979,7 @@
     on('refreshBtn', 'click', () => refreshMe().catch(() => {}));
 
     on('loadLeadsBtn', 'click', () => loadLeads().catch(() => {}));
+    on('leadStatus', 'change', () => renderLeadsTable());
     on('newLeadToggle', 'click', () => { $('newLeadBox').hidden = !$('newLeadBox').hidden; });
     on('createLeadBtn', 'click', () => createLead().catch(() => {}));
     on('pullLeadsToggle', 'click', () => { $('pullLeadsBox').hidden = !$('pullLeadsBox').hidden; });
