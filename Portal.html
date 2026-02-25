@@ -395,17 +395,17 @@
 
               <div class="two" style="margin-top:10px;">
                 <div>
-                  <label>Assigned role</label>
+                  <label>Assigned workspace</label>
                   <select id="leadEditAssignedRole">
                     <option value="">(unchanged)</option>
-                    <option>dialer</option>
-                    <option>in_person_setter</option>
-                    <option>remote_setter</option>
-                    <option>closer</option>
-                    <option>account_manager</option>
-                    <option>event_coordinator</option>
-                    <option>event_host</option>
-                    <option>media_team</option>
+                    <option value="dialer">Calls</option>
+                    <option value="remote_setter">Calls</option>
+                    <option value="in_person_setter">Booked</option>
+                    <option value="closer">Sales</option>
+                    <option value="account_manager">Sales</option>
+                    <option value="event_host">Events</option>
+                    <option value="event_coordinator">Operations</option>
+                    <option value="media_team">Media</option>
                   </select>
                 </div>
                 <div>
@@ -465,7 +465,7 @@
               <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
                 <div>
                   <div style="font-weight:900;">My queue</div>
-                  <div class="muted small">Leads assigned to you or your role</div>
+                  <div class="muted small">Leads assigned to you or your inbox</div>
                 </div>
                 <div class="row">
                   <button id="loadQueueBtn" class="btn secondary" type="button">Load</button>
@@ -580,7 +580,7 @@
                 <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
                   <div>
                     <div style="font-weight:900;">Booked meetings</div>
-                    <div class="muted small">Meetings you scheduled (track outcomes from closers)</div>
+                    <div class="muted small">Meetings you scheduled (track outcomes in Activity)</div>
                   </div>
                   <div class="row">
                     <button id="dialerBookedRefreshBtn" class="btn secondary" type="button">Refresh</button>
@@ -609,7 +609,7 @@
                 <div class="card" style="background:#fff; border-color: rgba(199,154,59,.35);">
                   <div class="bd">
                     <div style="font-weight:900;">Schedule for selected lead</div>
-                    <div class="muted small" style="margin-top:4px;">Creates an appointment for a closer. Track outcomes in Activity.</div>
+                    <div class="muted small" style="margin-top:4px;">Creates an appointment. Track outcomes in Activity.</div>
 
                     <div style="height:10px"></div>
                     <div class="two">
@@ -624,7 +624,7 @@
                     </div>
                     <div style="margin-top:10px;">
                       <label>Notes (optional)</label>
-                      <textarea id="dialerBookedNotes" placeholder="Any context for the closer."></textarea>
+                      <textarea id="dialerBookedNotes" placeholder="Any context for the meeting."></textarea>
                     </div>
                     <div class="row" style="margin-top:10px;">
                       <button id="dialerBookedScheduleBtn" class="btn" type="button">Schedule</button>
@@ -642,11 +642,11 @@
                 <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
                   <div>
                     <div style="font-weight:900;">Dispatch tasks</div>
-                    <div class="muted small">Open and assigned tasks for your role</div>
+                    <div class="muted small">Open and assigned tasks in your inbox</div>
                   </div>
                   <div class="row">
                     <select id="dialerTasksScope" style="max-width:220px">
-                      <option value="role">Role inbox</option>
+                      <option value="role">Inbox</option>
                       <option value="mine">My tasks</option>
                     </select>
                     <label class="muted small" style="display:flex; align-items:center; gap:8px; margin:0;">
@@ -997,11 +997,11 @@
                 <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
                   <div>
                     <div style="font-weight:900;">Dispatch tasks</div>
-                    <div class="muted small">Open and assigned tasks for your role</div>
+                    <div class="muted small">Open and assigned tasks in your inbox</div>
                   </div>
                   <div class="row">
                     <select id="closerTasksScope" style="max-width:220px">
-                      <option value="role">Role inbox</option>
+                      <option value="role">Inbox</option>
                       <option value="mine">My tasks</option>
                     </select>
                     <label class="muted small" style="display:flex; align-items:center; gap:8px; margin:0;">
@@ -1195,7 +1195,7 @@
             <div class="bd">
               <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
                 <div>
-                  <div class="muted small">Manager view</div>
+                  <div class="muted small">Operations</div>
                   <div style="font-weight:900; margin-top:4px;">Stats</div>
                 </div>
                 <button id="loadStatsBtn" class="btn secondary" type="button">Load stats</button>
@@ -1238,17 +1238,17 @@
                   </select>
                 </div>
                 <div>
-                  <label>Assigned role filter</label>
+                  <label>Assigned workspace filter</label>
                   <select id="dispatchRole">
-                    <option value="">All roles</option>
-                    <option>dialer</option>
-                    <option>in_person_setter</option>
-                    <option>remote_setter</option>
-                    <option>closer</option>
-                    <option>account_manager</option>
-                    <option>event_coordinator</option>
-                    <option>event_host</option>
-                    <option>media_team</option>
+                    <option value="">All workspaces</option>
+                    <option value="dialer">Calls</option>
+                    <option value="remote_setter">Calls</option>
+                    <option value="in_person_setter">Booked</option>
+                    <option value="closer">Sales</option>
+                    <option value="account_manager">Sales</option>
+                    <option value="event_host">Events</option>
+                    <option value="event_coordinator">Operations</option>
+                    <option value="media_team">Media</option>
                   </select>
                 </div>
               </div>
@@ -1266,17 +1266,17 @@
                       <input id="dispatchLeadId" placeholder="123" />
                     </div>
                     <div>
-                      <label>Assigned role</label>
+                      <label>Assigned workspace</label>
                       <select id="dispatchAssignedRole">
                         <option value="">Select…</option>
-                        <option>dialer</option>
-                        <option>in_person_setter</option>
-                        <option>remote_setter</option>
-                        <option>closer</option>
-                        <option>account_manager</option>
-                        <option>event_coordinator</option>
-                        <option>event_host</option>
-                        <option>media_team</option>
+                        <option value="dialer">Calls</option>
+                        <option value="remote_setter">Calls</option>
+                        <option value="in_person_setter">Booked</option>
+                        <option value="closer">Sales</option>
+                        <option value="account_manager">Sales</option>
+                        <option value="event_host">Events</option>
+                        <option value="event_coordinator">Operations</option>
+                        <option value="media_team">Media</option>
                       </select>
                     </div>
                   </div>
@@ -1339,7 +1339,7 @@
                     <tr>
                       <th>Due</th>
                       <th>Title</th>
-                      <th>Role</th>
+                      <th>Workspace</th>
                       <th>Assigned</th>
                       <th>Lead</th>
                       <th>Status</th>
@@ -1357,7 +1357,7 @@
           <div class="card" style="background:#fff;">
             <div class="bd">
               <div style="font-weight:900;">Lead assignment</div>
-              <div class="muted small" style="margin-top:4px;">Assign a lead to a role or a specific user</div>
+              <div class="muted small" style="margin-top:4px;">Assign a lead to a workspace or a specific person</div>
               <div style="height:10px"></div>
               <div class="two">
                 <div>
@@ -1365,17 +1365,17 @@
                   <input id="mgrLeadId" placeholder="123" />
                 </div>
                 <div>
-                  <label>Assigned role</label>
+                  <label>Assigned workspace</label>
                   <select id="mgrAssignedRole">
                     <option value="">(no change)</option>
-                    <option>dialer</option>
-                    <option>in_person_setter</option>
-                    <option>remote_setter</option>
-                    <option>closer</option>
-                    <option>account_manager</option>
-                    <option>event_coordinator</option>
-                    <option>event_host</option>
-                    <option>media_team</option>
+                    <option value="dialer">Calls</option>
+                    <option value="remote_setter">Calls</option>
+                    <option value="in_person_setter">Booked</option>
+                    <option value="closer">Sales</option>
+                    <option value="account_manager">Sales</option>
+                    <option value="event_host">Events</option>
+                    <option value="event_coordinator">Operations</option>
+                    <option value="media_team">Media</option>
                   </select>
                 </div>
               </div>
@@ -1397,7 +1397,7 @@
               <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
                 <div>
                   <div style="font-weight:900;">Users</div>
-                  <div class="muted small">Edit roles and view availability</div>
+                  <div class="muted small">Edit team assignments and view availability</div>
                 </div>
                 <button id="loadUsersBtn" class="btn secondary" type="button">Load users</button>
               </div>
@@ -1409,7 +1409,7 @@
                     <tr>
                       <th>Name</th>
                       <th>Email</th>
-                      <th>Role</th>
+                      <th>Workspace</th>
                       <th>User ID</th>
                       <th></th>
                     </tr>
@@ -1514,7 +1514,7 @@
       availability: { monthOffset: 0, selectedDate: '', byDate: {}, tz: '' },
     };
 
-    let viewAsOutsideBound = false;
+    const INBOX_USER_SENTINEL = '__inbox__';
 
     function setBadge(kind, text){
       const b = $('viewBadge');
@@ -1547,15 +1547,15 @@
     function roleLabel(role){
       const r = String(role || '').trim();
       const map = {
-        dialer: 'Dialer',
-        in_person_setter: 'In-person setter',
-        remote_setter: 'Dialer',
-        closer: 'Closer',
-        account_manager: 'Account manager',
-        event_host: 'Event host',
-        event_coordinator: 'Event coordinator',
-        media_team: 'Media team',
-        manager: 'Manager',
+        dialer: 'Calls',
+        remote_setter: 'Calls',
+        in_person_setter: 'Booked',
+        closer: 'Sales',
+        account_manager: 'Sales',
+        event_host: 'Events',
+        event_coordinator: 'Operations',
+        media_team: 'Media',
+        manager: 'Operations',
       };
       return map[r] || (r ? r.replaceAll('_', ' ') : '—');
     }
@@ -1576,7 +1576,7 @@
 
     function viewAsUserLabel(userId){
       const id = String(userId || '').trim();
-      if (!id) return '';
+      if (!id || id === INBOX_USER_SENTINEL) return '';
       const u = (state.usersCache || []).find((x) => String(x.userId) === id);
       if (!u) return '';
       return String(u.fullName || u.email || '').trim();
@@ -1628,7 +1628,8 @@
     }
 
     function setViewAsUserId(nextUserId){
-      state.viewAsUserId = String(nextUserId || '').trim();
+      const v = String(nextUserId || '').trim();
+      state.viewAsUserId = v ? v : INBOX_USER_SENTINEL;
       refreshMe().catch(() => {});
     }
 
@@ -1726,7 +1727,7 @@
         closer: 'Sales',
         events: 'Events',
         payments: 'Payments',
-        manager: (er === 'event_coordinator' ? 'Operations' : 'Manager')
+        manager: 'Operations'
       }[tab] || 'Overview';
       const viewKey = {
         overview: 'Overview',
@@ -1852,7 +1853,8 @@
       // Manager-only: pass effective view-as role to the server so it can
       // enforce scoping (and read-only) server-side.
       const viewAs = isManagerUser() ? String(state.viewAsRole || '').trim() : '';
-      const viewAsUserId = isManagerUser() ? String(state.viewAsUserId || '').trim() : '';
+      const viewAsUserIdRaw = isManagerUser() ? String(state.viewAsUserId || '').trim() : '';
+      const viewAsUserId = viewAsUserIdRaw === INBOX_USER_SENTINEL ? '' : viewAsUserIdRaw;
       const p = String(path || '');
       const exclude = [
         '/api/portal/me',
@@ -1924,8 +1926,8 @@
       }
 
       $('roleLine').textContent = realRole === 'manager' && er !== 'manager'
-        ? `Manager • viewing ${viewingLabel(er)}${state.viewAsUserId ? (' — ' + (viewAsUserLabel(state.viewAsUserId) || '')) : ''}`.trim()
-        : roleLabel(realRole);
+        ? `Operations • viewing ${viewingLabel(er)}${(state.viewAsUserId && state.viewAsUserId !== INBOX_USER_SENTINEL) ? (' — ' + (viewAsUserLabel(state.viewAsUserId) || '')) : ''}`.trim()
+        : viewingLabel(realRole);
       $('appUser').textContent = me.user.email;
 
       const navItems = [];
@@ -1951,42 +1953,45 @@
 
       navItems.push({ id:'payments', label:'Payments' });
 
-      const viewAsHtml = isManagerUser() ? `
-        <div class="navTitle" style="margin-top:6px;">View as</div>
-        <div style="padding:0 6px 10px;">
-          <div class="dd" id="viewAsRoleDd">
-            <button id="viewAsRoleBtn" class="ddBtn" type="button">
-              <span id="viewAsRoleBtnLabel">${escapeHtml(roleLabel(er))}</span>
-              <span class="muted" style="font-weight:900;">▾</span>
-            </button>
-            <div id="viewAsRoleMenu" class="ddMenu hide">
-              ${['manager', ...ROLE_ORDER.filter((r) => r !== 'manager')].map((r) => {
-                const active = (r === 'manager' ? 'manager' : r) === er;
-                return `<button type="button" class="ddItem ${active ? 'active' : ''}" data-viewas-role="${r}">${escapeHtml(roleLabel(r))}</button>`;
-              }).join('')}
-            </div>
+      const viewAsHtml = isManagerUser() ? (() => {
+        const workspaces = [
+          { role: 'manager', label: 'Operations' },
+          { role: 'dialer', label: 'Calls' },
+          { role: 'in_person_setter', label: 'Booked' },
+          { role: 'closer', label: 'Sales' },
+          { role: 'event_host', label: 'Events' },
+        ];
+        const wsBtns = workspaces.map((w) => {
+          const active = (w.role === 'manager' ? 'manager' : w.role) === er;
+          return `<button class="segBtn ${active ? 'active' : ''}" type="button" data-viewas-role="${escapeHtml(w.role)}">${escapeHtml(w.label)}</button>`;
+        }).join('');
+
+        const people = er === 'manager' ? [] : usersForViewAsRole(er);
+        const isInbox = (!state.viewAsUserId || state.viewAsUserId === INBOX_USER_SENTINEL);
+        const peopleBtns = er === 'manager' ? '' : `
+          <div style="height:10px"></div>
+          <div class="muted" style="font-size:11px; font-weight:900; letter-spacing:.08em; text-transform:uppercase;">Person</div>
+          <div style="height:8px"></div>
+          <div class="slotGrid">
+            <button class="slotBtn ${isInbox ? 'active' : ''}" type="button" data-viewas-user="">Inbox</button>
+            ${people.map((u) => {
+              const label = String(u.fullName || u.email || u.userId || '').trim() || u.userId;
+              const active = String(u.userId) === String(state.viewAsUserId || '');
+              return `<button class="slotBtn ${active ? 'active' : ''}" type="button" data-viewas-user="${escapeHtml(u.userId)}">${escapeHtml(label)}</button>`;
+            }).join('')}
           </div>
-        </div>
-        <div style="padding:0 6px 10px;">
-          <div class="dd" id="viewAsUserDd">
-            <button id="viewAsUserBtn" class="ddBtn" type="button" ${er === 'manager' ? 'disabled' : ''}>
-              <span id="viewAsUserBtnLabel">${escapeHtml(er === 'manager' ? '—' : (viewAsUserLabel(state.viewAsUserId) || 'Role inbox'))}</span>
-              <span class="muted" style="font-weight:900;">▾</span>
-            </button>
-            <div id="viewAsUserMenu" class="ddMenu hide">
-              ${er === 'manager' ? '' : `
-                <button type="button" class="ddItem ${!state.viewAsUserId ? 'active' : ''}" data-viewas-user="">Role inbox</button>
-                ${usersForViewAsRole(er).map((u) => {
-                  const label = String(u.fullName || u.email || u.userId || '').trim() || u.userId;
-                  const active = String(u.userId) === String(state.viewAsUserId || '');
-                  return `<button type="button" class="ddItem ${active ? 'active' : ''}" data-viewas-user="${escapeHtml(u.userId)}">${escapeHtml(label)}</button>`;
-                }).join('')}
-              `}
+        `;
+
+        return `
+          <div class="navTitle" style="margin-top:6px;">Workspace</div>
+          <div style="padding:0 6px 10px;">
+            <div class="segTabs" style="gap:8px;">
+              ${wsBtns}
             </div>
+            ${peopleBtns}
           </div>
-        </div>
-        <div class="navTitle">Workspace</div>
-      ` : '<div class="navTitle">Workspace</div>';
+        `;
+      })() : '<div class="navTitle">Workspace</div>';
 
       $('nav').innerHTML = viewAsHtml + navItems
         .map((t) => `<button class="navBtn" type="button" data-tab="${t.id}">${t.label}</button>`)
@@ -2009,70 +2014,18 @@
         el.addEventListener('click', () => setTab(el.dataset.tab));
       }
 
-      const ddBtn = $('viewAsRoleBtn');
-      const ddMenu = $('viewAsRoleMenu');
-      const ddRoot = $('viewAsRoleDd');
-      const ddLabel = $('viewAsRoleBtnLabel');
-      if (ddLabel) ddLabel.textContent = roleLabel(er);
-
-      const ddUbtn = $('viewAsUserBtn');
-      const ddUmenu = $('viewAsUserMenu');
-      const ddUroot = $('viewAsUserDd');
-      const ddUlabel = $('viewAsUserBtnLabel');
-      if (ddUlabel) ddUlabel.textContent = er === 'manager' ? '—' : (viewAsUserLabel(state.viewAsUserId) || 'Role inbox');
-
-      if (ddBtn && ddMenu) {
-        ddBtn.addEventListener('click', (ev) => {
-          ev.preventDefault();
-          ddMenu.classList.toggle('hide');
+      for (const item of document.querySelectorAll('button[data-viewas-role]')) {
+        item.addEventListener('click', () => {
+          const r = String(item.dataset.viewasRole || '').trim() || 'manager';
+          setViewAsRole(r);
         });
       }
 
-      if (ddUbtn && ddUmenu) {
-        ddUbtn.addEventListener('click', (ev) => {
-          ev.preventDefault();
-          if (ddUbtn.disabled) return;
-          ddUmenu.classList.toggle('hide');
+      for (const item of document.querySelectorAll('button[data-viewas-user]')) {
+        item.addEventListener('click', () => {
+          const uid = String(item.dataset.viewasUser || '').trim();
+          setViewAsUserId(uid);
         });
-      }
-
-      if (ddMenu) {
-        for (const item of ddMenu.querySelectorAll('button[data-viewas-role]')) {
-          item.addEventListener('click', () => {
-            const r = String(item.dataset.viewasRole || '').trim() || 'manager';
-            ddMenu.classList.add('hide');
-            setViewAsRole(r);
-          });
-        }
-      }
-
-      if (ddUmenu) {
-        for (const item of ddUmenu.querySelectorAll('button[data-viewas-user]')) {
-          item.addEventListener('click', () => {
-            const uid = String(item.dataset.viewasUser || '').trim();
-            ddUmenu.classList.add('hide');
-            setViewAsUserId(uid);
-          });
-        }
-      }
-
-      if (isManagerUser() && !viewAsOutsideBound) {
-        viewAsOutsideBound = true;
-        window.addEventListener('click', (ev) => {
-          const t = ev.target;
-
-          const roleMenu = $('viewAsRoleMenu');
-          const roleRoot = $('viewAsRoleDd');
-          if (roleMenu && !roleMenu.classList.contains('hide')) {
-            if (!(roleRoot && (t === roleRoot || roleRoot.contains(t)))) roleMenu.classList.add('hide');
-          }
-
-          const userMenu = $('viewAsUserMenu');
-          const userRoot = $('viewAsUserDd');
-          if (userMenu && !userMenu.classList.contains('hide')) {
-            if (!(userRoot && (t === userRoot || userRoot.contains(t)))) userMenu.classList.add('hide');
-          }
-        }, { capture: true });
       }
 
       // Manager-only controls
@@ -2087,8 +2040,8 @@
           </div>
           <div>
             <div class="muted small">Workspace</div>
-            <div style="margin-top:4px;"><span class="badge ok">${escapeHtml(realRole === 'manager' && er !== 'manager' ? viewingLabel(er) : roleLabel(realRole))}</span></div>
-            ${realRole === 'manager' && er !== 'manager' && state.viewAsUserId ? `<div class="muted small" style="margin-top:6px;">${escapeHtml(viewAsUserLabel(state.viewAsUserId) || '')}</div>` : ''}
+            <div style="margin-top:4px;"><span class="badge ok">${escapeHtml(realRole === 'manager' && er !== 'manager' ? viewingLabel(er) : viewingLabel(realRole))}</span></div>
+            ${realRole === 'manager' && er !== 'manager' && state.viewAsUserId && state.viewAsUserId !== INBOX_USER_SENTINEL ? `<div class="muted small" style="margin-top:6px;">${escapeHtml(viewAsUserLabel(state.viewAsUserId) || '')}</div>` : ''}
           </div>
         </div>
         <div style="height:12px"></div>
@@ -2518,7 +2471,7 @@
                 <div class="row" style="justify-content:space-between; gap:10px;">
                   <div>
                     <div style="font-weight:900;">${escapeHtml(r.u.email || r.u.userId)}</div>
-                    <div class="muted small" style="margin-top:4px;">${escapeHtml(r.u.role || '')}</div>
+                    <div class="muted small" style="margin-top:4px;">${escapeHtml(viewingLabel(r.u.role || ''))}</div>
                   </div>
                   <div class="muted small">${escapeHtml(String(r.updatedAt || '').slice(0,19).replace('T',' '))}</div>
                 </div>
@@ -2674,7 +2627,7 @@
             <tr>
               <td class="muted">${escapeHtml(due)}</td>
               <td>${escapeHtml(String(t.title || ''))} ${overdue} ${escalated}</td>
-              <td><span class="badge">${escapeHtml(String(t.assigned_role || ''))}</span></td>
+              <td><span class="badge">${escapeHtml(viewingLabel(String(t.assigned_role || '')))}</span></td>
               <td class="muted" style="font-family:var(--mono); font-size:12px;">${escapeHtml(assigned)}</td>
               <td class="muted">${escapeHtml(leadLine)}</td>
               <td><span class="badge">${escapeHtml(st)}</span></td>
@@ -2758,7 +2711,7 @@
       $('dispatchCreateMsg').textContent = '';
       try{
         const assignedRole = String($('dispatchAssignedRole').value || '').trim();
-        if (!assignedRole) throw new Error('Select an assigned role');
+        if (!assignedRole) throw new Error('Select an assigned workspace');
         const title = String($('dispatchTitle').value || '').trim();
         if (!title) throw new Error('Enter a title');
 
@@ -3595,7 +3548,9 @@
         const j = await api('/api/portal/docs?limit=80');
         const docs = j.docs || [];
         $('docsList').innerHTML = docs.map((d) => {
-          const role = d.audience_role ? `<span class="badge">${d.audience_role}</span>` : `<span class="badge ok">all</span>`;
+          const role = d.audience_role
+            ? `<span class="badge">${escapeHtml(viewingLabel(d.audience_role))}</span>`
+            : `<span class="badge ok">all</span>`;
           const content = (d.content || '').slice(0, 2000);
           return `
             <div class="card" style="background: #fff; margin-bottom:12px;">
@@ -3650,7 +3605,7 @@
           <tr>
             <td>${u.fullName || ''}</td>
             <td class="muted">${u.email || ''}</td>
-            <td><span class="badge">${u.role}</span></td>
+            <td><span class="badge">${escapeHtml(viewingLabel(u.role))}</span></td>
             <td class="muted" style="font-family:var(--mono); font-size:12px;">${u.userId}</td>
             <td><button class="btn secondary small" data-edit-user="${u.userId}">Edit</button></td>
           </tr>
@@ -3662,7 +3617,7 @@
             try{
               const userId = String(btn.dataset.editUser || '').trim();
               const current = users.find((x) => String(x.userId) === userId);
-              const nextRole = prompt('Role for user:', current?.role || '');
+              const nextRole = prompt('Workspace for person:', current?.role || '');
               if (nextRole == null) return;
               const nextName = prompt('Full name:', current?.fullName || '');
               if (nextName == null) return;
