@@ -199,6 +199,17 @@
     .calCell.muted{opacity:.55;}
     .calCell.active{background: rgba(122,46,38,.06); border-color: rgba(122,46,38,.22)}
 
+    .availGridWrap{overflow:auto; border:1px solid var(--border); border-radius: 14px; background:#fff;}
+    .availWeekGrid{display:grid; grid-template-columns: 96px repeat(7, minmax(130px, 1fr)); min-width: 960px;}
+    .availHeadCell{position: sticky; top: 0; z-index: 2; background:#fff; border-bottom:1px solid var(--border); padding:10px 10px; font-size:12px; color:var(--muted); font-weight:900;}
+    .availHeadCell:first-child{left:0; z-index: 3; position: sticky;}
+    .availTimeCell{position: sticky; left: 0; z-index: 1; background:#fff; border-right:1px solid var(--border); border-bottom:1px solid var(--border); padding:10px 10px; font-family: var(--mono); font-size:12px; color:var(--muted);}
+    .availSlotCell{border-bottom:1px solid var(--border); border-right:1px solid var(--border); padding:6px; background:#fff;}
+    .availSlotBtn{width:100%; height:34px; appearance:none; border:1px solid rgba(0,0,0,.06); background: rgba(15,118,110,.04); border-radius: 10px; cursor:pointer;}
+    .availSlotBtn:hover{border-color: rgba(199,154,59,.35)}
+    .availSlotBtn.active{background: rgba(15,118,110,.18); border-color: rgba(15,118,110,.28)}
+    .availSlotBtn[disabled]{cursor:not-allowed; opacity:.6}
+
     .spin{
       width: 12px;
       height: 12px;
@@ -768,6 +779,36 @@
                   </div>
                 </div>
               </div>
+
+              <div id="meetingsAvailabilityCard" class="card" style="margin-top:14px; background:#fff; border-color: rgba(199,154,59,.35);">
+                <div class="bd">
+                  <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
+                    <div>
+                      <div style="font-weight:900;">Availability</div>
+                      <div class="muted small" style="margin-top:4px;">Select times you can take meetings. Times are shown in your local timezone (<span id="availTzLabel"></span>).</div>
+                      <div id="availReadOnlyNote" class="muted small" style="margin-top:6px; display:none;">View-as is read-only.</div>
+                    </div>
+                    <div class="row" style="gap:8px;">
+                      <button id="availPrevWeek" class="btn secondary" type="button">Prev week</button>
+                      <button id="availToday" class="btn secondary" type="button">This week</button>
+                      <button id="availNextWeek" class="btn secondary" type="button">Next week</button>
+                      <button id="availClearWeek" class="btn secondary" type="button">Clear week</button>
+                      <button id="availSaveBtn" class="btn" type="button">Save</button>
+                    </div>
+                  </div>
+
+                  <div style="height:10px"></div>
+                  <div class="row" style="justify-content:space-between; gap:10px;">
+                    <div class="muted small" id="availWeekLabel">—</div>
+                  </div>
+                  <div style="height:10px"></div>
+                  <div id="availMsg" class="err"></div>
+
+                  <div class="availGridWrap" style="margin-top:10px;">
+                    <div class="availWeekGrid" id="availWeekGrid"></div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -776,7 +817,6 @@
           <div class="row" style="justify-content:space-between; gap:12px; margin-bottom:12px;">
             <div class="segTabs" style="gap:8px;">
               <button id="closerSegDisposition" class="segBtn" type="button">Disposition</button>
-              <button id="closerSegAvailability" class="segBtn" type="button">Availability</button>
               <button id="closerSegPipeline" class="segBtn" type="button">Pipeline</button>
             </div>
           </div>
@@ -923,46 +963,6 @@
               </div>
 
           </div>
-
-          <div id="closerPaneAvailability" class="hide">
-            <div class="card" style="background:#fff;">
-              <div class="bd">
-                <div style="font-weight:900;">Availability calendar</div>
-                <div class="muted small" style="margin-top:4px;">Pick dates and time slots you can take meetings</div>
-
-                <div style="height:10px"></div>
-                <div class="row" style="justify-content:space-between; gap:10px;">
-                  <div class="row" style="gap:8px;">
-                    <button id="availPrevMonth" class="btn secondary" type="button">Prev</button>
-                    <button id="availNextMonth" class="btn secondary" type="button">Next</button>
-                  </div>
-                  <div class="muted small" id="availMonthLabel">—</div>
-                </div>
-
-                <div style="height:10px"></div>
-                <div class="calGrid" id="availCalendar"></div>
-
-                <div style="height:12px"></div>
-                <div class="row" style="justify-content:space-between; gap:10px;">
-                  <div>
-                    <div class="muted small">Selected date</div>
-                    <div id="availSelectedDate" style="font-weight:900; margin-top:4px;">—</div>
-                  </div>
-                  <div class="row" style="gap:8px;">
-                    <button id="availClearDay" class="btn secondary" type="button">Clear day</button>
-                    <button id="saveAvailBtn" class="btn" type="button">Save</button>
-                  </div>
-                </div>
-
-                <div style="height:10px"></div>
-                <div id="availMsg" class="err"></div>
-
-                <div class="slotGrid" id="availSlots"></div>
-              </div>
-            </div>
-          </div>
-
-
           <div id="closerPanePipeline" class="hide"></div>
 
             </div>
@@ -1438,7 +1438,7 @@
       dispatch: [],
       pickLeadReturnTab: 'calls',
       usersCache: [],
-      availability: { monthOffset: 0, selectedDate: '', byDate: {}, tz: '' },
+      availability: { weekOffset: 0, byDate: {}, tz: '', drag: { active: false, mode: '' } },
     };
 
     function setBadge(kind, text){
@@ -1616,7 +1616,7 @@
     }
 
     function setCloserSubtab(next){
-      state.closerSubtab = String(next || 'meetings');
+      state.closerSubtab = String(next || 'disposition');
       renderCloserSubtab();
       queueAutoRefreshSoon();
     }
@@ -1625,7 +1625,6 @@
       const t = String(state.closerSubtab || 'disposition');
       const map = {
         disposition: { btn: 'closerSegDisposition', pane: 'closerPaneDisposition' },
-        availability: { btn: 'closerSegAvailability', pane: 'closerPaneAvailability' },
         pipeline: { btn: 'closerSegPipeline', pane: 'closerPanePipeline' },
       };
       const keys = Object.keys(map);
@@ -1711,11 +1710,13 @@
       if (tab === 'overview') loadOverview().catch(()=>{});
       if (tab === 'leads') loadLeads().catch(()=>{});
       if (tab === 'events') loadEvents().catch(()=>{});
-      if (tab === 'meetings') loadAppointmentsInto('meetingsTbody', 'meetingsMsg').catch(()=>{});
+      if (tab === 'meetings') {
+        loadAppointmentsInto('meetingsTbody', 'meetingsMsg').catch(()=>{});
+        // Load availability once when entering Meetings.
+        loadAvailability().catch(()=>{});
+      }
       if (tab === 'closer') {
         renderCloserSubtab();
-        if (state.closerSubtab === 'meetings') loadAppointments().catch(()=>{});
-        if (state.closerSubtab === 'availability') loadAvailability().catch(()=>{});
         if (state.closerSubtab === 'pipeline') loadCloserQueue().catch(()=>{});
         // Closer Dispatch removed from Sales.
       }
@@ -1764,8 +1765,6 @@
       }
       if (tab === 'closer') {
         renderCloserSubtab();
-        if (state.closerSubtab === 'meetings') await loadAppointments().catch(()=>{});
-        if (state.closerSubtab === 'availability') await loadAvailability().catch(()=>{});
         if (state.closerSubtab === 'pipeline') await loadCloserQueue().catch(()=>{});
         // Closer Dispatch removed from Sales.
       }
@@ -3049,9 +3048,84 @@
     }
 
     function ensureAvailInit(){
-      if (!state.availability.tz) state.availability.tz = localTz();
-      if (!state.availability.selectedDate) state.availability.selectedDate = isoToday();
+      // Treat slots as floating local times; always show in viewer's local timezone.
+      state.availability.tz = localTz() || '';
+      if (typeof state.availability.weekOffset !== 'number') state.availability.weekOffset = Number(state.availability.weekOffset || 0);
       if (!state.availability.byDate || typeof state.availability.byDate !== 'object') state.availability.byDate = {};
+      if (!state.availability.drag || typeof state.availability.drag !== 'object') state.availability.drag = { active: false, mode: '' };
+    }
+
+    function addDays(date, n){
+      const d = new Date(date.getTime());
+      d.setDate(d.getDate() + Number(n || 0));
+      return d;
+    }
+
+    function startOfWeekMonday(date){
+      const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const dow = d.getDay();
+      const diff = (dow + 6) % 7; // Monday -> 0
+      d.setDate(d.getDate() - diff);
+      return d;
+    }
+
+    function dayHeadLabel(date){
+      try{
+        return date.toLocaleDateString(undefined, { weekday:'short', month:'numeric', day:'numeric' });
+      } catch {
+        return ymd(date);
+      }
+    }
+
+    function timeLabel(hhmm){
+      const s = String(hhmm || '');
+      const parts = s.split(':');
+      const h = Number(parts[0] || 0);
+      const m = Number(parts[1] || 0);
+      const d = new Date();
+      d.setHours(h, m, 0, 0);
+      try{
+        return d.toLocaleTimeString(undefined, { hour:'numeric', minute:'2-digit' });
+      } catch {
+        return s;
+      }
+    }
+
+    function availabilityEditable(){
+      const er = effectiveRole();
+      if (!['closer','account_manager'].includes(er)) return false;
+      // Manager view-as must remain read-only (server enforced too).
+      if (isManagerUser() && String(state.viewAsRole || '').trim()) return false;
+      return true;
+    }
+
+    function weekDates(){
+      ensureAvailInit();
+      const off = Number(state.availability.weekOffset || 0);
+      const base = addDays(new Date(), off * 7);
+      const start = startOfWeekMonday(base);
+      return Array.from({ length: 7 }, (_, i) => addDays(start, i));
+    }
+
+    function setAvailSlot(dateYmd, hhmm, on){
+      ensureAvailInit();
+      const d = String(dateYmd || '');
+      const t = String(hhmm || '');
+      if (!d || !t) return;
+      const arr = Array.isArray(state.availability.byDate[d]) ? state.availability.byDate[d].slice() : [];
+      const set = new Set(arr.map(String));
+      if (on) set.add(t);
+      else set.delete(t);
+      const next = Array.from(set).sort();
+      if (next.length) state.availability.byDate[d] = next;
+      else delete state.availability.byDate[d];
+    }
+
+    function hasAvailSlot(dateYmd, hhmm){
+      const d = String(dateYmd || '');
+      const t = String(hhmm || '');
+      const arr = Array.isArray(state.availability.byDate?.[d]) ? state.availability.byDate[d] : [];
+      return arr.includes(t);
     }
 
     function timeSlots(){
@@ -3065,78 +3139,102 @@
       return out;
     }
 
-    function renderAvailCalendar(){
+    function renderAvailWeekGrid(){
       ensureAvailInit();
-      const cal = $('availCalendar');
-      const label = $('availMonthLabel');
-      if (!cal) return;
-      const base = addMonths(new Date(), state.availability.monthOffset);
-      const first = new Date(base.getFullYear(), base.getMonth(), 1);
-      const startDow = first.getDay();
-      const start = new Date(first.getTime());
-      start.setDate(first.getDate() - startDow);
+      const grid = $('availWeekGrid');
+      if (!grid) return;
 
-      if (label) label.textContent = monthLabel(first);
-      const selected = String(state.availability.selectedDate || '');
+      const tz = localTz() || '';
+      const tzLabel = $('availTzLabel');
+      if (tzLabel) tzLabel.textContent = tz || 'local';
 
-      const cells = [];
-      for (let i = 0; i < 42; i++) {
-        const d = new Date(start.getTime());
-        d.setDate(start.getDate() + i);
-        const inMonth = d.getMonth() === first.getMonth();
-        const k = ymd(d);
-        const cls = ['calCell'];
-        if (!inMonth) cls.push('muted');
-        if (k === selected) cls.push('active');
-        cells.push(`<button type="button" class="${cls.join(' ')}" data-avail-date="${k}">${d.getDate()}</button>`);
+      const week = weekDates();
+      const weekLabel = $('availWeekLabel');
+      if (weekLabel) weekLabel.textContent = `${ymd(week[0])} – ${ymd(week[6])}`;
+
+      const editable = availabilityEditable();
+      const ro = $('availReadOnlyNote');
+      if (ro) ro.style.display = (!editable && isManagerUser() && String(state.viewAsRole || '').trim()) ? 'block' : 'none';
+      const saveBtn = $('availSaveBtn');
+      if (saveBtn) saveBtn.disabled = !editable;
+      const clearBtn = $('availClearWeek');
+      if (clearBtn) clearBtn.disabled = !editable;
+
+      const head = [];
+      head.push(`<div class="availHeadCell"></div>`);
+      for (const d of week) {
+        head.push(`<div class="availHeadCell">${escapeHtml(dayHeadLabel(d))}<div class="muted" style="margin-top:2px; font-weight:700;">${escapeHtml(ymd(d))}</div></div>`);
       }
-      cal.innerHTML = cells.join('');
 
-      for (const btn of cal.querySelectorAll('button[data-avail-date]')){
-        btn.addEventListener('click', () => {
-          state.availability.selectedDate = String(btn.dataset.availDate || '');
-          renderAvailCalendar();
-          renderAvailSlots();
-        });
+      const rows = [];
+      const times = timeSlots();
+      for (const t of times) {
+        rows.push(`<div class="availTimeCell">${escapeHtml(timeLabel(t))}</div>`);
+        for (const d of week) {
+          const dateKey = ymd(d);
+          const active = hasAvailSlot(dateKey, t);
+          rows.push(
+            `<div class="availSlotCell"><button ${editable ? '' : 'disabled'} type="button" class="availSlotBtn ${active ? 'active' : ''}" data-avail-date="${escapeHtml(dateKey)}" data-avail-time="${escapeHtml(t)}" aria-pressed="${active ? 'true' : 'false'}"></button></div>`
+          );
+        }
       }
-    }
 
-    function renderAvailSlots(){
-      ensureAvailInit();
-      const date = String(state.availability.selectedDate || '');
-      const dateLine = $('availSelectedDate');
-      if (dateLine) dateLine.textContent = date || '—';
+      grid.innerHTML = head.join('') + rows.join('');
 
-      const wrap = $('availSlots');
-      if (!wrap) return;
+      // Drag multi-select (Excel-ish).
+      const drag = state.availability.drag;
+      drag.active = false;
+      drag.mode = '';
 
-      const slots = Array.isArray(state.availability.byDate?.[date]) ? state.availability.byDate[date] : [];
-      const set = new Set(slots.map(String));
+      const applyCell = (btn) => {
+        const dateKey = String(btn.dataset.availDate || '');
+        const t = String(btn.dataset.availTime || '');
+        if (!dateKey || !t) return;
+        if (!availabilityEditable()) return;
+        const wantOn = drag.mode === 'add';
+        setAvailSlot(dateKey, t, wantOn);
+        const on = hasAvailSlot(dateKey, t);
+        btn.classList.toggle('active', on);
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      };
 
-      const html = timeSlots().map((t) => {
-        const active = set.has(t);
-        return `<button type="button" class="slotBtn ${active ? 'active' : ''}" data-avail-slot="${t}">${t}</button>`;
-      }).join('');
-      wrap.innerHTML = html;
+      grid.onpointerdown = (ev) => {
+        const btn = ev.target && ev.target.closest ? ev.target.closest('button.availSlotBtn') : null;
+        if (!btn) return;
+        if (btn.disabled) return;
+        ev.preventDefault();
+        const dateKey = String(btn.dataset.availDate || '');
+        const t = String(btn.dataset.availTime || '');
+        const currentlyOn = hasAvailSlot(dateKey, t);
+        drag.active = true;
+        drag.mode = currentlyOn ? 'remove' : 'add';
+        applyCell(btn);
+        try { btn.setPointerCapture(ev.pointerId); } catch(_e) {}
+      };
 
-      for (const btn of wrap.querySelectorAll('button[data-avail-slot]')){
-        btn.addEventListener('click', () => {
-          const t = String(btn.dataset.availSlot || '');
-          if (!t) return;
-          const arr = Array.isArray(state.availability.byDate[date]) ? state.availability.byDate[date] : [];
-          const idx = arr.indexOf(t);
-          if (idx >= 0) arr.splice(idx, 1);
-          else arr.push(t);
-          arr.sort();
-          if (arr.length) state.availability.byDate[date] = arr;
-          else delete state.availability.byDate[date];
-          renderAvailSlots();
-        });
-      }
+      grid.onpointerover = (ev) => {
+        if (!drag.active) return;
+        const btn = ev.target && ev.target.closest ? ev.target.closest('button.availSlotBtn') : null;
+        if (!btn) return;
+        if (btn.disabled) return;
+        applyCell(btn);
+      };
+
+      const endDrag = () => {
+        drag.active = false;
+        drag.mode = '';
+      };
+      grid.onpointerup = endDrag;
+      grid.onpointercancel = endDrag;
+      document.addEventListener('pointerup', endDrag, { once: true });
     }
 
     async function loadAvailability(){
-      if (!$('availCalendar')) return;
+      if (!$('availWeekGrid')) return;
+      const card = $('meetingsAvailabilityCard');
+      const show = ['closer','account_manager'].includes(effectiveRole());
+      if (card) card.classList.toggle('hide', !show);
+      if (!show) return;
       $('availMsg').textContent = '';
       ensureAvailInit();
       try{
@@ -3144,10 +3242,8 @@
         const slots = j.availability?.slots && typeof j.availability.slots === 'object' ? j.availability.slots : {};
         const byDate = slots.byDate && typeof slots.byDate === 'object' ? slots.byDate : {};
         state.availability.byDate = byDate;
-        state.availability.tz = String(slots.tz || localTz() || '');
-        if (!state.availability.selectedDate) state.availability.selectedDate = isoToday();
-        renderAvailCalendar();
-        renderAvailSlots();
+        state.availability.tz = localTz() || '';
+        renderAvailWeekGrid();
         setBadge('ok', 'ready');
       } catch(e){
         $('availMsg').textContent = String(e.message || e);
@@ -3162,7 +3258,7 @@
           method: 'PUT',
           body: {
             slots: {
-              tz: state.availability.tz || localTz() || '',
+              tz: localTz() || '',
               byDate: state.availability.byDate || {},
             }
           }
@@ -3827,20 +3923,22 @@
     on('scheduleApptBtn', 'click', () => scheduleAppointment().catch(() => {}));
     on('meetingsRefreshBtn', 'click', () => loadAppointmentsInto('meetingsTbody', 'meetingsMsg').catch(() => {}));
     on('meetingScheduleBtn', 'click', () => scheduleMeeting().catch(() => {}));
-    on('saveAvailBtn', 'click', () => saveAvailability().catch(() => {}));
+    on('availSaveBtn', 'click', () => saveAvailability().catch(() => {}));
+    on('availPrevWeek', 'click', () => { ensureAvailInit(); state.availability.weekOffset -= 1; renderAvailWeekGrid(); });
+    on('availNextWeek', 'click', () => { ensureAvailInit(); state.availability.weekOffset += 1; renderAvailWeekGrid(); });
+    on('availToday', 'click', () => { ensureAvailInit(); state.availability.weekOffset = 0; renderAvailWeekGrid(); });
+    on('availClearWeek', 'click', () => {
+      if (!availabilityEditable()) return;
+      ensureAvailInit();
+      const week = weekDates().map(ymd);
+      for (const d of week) {
+        if (state.availability.byDate && typeof state.availability.byDate === 'object') delete state.availability.byDate[d];
+      }
+      renderAvailWeekGrid();
+    });
 
     on('closerSegDisposition', 'click', () => setCloserSubtab('disposition'));
-    on('closerSegAvailability', 'click', () => setCloserSubtab('availability'));
     on('closerSegPipeline', 'click', () => { hydrateCloserPipelinePane(); setCloserSubtab('pipeline'); });
-
-    on('availPrevMonth', 'click', () => { state.availability.monthOffset -= 1; renderAvailCalendar(); renderAvailSlots(); });
-    on('availNextMonth', 'click', () => { state.availability.monthOffset += 1; renderAvailCalendar(); renderAvailSlots(); });
-    on('availClearDay', 'click', () => {
-      ensureAvailInit();
-      const d = String(state.availability.selectedDate || '');
-      if (d && state.availability.byDate && typeof state.availability.byDate === 'object') delete state.availability.byDate[d];
-      renderAvailSlots();
-    });
 
     on('loadCloserQueueBtn', 'click', () => loadCloserQueue().catch(() => {}));
 
