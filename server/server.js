@@ -10,6 +10,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { URL } = require('url');
+const net = require('net');
 
 const ROOT_DIR = path.resolve(__dirname, '..');
 const DATA_DIR = path.resolve(__dirname, 'data');
@@ -616,8 +617,44 @@ const server = http.createServer(async (req, res) => {
   return tryNext(0);
 });
 
-server.listen(PORT, () => {
-  console.log(`[purestay] server running: http://localhost:${PORT}`);
-  console.log(`[purestay] serving: ${ROOT_DIR}`);
-  if (!ADMIN_TOKEN) console.log('[purestay] ADMIN_TOKEN not set (admin submissions endpoint will be locked)');
-});
+function findFreePort(startPort, maxTries = 10) {
+  return new Promise((resolve, reject) => {
+    const tryPort = (port, attempt) => {
+      const tester = net.createServer();
+
+      tester.once('error', (err) => {
+        tester.close(() => {
+          if (err && err.code === 'EADDRINUSE' && attempt < maxTries) {
+            console.log(`[purestay] port ${port} in use, trying ${port + 1}`);
+            tryPort(port + 1, attempt + 1);
+            return;
+          }
+          reject(err);
+        });
+      });
+
+      tester.once('listening', () => {
+        tester.close(() => resolve(port));
+      });
+
+      tester.listen(port, '0.0.0.0');
+    };
+
+    tryPort(Number(startPort) || 5173, 0);
+  });
+}
+
+(async () => {
+  let port = PORT;
+  try {
+    port = await findFreePort(PORT, 10);
+  } catch {
+    port = PORT;
+  }
+
+  server.listen(port, () => {
+    console.log(`[purestay] server running: http://localhost:${port}`);
+    console.log(`[purestay] serving: ${ROOT_DIR}`);
+    if (!ADMIN_TOKEN) console.log('[purestay] ADMIN_TOKEN not set (admin submissions endpoint will be locked)');
+  });
+})();

@@ -322,9 +322,144 @@
               <tbody id="leadsTbody"></tbody>
             </table>
           </div>
+
+          <div style="height:14px"></div>
+
+          <div class="card" style="background:#fff;">
+            <div class="bd">
+              <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
+                <div>
+                  <div class="muted small">Selected lead</div>
+                  <div id="leadDetailTitle" style="font-weight:900; margin-top:4px;">None</div>
+                </div>
+                <div class="row">
+                  <button id="leadDetailRefreshBtn" class="btn secondary" type="button">Refresh timeline</button>
+                </div>
+              </div>
+
+              <div style="height:10px"></div>
+              <div id="leadDetailMsg" class="err"></div>
+
+              <div class="two">
+                <div>
+                  <label>Status</label>
+                  <select id="leadEditStatus">
+                    <option value="">(unchanged)</option>
+                    <option>new</option>
+                    <option>working</option>
+                    <option>booked</option>
+                    <option>won</option>
+                    <option>lost</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Priority</label>
+                  <select id="leadEditPriority">
+                    <option value="">(unchanged)</option>
+                    <option value="5">5</option>
+                    <option value="4">4</option>
+                    <option value="3">3</option>
+                    <option value="2">2</option>
+                    <option value="1">1</option>
+                    <option value="0">0</option>
+                    <option value="-1">-1</option>
+                    <option value="-2">-2</option>
+                    <option value="-3">-3</option>
+                    <option value="-4">-4</option>
+                    <option value="-5">-5</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="two" style="margin-top:10px;">
+                <div>
+                  <label>Assigned role</label>
+                  <select id="leadEditAssignedRole">
+                    <option value="">(unchanged)</option>
+                    <option>dialer</option>
+                    <option>in_person_setter</option>
+                    <option>remote_setter</option>
+                    <option>closer</option>
+                    <option>account_manager</option>
+                    <option>event_coordinator</option>
+                    <option>event_host</option>
+                    <option>media_team</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Assigned user id (manager only)</label>
+                  <input id="leadEditAssignedUser" placeholder="uuid" />
+                </div>
+              </div>
+
+              <div style="margin-top:10px;">
+                <label>Next follow up (ISO or free text)</label>
+                <input id="leadEditFollowup" placeholder="2026-02-25 14:30 ET" />
+              </div>
+
+              <div class="row" style="margin-top:10px;">
+                <button id="leadSaveBtn" class="btn secondary" type="button">Save updates</button>
+                <div id="leadSaveMsg" class="err"></div>
+              </div>
+
+              <div style="height:14px"></div>
+
+              <div class="card" style="background:#fff; border-color: rgba(231,225,218,.9);">
+                <div class="bd">
+                  <div style="font-weight:900;">Timeline</div>
+                  <div class="muted small" style="margin-top:4px;">Calls, closes, notes, and follow ups</div>
+                  <div style="height:10px"></div>
+                  <div id="timelineMsg" class="err"></div>
+                  <div id="timelineList"></div>
+
+                  <div style="height:12px"></div>
+                  <div>
+                    <label>Add note</label>
+                    <textarea id="timelineNote" placeholder="Add factual notes and next step."></textarea>
+                  </div>
+                  <div class="row" style="margin-top:10px;">
+                    <button id="timelineAddBtn" class="btn" type="button">Add note</button>
+                    <div id="timelineAddMsg" class="err"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div id="viewCalls" class="hide">
+          <div class="card" style="background:#fff; margin-bottom:14px;">
+            <div class="bd">
+              <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
+                <div>
+                  <div style="font-weight:900;">My queue</div>
+                  <div class="muted small">Leads assigned to you or your role</div>
+                </div>
+                <div class="row">
+                  <button id="loadQueueBtn" class="btn secondary" type="button">Load</button>
+                </div>
+              </div>
+              <div style="height:10px"></div>
+              <div id="queueMsg" class="err"></div>
+              <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Name</th>
+                      <th>Property</th>
+                      <th>Status</th>
+                      <th>Priority</th>
+                      <th>Follow up</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="queueTbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
           <div class="card" style="background: #fff;">
             <div class="bd">
               <div class="row" style="justify-content:space-between;">
@@ -360,6 +495,10 @@
                 </div>
               </div>
               <div style="margin-top:10px;">
+                <label>Next follow up</label>
+                <input id="callFollowup" placeholder="2026-02-25 14:30 ET" />
+              </div>
+              <div style="margin-top:10px;">
                 <label>Notes</label>
                 <textarea id="callNotes" placeholder="Short, factual notes."></textarea>
               </div>
@@ -380,9 +519,86 @@
               </div>
             </div>
           </div>
+
+          <div style="height:14px"></div>
+
+          <div class="card" style="background:#fff;">
+            <div class="bd">
+              <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
+                <div>
+                  <div style="font-weight:900;">Recent activity</div>
+                  <div class="muted small">Calls and notes for the selected lead</div>
+                </div>
+                <button id="loadDialerTimelineBtn" class="btn secondary" type="button">Refresh</button>
+              </div>
+              <div style="height:10px"></div>
+              <div id="dialerTimelineMsg" class="err"></div>
+              <div id="dialerTimelineList"></div>
+            </div>
+          </div>
+
+          <div style="height:14px"></div>
+
+          <div class="card" style="background:#fff;">
+            <div class="bd">
+              <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
+                <div>
+                  <div style="font-weight:900;">Dispatch tasks</div>
+                  <div class="muted small">Open and assigned tasks for your role</div>
+                </div>
+                <button id="loadDialerTasksBtn" class="btn secondary" type="button">Load</button>
+              </div>
+              <div style="height:10px"></div>
+              <div id="dialerTasksMsg" class="err"></div>
+              <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Due</th>
+                      <th>Title</th>
+                      <th>Lead</th>
+                      <th>Status</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="dialerTasksTbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div id="viewCloser" class="hide">
+          <div class="card" style="background:#fff; margin-bottom:14px;">
+            <div class="bd">
+              <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
+                <div>
+                  <div style="font-weight:900;">Closer pipeline</div>
+                  <div class="muted small">Working and booked leads for closing</div>
+                </div>
+                <button id="loadCloserQueueBtn" class="btn secondary" type="button">Load</button>
+              </div>
+              <div style="height:10px"></div>
+              <div id="closerQueueMsg" class="err"></div>
+              <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Name</th>
+                      <th>Property</th>
+                      <th>Status</th>
+                      <th>Priority</th>
+                      <th>Follow up</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="closerQueueTbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
           <div class="card" style="background: #fff;">
             <div class="bd">
               <div class="row" style="justify-content:space-between;">
@@ -489,6 +705,103 @@
                     <button id="closeSubmitBtn" class="btn">Submit</button>
                     <button id="closeQuoteBtn" class="btn secondary" type="button">Fill tier price</button>
                     <div id="closeMsg" class="err"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="height:14px"></div>
+
+              <div class="card" style="background:#fff;">
+                <div class="bd">
+                  <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
+                    <div>
+                      <div style="font-weight:900;">Appointments</div>
+                      <div class="muted small">Schedule and track closer appointments</div>
+                    </div>
+                    <button id="loadApptsBtn" class="btn secondary" type="button">Load</button>
+                  </div>
+
+                  <div style="height:10px"></div>
+                  <div id="apptsMsg" class="err"></div>
+
+                  <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Time</th>
+                          <th>Lead</th>
+                          <th>Status</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody id="apptsTbody"></tbody>
+                    </table>
+                  </div>
+
+                  <div style="height:12px"></div>
+                  <div class="two">
+                    <div>
+                      <label>Date</label>
+                      <input id="apptDate" type="date" />
+                    </div>
+                    <div>
+                      <label>Start time</label>
+                      <input id="apptStart" type="time" />
+                    </div>
+                  </div>
+                  <div style="margin-top:10px;">
+                    <label>Notes</label>
+                    <textarea id="apptNotes" placeholder="Agenda and next steps."></textarea>
+                  </div>
+                  <div class="row" style="margin-top:10px;">
+                    <button id="scheduleApptBtn" class="btn" type="button">Schedule for selected lead</button>
+                    <div id="scheduleApptMsg" class="err"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="height:14px"></div>
+
+              <div class="card" style="background:#fff;">
+                <div class="bd">
+                  <div style="font-weight:900;">Availability</div>
+                  <div class="muted small" style="margin-top:4px;">Saved server-side for dispatch and scheduling</div>
+                  <div style="height:10px"></div>
+                  <div><label>Availability notes</label><textarea id="availNotes" placeholder="Example: Mon to Fri 10am to 4pm ET. No calls after 6pm."></textarea></div>
+                  <div class="row" style="margin-top:10px;">
+                    <button id="saveAvailBtn" class="btn secondary" type="button">Save availability</button>
+                    <div id="availMsg" class="err"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="height:14px"></div>
+
+              <div class="card" style="background:#fff;">
+                <div class="bd">
+                  <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
+                    <div>
+                      <div style="font-weight:900;">Dispatch tasks</div>
+                      <div class="muted small">Open and assigned tasks for your role</div>
+                    </div>
+                    <button id="loadCloserTasksBtn" class="btn secondary" type="button">Load</button>
+                  </div>
+                  <div style="height:10px"></div>
+                  <div id="closerTasksMsg" class="err"></div>
+                  <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Due</th>
+                          <th>Title</th>
+                          <th>Lead</th>
+                          <th>Status</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody id="closerTasksTbody"></tbody>
+                    </table>
                   </div>
                 </div>
               </div>
@@ -651,29 +964,211 @@
         </div>
 
         <div id="viewManager" class="hide">
-          <div class="row" style="justify-content:space-between;">
-            <div>
-              <div class="muted small">Manager view</div>
-              <div style="font-weight:700; margin-top:4px;">Users</div>
-            </div>
-            <div class="row">
-              <button id="loadUsersBtn" class="btn secondary">Load users</button>
+          <div class="card" style="background:#fff;">
+            <div class="bd">
+              <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
+                <div>
+                  <div class="muted small">Manager view</div>
+                  <div style="font-weight:900; margin-top:4px;">Stats</div>
+                </div>
+                <button id="loadStatsBtn" class="btn secondary" type="button">Load stats</button>
+              </div>
+              <div style="height:10px"></div>
+              <div id="statsMsg" class="err"></div>
+              <div id="statsBox" class="row" style="gap:10px; flex-wrap:wrap;"></div>
             </div>
           </div>
+
           <div style="height:14px"></div>
-          <div id="usersMsg" class="err"></div>
-          <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Role</th>
-                  <th>User ID</th>
-                </tr>
-              </thead>
-              <tbody id="usersTbody"></tbody>
-            </table>
+
+          <div class="card" style="background:#fff;">
+            <div class="bd">
+              <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
+                <div>
+                  <div style="font-weight:900;">Dispatch</div>
+                  <div class="muted small">Create and manage operational tasks</div>
+                </div>
+                <button id="loadDispatchBtn" class="btn secondary" type="button">Load tasks</button>
+              </div>
+
+              <div style="height:10px"></div>
+              <div id="dispatchMsg" class="err"></div>
+
+              <div class="card" style="background:#fff; border-color: rgba(199,154,59,.35);">
+                <div class="bd">
+                  <div style="font-weight:900;">Create task</div>
+                  <div style="height:10px"></div>
+                  <div class="two">
+                    <div>
+                      <label>Lead ID (optional)</label>
+                      <input id="dispatchLeadId" placeholder="123" />
+                    </div>
+                    <div>
+                      <label>Assigned role</label>
+                      <select id="dispatchAssignedRole">
+                        <option value="">Select…</option>
+                        <option>dialer</option>
+                        <option>in_person_setter</option>
+                        <option>remote_setter</option>
+                        <option>closer</option>
+                        <option>account_manager</option>
+                        <option>event_coordinator</option>
+                        <option>event_host</option>
+                        <option>media_team</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div style="margin-top:10px;">
+                    <label>Title</label>
+                    <input id="dispatchTitle" placeholder="Example: Pull comps and prep talking points" />
+                  </div>
+
+                  <div class="two" style="margin-top:10px;">
+                    <div>
+                      <label>Due date</label>
+                      <input id="dispatchDueDate" type="date" />
+                    </div>
+                    <div>
+                      <label>Due time</label>
+                      <input id="dispatchDueTime" type="time" />
+                    </div>
+                  </div>
+
+                  <div class="two" style="margin-top:10px;">
+                    <div>
+                      <label>Assigned user id (optional)</label>
+                      <input id="dispatchAssignedUserId" placeholder="uuid" />
+                    </div>
+                    <div>
+                      <label>Priority</label>
+                      <select id="dispatchPriority">
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="-1">-1</option>
+                        <option value="-2">-2</option>
+                        <option value="-3">-3</option>
+                        <option value="-4">-4</option>
+                        <option value="-5">-5</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div style="margin-top:10px;">
+                    <label>Notes</label>
+                    <textarea id="dispatchNotes" placeholder="Context and expected output."></textarea>
+                  </div>
+
+                  <div class="row" style="margin-top:10px;">
+                    <button id="dispatchCreateBtn" class="btn" type="button">Create</button>
+                    <div id="dispatchCreateMsg" class="err"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="height:12px"></div>
+              <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Due</th>
+                      <th>Title</th>
+                      <th>Role</th>
+                      <th>Assigned</th>
+                      <th>Lead</th>
+                      <th>Status</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="dispatchTbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div style="height:14px"></div>
+
+          <div class="card" style="background:#fff;">
+            <div class="bd">
+              <div style="font-weight:900;">Lead assignment</div>
+              <div class="muted small" style="margin-top:4px;">Assign a lead to a role or a specific user</div>
+              <div style="height:10px"></div>
+              <div class="two">
+                <div>
+                  <label>Lead ID</label>
+                  <input id="mgrLeadId" placeholder="123" />
+                </div>
+                <div>
+                  <label>Assigned role</label>
+                  <select id="mgrAssignedRole">
+                    <option value="">(no change)</option>
+                    <option>dialer</option>
+                    <option>in_person_setter</option>
+                    <option>remote_setter</option>
+                    <option>closer</option>
+                    <option>account_manager</option>
+                    <option>event_coordinator</option>
+                    <option>event_host</option>
+                    <option>media_team</option>
+                  </select>
+                </div>
+              </div>
+              <div style="margin-top:10px;">
+                <label>Assigned user id</label>
+                <input id="mgrAssignedUserId" placeholder="uuid" />
+              </div>
+              <div class="row" style="margin-top:10px;">
+                <button id="mgrAssignBtn" class="btn secondary" type="button">Apply</button>
+                <div id="mgrAssignMsg" class="err"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="height:14px"></div>
+
+          <div class="card" style="background:#fff;">
+            <div class="bd">
+              <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
+                <div>
+                  <div style="font-weight:900;">Users</div>
+                  <div class="muted small">Edit roles and view availability</div>
+                </div>
+                <button id="loadUsersBtn" class="btn secondary" type="button">Load users</button>
+              </div>
+              <div style="height:14px"></div>
+              <div id="usersMsg" class="err"></div>
+              <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>User ID</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="usersTbody"></tbody>
+                </table>
+              </div>
+
+              <div style="height:12px"></div>
+              <div class="card" style="background:#fff;">
+                <div class="bd">
+                  <div style="font-weight:900;">Team availability</div>
+                  <div class="muted small" style="margin-top:4px;">Loads from saved availability notes</div>
+                  <div style="height:10px"></div>
+                  <button id="loadTeamAvailBtn" class="btn secondary" type="button">Load availability</button>
+                  <div style="height:10px"></div>
+                  <div id="teamAvailMsg" class="err"></div>
+                  <div id="teamAvailList"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -746,6 +1241,10 @@
       selectedLead: null,
       events: [],
       selectedEvent: null,
+      appointments: [],
+      dispatch: [],
+      pickLeadReturnTab: 'calls',
+      usersCache: [],
     };
 
     function setBadge(kind, text){
@@ -765,16 +1264,45 @@
         payments: 'Payments',
         manager: 'Manager'
       }[tab] || 'Overview';
+      const viewKey = {
+        overview: 'Overview',
+        leads: 'Leads',
+        calls: 'Calls',
+        closer: 'Closer',
+        events: 'Events',
+        payments: 'Payments',
+        manager: 'Manager'
+      }[tab] || 'Overview';
+
       $('viewTitle').textContent = title;
 
       const views = ['Overview','Leads','Calls','Closer','Events','Payments','Manager'];
       for (const v of views) $('view'+v).classList.add('hide');
-      $('view' + title).classList.remove('hide');
+      const viewEl = $('view' + viewKey);
+      if (viewEl) viewEl.classList.remove('hide');
 
-      for (const el of document.querySelectorAll('.navBtn')) el.classList.toggle('active', el.dataset.tab === tab);
+      for (const el of document.querySelectorAll('.navBtn')) {
+        el.classList.toggle('active', el.dataset.tab === tab);
+      }
 
       if (tab === 'leads') loadLeads().catch(()=>{});
       if (tab === 'events') loadEvents().catch(()=>{});
+      if (tab === 'closer') {
+        loadAppointments().catch(()=>{});
+        loadAvailability().catch(()=>{});
+        loadCloserQueue().catch(()=>{});
+        loadDispatchInto('closerTasksTbody', 'closerTasksMsg').catch(()=>{});
+      }
+      if (tab === 'calls') {
+        loadQueue().catch(()=>{});
+        if (state.selectedLead && state.selectedLead.id) {
+          loadTimelineInto('dialerTimelineList', 'dialerTimelineMsg').catch(()=>{});
+        }
+        loadDispatchInto('dialerTasksTbody', 'dialerTasksMsg').catch(()=>{});
+      }
+      if (tab === 'manager') {
+        loadDispatchManager().catch(()=>{});
+      }
     }
 
     function showAuthView(message){
@@ -904,6 +1432,513 @@
         : 'None';
       if ($('selectedLeadLine')) $('selectedLeadLine').textContent = line;
       if ($('closerSelectedLead')) $('closerSelectedLead').textContent = line;
+      if ($('leadDetailTitle')) $('leadDetailTitle').textContent = line;
+
+      // Populate lead edit defaults for convenience
+      if (l) {
+        if ($('leadEditStatus')) $('leadEditStatus').value = '';
+        if ($('leadEditPriority')) $('leadEditPriority').value = '';
+        if ($('leadEditAssignedRole')) $('leadEditAssignedRole').value = '';
+        if ($('leadEditAssignedUser')) $('leadEditAssignedUser').value = '';
+        const fu = l.meta && typeof l.meta === 'object' ? String(l.meta.followup || '') : '';
+        if ($('leadEditFollowup')) $('leadEditFollowup').value = fu;
+      }
+    }
+
+    function leadDisplayName(l){
+      if (!l) return '';
+      const name = [l.first_name, l.last_name].filter(Boolean).join(' ').trim();
+      const prop = l.property_name || l.company || '';
+      return [name || '(no name)', prop].filter(Boolean).join(' • ');
+    }
+
+    function activityLabel(a){
+      const t = String(a.activity_type || '');
+      if (t === 'call') return 'Call';
+      if (t === 'close') return 'Close';
+      if (t === 'note') return 'Note';
+      return t || 'Activity';
+    }
+
+    function renderTimeline(listElId, msgElId, items){
+      const msgEl = msgElId ? $(msgElId) : null;
+      const listEl = $(listElId);
+      if (!listEl) return;
+      if (msgEl) msgEl.textContent = '';
+
+      const arr = Array.isArray(items) ? items : [];
+      if (!arr.length) {
+        listEl.innerHTML = '<div class="muted small">No activity yet.</div>';
+        return;
+      }
+
+      listEl.innerHTML = arr.map((a) => {
+        const when = String(a.created_at || '').replace('T', ' ').slice(0, 19);
+        const label = activityLabel(a);
+        const outcome = a.outcome ? `<span class="badge">${escapeHtml(a.outcome)}</span>` : '';
+        const notes = a.notes ? `<div style="margin-top:6px; white-space:pre-wrap;">${escapeHtml(a.notes)}</div>` : '';
+        const payload = a.payload && typeof a.payload === 'object' ? a.payload : {};
+        const fu = payload.followup || '';
+        const fuLine = fu ? `<div class="muted small" style="margin-top:6px;">Follow up: ${escapeHtml(String(fu))}</div>` : '';
+        return `
+          <div class="card" style="background:#fff; margin-bottom:10px;">
+            <div class="bd">
+              <div class="row" style="justify-content:space-between; gap:10px; align-items:flex-start;">
+                <div>
+                  <div class="muted small">${escapeHtml(when)}</div>
+                  <div style="font-weight:900; margin-top:4px;">${escapeHtml(label)}</div>
+                </div>
+                <div class="row">${outcome}</div>
+              </div>
+              ${notes}
+              ${fuLine}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function loadTimelineInto(listElId, msgElId){
+      const msgEl = msgElId ? $(msgElId) : null;
+      if (msgEl) msgEl.textContent = '';
+      try{
+        const lead = requireSelectedLead('Timeline');
+        const j = await api('/api/portal/activities?leadId=' + encodeURIComponent(String(lead.id)) + '&limit=80');
+        renderTimeline(listElId, msgElId, j.activities || []);
+      } catch(e){
+        if (msgEl) msgEl.textContent = String(e.message || e);
+      }
+    }
+
+    async function addTimelineNote(noteElId, msgElId, listElId){
+      const msgEl = msgElId ? $(msgElId) : null;
+      if (msgEl) msgEl.textContent = '';
+      try{
+        const lead = requireSelectedLead('Add note');
+        const notes = String($(noteElId)?.value || '').trim();
+        if (!notes) throw new Error('Write a note');
+        const fu = String($('leadEditFollowup')?.value || '').trim();
+
+        await api('/api/portal/activities', {
+          method: 'POST',
+          body: {
+            leadId: lead.id,
+            activityType: 'note',
+            notes,
+            payload: fu ? { followup: fu } : {},
+          }
+        });
+
+        const nEl = $(noteElId);
+        if (nEl) nEl.value = '';
+        await loadTimelineInto(listElId, msgElId);
+        setBadge('ok', 'saved');
+      } catch(e){
+        if (msgEl) msgEl.textContent = String(e.message || e);
+      }
+    }
+
+    async function saveLeadEdits(){
+      $('leadSaveMsg').textContent = '';
+      try{
+        const lead = requireSelectedLead('Lead update');
+        const patch = { id: lead.id };
+
+        const st = $('leadEditStatus').value;
+        const pr = $('leadEditPriority').value;
+        const ar = $('leadEditAssignedRole').value;
+        const au = $('leadEditAssignedUser').value.trim();
+        const fu = $('leadEditFollowup').value.trim();
+
+        if (st) patch.status = st;
+        if (pr !== '') patch.priority = Number(pr);
+        if (ar) patch.assignedRole = ar;
+        if (au) patch.assignedUserId = au;
+
+        // Merge meta followup
+        const nextMeta = Object.assign({}, (lead.meta && typeof lead.meta === 'object') ? lead.meta : {});
+        if (fu) nextMeta.followup = fu;
+        if (!fu && 'followup' in nextMeta) delete nextMeta.followup;
+        patch.meta = nextMeta;
+
+        await api('/api/portal/leads', { method:'PATCH', body: patch });
+        await loadLeads();
+        // Preserve selected lead instance from refreshed list
+        state.selectedLead = state.leads.find((x) => Number(x.id) === Number(lead.id)) || state.selectedLead;
+        setSelectedLeadLine();
+        await loadTimelineInto('timelineList', 'timelineMsg');
+        setBadge('ok', 'updated');
+      } catch(e){
+        $('leadSaveMsg').textContent = String(e.message || e);
+      }
+    }
+
+    async function loadQueue(){
+      $('queueMsg').textContent = '';
+      setBadge('warn', 'loading');
+      try{
+        const j = await api('/api/portal/queue?kind=dialer&limit=50');
+        const leads = j.leads || [];
+        const tb = $('queueTbody');
+        if (!tb) return;
+
+        if (!leads.length) {
+          tb.innerHTML = '<tr><td colspan="7" class="muted">No queue items.</td></tr>';
+          setBadge('ok', 'loaded');
+          return;
+        }
+
+        tb.innerHTML = leads.map((l) => {
+          const name = [l.first_name, l.last_name].filter(Boolean).join(' ') || '(no name)';
+          const prop = l.property_name || l.company || '';
+          const fu = l.meta && typeof l.meta === 'object' ? String(l.meta.followup || '') : '';
+          const canClaim = !l.assigned_user_id;
+          const claimBtn = canClaim ? `<button class="btn small" data-queue-claim="${l.id}">Claim</button>` : '';
+          return `
+            <tr>
+              <td><span class="badge">${l.id}</span></td>
+              <td>${escapeHtml(name)}</td>
+              <td class="muted">${escapeHtml(prop)}</td>
+              <td><span class="badge">${escapeHtml(l.status || '')}</span></td>
+              <td class="muted">${escapeHtml(String(l.priority ?? 0))}</td>
+              <td class="muted">${escapeHtml(fu)}</td>
+              <td><button class="btn secondary small" data-queue-pick="${l.id}">Select</button> ${claimBtn}</td>
+            </tr>
+          `;
+        }).join('');
+
+        for (const btn of tb.querySelectorAll('button[data-queue-pick]')){
+          btn.addEventListener('click', () => {
+            const id = Number(btn.dataset.queuePick);
+            const l = leads.find((x) => Number(x.id) === id) || null;
+            state.selectedLead = l;
+            setSelectedLeadLine();
+            loadTimelineInto('dialerTimelineList', 'dialerTimelineMsg').catch(()=>{});
+          });
+        }
+
+        for (const btn of tb.querySelectorAll('button[data-queue-claim]')){
+          btn.addEventListener('click', async () => {
+            $('queueMsg').textContent = '';
+            try{
+              const id = Number(btn.dataset.queueClaim);
+              await api('/api/portal/leads', { method:'PATCH', body: { id, assignedUserId: state.me.user.id, status: 'working' } });
+              await loadQueue();
+              setBadge('ok', 'claimed');
+            } catch(e){
+              $('queueMsg').textContent = String(e.message || e);
+            }
+          });
+        }
+
+        setBadge('ok', 'loaded');
+      } catch(e){
+        $('queueMsg').textContent = String(e.message || e);
+        setBadge('warn', 'error');
+      }
+    }
+
+    async function loadStats(){
+      $('statsMsg').textContent = '';
+      setBadge('warn', 'loading');
+      try{
+        const j = await api('/api/portal/stats?scope=all');
+        const c = j.leadCounts || {};
+        const box = $('statsBox');
+        if (box) {
+          box.innerHTML = [
+            `<span class="badge ok">new ${Number(c.new ?? 0)}</span>`,
+            `<span class="badge">working ${Number(c.working ?? 0)}</span>`,
+            `<span class="badge">booked ${Number(c.booked ?? 0)}</span>`,
+            `<span class="badge ok">won ${Number(c.won ?? 0)}</span>`,
+            `<span class="badge warn">lost ${Number(c.lost ?? 0)}</span>`,
+            `<span class="badge">calls24h ${Number(j.callsLast24h ?? 0)}</span>`,
+            `<span class="badge">upcoming appts ${Number(j.upcomingAppointments ?? 0)}</span>`,
+          ].join(' ');
+        }
+        setBadge('ok', 'loaded');
+      } catch(e){
+        $('statsMsg').textContent = String(e.message || e);
+        setBadge('warn', 'error');
+      }
+    }
+
+    async function managerAssignLead(){
+      $('mgrAssignMsg').textContent = '';
+      try{
+        const id = Number($('mgrLeadId').value || 0);
+        if (!id) throw new Error('Enter a lead id');
+        const body = { id };
+
+        const role = $('mgrAssignedRole').value;
+        const userId = $('mgrAssignedUserId').value.trim();
+        if (role) body.assignedRole = role;
+        if (userId) body.assignedUserId = userId;
+
+        await api('/api/portal/leads', { method:'PATCH', body });
+        setBadge('ok', 'assigned');
+      } catch(e){
+        $('mgrAssignMsg').textContent = String(e.message || e);
+      }
+    }
+
+    async function loadTeamAvailability(){
+      $('teamAvailMsg').textContent = '';
+      const box = $('teamAvailList');
+      if (box) box.innerHTML = '';
+      try{
+        if (!state.usersCache || !Array.isArray(state.usersCache) || !state.usersCache.length) {
+          throw new Error('Load users first');
+        }
+        const users = state.usersCache.slice(0, 60);
+        const rows = [];
+        for (const u of users) {
+          // eslint-disable-next-line no-await-in-loop
+          const j = await api('/api/portal/availability?userId=' + encodeURIComponent(String(u.userId)));
+          const notes = String(j.availability?.notes || '').trim();
+          if (!notes) continue;
+          rows.push({ u, notes, updatedAt: j.availability?.updatedAt || '' });
+        }
+        if (!rows.length) {
+          if (box) box.innerHTML = '<div class="muted small">No availability saved.</div>';
+          return;
+        }
+        if (box) {
+          box.innerHTML = rows.map((r) => `
+            <div class="card" style="background:#fff; margin-bottom:10px;">
+              <div class="bd">
+                <div class="row" style="justify-content:space-between; gap:10px;">
+                  <div>
+                    <div style="font-weight:900;">${escapeHtml(r.u.email || r.u.userId)}</div>
+                    <div class="muted small" style="margin-top:4px;">${escapeHtml(r.u.role || '')}</div>
+                  </div>
+                  <div class="muted small">${escapeHtml(String(r.updatedAt || '').slice(0,19).replace('T',' '))}</div>
+                </div>
+                <div style="margin-top:8px; white-space:pre-wrap;">${escapeHtml(r.notes)}</div>
+              </div>
+            </div>
+          `).join('');
+        }
+      } catch(e){
+        $('teamAvailMsg').textContent = String(e.message || e);
+      }
+    }
+
+    function dispatchDue(task){
+      const d = String(task?.event_date || '');
+      const t = String(task?.start_time || '');
+      return [d, t].filter(Boolean).join(' ');
+    }
+
+    function isOverdue(task){
+      const st = String(task?.status || '');
+      if (['completed', 'cancelled'].includes(st)) return false;
+      const d = String(task?.event_date || '');
+      if (!d) return false;
+      const now = new Date();
+      const yyyy = now.getUTCFullYear();
+      const mm = String(now.getUTCMonth() + 1).padStart(2, '0');
+      const dd = String(now.getUTCDate()).padStart(2, '0');
+      const today = `${yyyy}-${mm}-${dd}`;
+      return d < today;
+    }
+
+    async function loadDispatchInto(tbodyId, msgId){
+      const tb = $(tbodyId);
+      const msgEl = $(msgId);
+      if (!tb) return;
+      if (msgEl) msgEl.textContent = '';
+      setBadge('warn', 'loading');
+      try{
+        const j = await api('/api/portal/dispatch?limit=80');
+        const tasks = (j.tasks || []).filter((t) => !['completed','cancelled'].includes(String(t.status || '')));
+        state.dispatch = tasks;
+        if (!tasks.length) {
+          tb.innerHTML = '<tr><td colspan="5" class="muted">No tasks.</td></tr>';
+          setBadge('ok', 'loaded');
+          return;
+        }
+
+        const meId = state.me?.user?.id;
+        const role = String(state.me?.profile?.role || '');
+
+        tb.innerHTML = tasks.map((t) => {
+          const meta = t.meta && typeof t.meta === 'object' ? t.meta : {};
+          const leadLine = meta.leadLabel || (meta.leadId ? ('Lead #' + meta.leadId) : '');
+          const st = String(t.status || '');
+          const due = dispatchDue(t);
+          const overdue = isOverdue(t) ? '<span class="badge warn">overdue</span>' : '';
+          const canClaim = !t.assigned_user_id && st === 'open' && role && t.assigned_role === role;
+          const canComplete = (t.assigned_user_id && meId && t.assigned_user_id === meId) || String(state.me?.profile?.role || '') === 'manager';
+          const claimBtn = canClaim ? `<button class="btn small" data-task-claim="${t.id}">Claim</button>` : '';
+          const doneBtn = canComplete ? `<button class="btn secondary small" data-task-done="${t.id}">Done</button>` : '';
+          return `
+            <tr>
+              <td class="muted">${escapeHtml(due)}</td>
+              <td>${escapeHtml(String(t.title || ''))} ${overdue}</td>
+              <td class="muted">${escapeHtml(leadLine)}</td>
+              <td><span class="badge">${escapeHtml(st)}</span></td>
+              <td>${claimBtn} ${doneBtn}</td>
+            </tr>
+          `;
+        }).join('');
+
+        for (const btn of tb.querySelectorAll('button[data-task-claim]')){
+          btn.addEventListener('click', async () => {
+            if (msgEl) msgEl.textContent = '';
+            try{
+              const id = Number(btn.dataset.taskClaim);
+              await api('/api/portal/dispatch', { method:'PATCH', body: { id, assignedUserId: state.me.user.id, status: 'assigned' } });
+              await loadDispatchInto(tbodyId, msgId);
+              setBadge('ok', 'claimed');
+            } catch(e){
+              if (msgEl) msgEl.textContent = String(e.message || e);
+            }
+          });
+        }
+
+        for (const btn of tb.querySelectorAll('button[data-task-done]')){
+          btn.addEventListener('click', async () => {
+            if (msgEl) msgEl.textContent = '';
+            try{
+              const id = Number(btn.dataset.taskDone);
+              await api('/api/portal/dispatch', { method:'PATCH', body: { id, status: 'completed' } });
+              await loadDispatchInto(tbodyId, msgId);
+              setBadge('ok', 'done');
+            } catch(e){
+              if (msgEl) msgEl.textContent = String(e.message || e);
+            }
+          });
+        }
+
+        setBadge('ok', 'loaded');
+      } catch(e){
+        if (msgEl) msgEl.textContent = String(e.message || e);
+        setBadge('warn', 'error');
+      }
+    }
+
+    async function loadDispatchManager(){
+      const tb = $('dispatchTbody');
+      $('dispatchMsg').textContent = '';
+      if (!tb) return;
+      setBadge('warn', 'loading');
+      try{
+        const j = await api('/api/portal/dispatch?limit=140');
+        const tasks = (j.tasks || []).filter((t) => !['completed','cancelled'].includes(String(t.status || '')));
+        state.dispatch = tasks;
+        if (!tasks.length) {
+          tb.innerHTML = '<tr><td colspan="7" class="muted">No tasks.</td></tr>';
+          setBadge('ok', 'loaded');
+          return;
+        }
+
+        tb.innerHTML = tasks.map((t) => {
+          const meta = t.meta && typeof t.meta === 'object' ? t.meta : {};
+          const leadLine = meta.leadLabel || (meta.leadId ? ('Lead #' + meta.leadId) : '');
+          const st = String(t.status || '');
+          const due = dispatchDue(t);
+          const overdue = isOverdue(t) ? '<span class="badge warn">overdue</span>' : '';
+          const assigned = t.assigned_user_id ? String(t.assigned_user_id).slice(0, 8) : '';
+          return `
+            <tr>
+              <td class="muted">${escapeHtml(due)}</td>
+              <td>${escapeHtml(String(t.title || ''))} ${overdue}</td>
+              <td><span class="badge">${escapeHtml(String(t.assigned_role || ''))}</span></td>
+              <td class="muted" style="font-family:var(--mono); font-size:12px;">${escapeHtml(assigned)}</td>
+              <td class="muted">${escapeHtml(leadLine)}</td>
+              <td><span class="badge">${escapeHtml(st)}</span></td>
+              <td>
+                <button class="btn secondary small" data-mgr-assign="${t.id}">Assign</button>
+                <button class="btn secondary small" data-mgr-done="${t.id}">Done</button>
+                <button class="btn secondary small" data-mgr-cancel="${t.id}">Cancel</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        for (const btn of tb.querySelectorAll('button[data-mgr-assign]')){
+          btn.addEventListener('click', async () => {
+            $('dispatchMsg').textContent = '';
+            try{
+              const id = Number(btn.dataset.mgrAssign);
+              const userId = prompt('Assign user id (uuid) or blank to clear:', '');
+              if (userId == null) return;
+              const nextAssigned = String(userId).trim() || null;
+              await api('/api/portal/dispatch', { method:'PATCH', body: { id, assignedUserId: nextAssigned, status: nextAssigned ? 'assigned' : 'open' } });
+              await loadDispatchManager();
+              setBadge('ok', 'assigned');
+            } catch(e){
+              $('dispatchMsg').textContent = String(e.message || e);
+            }
+          });
+        }
+
+        for (const btn of tb.querySelectorAll('button[data-mgr-done]')){
+          btn.addEventListener('click', async () => {
+            $('dispatchMsg').textContent = '';
+            try{
+              const id = Number(btn.dataset.mgrDone);
+              await api('/api/portal/dispatch', { method:'PATCH', body: { id, status: 'completed' } });
+              await loadDispatchManager();
+              setBadge('ok', 'done');
+            } catch(e){
+              $('dispatchMsg').textContent = String(e.message || e);
+            }
+          });
+        }
+
+        for (const btn of tb.querySelectorAll('button[data-mgr-cancel]')){
+          btn.addEventListener('click', async () => {
+            $('dispatchMsg').textContent = '';
+            try{
+              const id = Number(btn.dataset.mgrCancel);
+              await api('/api/portal/dispatch', { method:'PATCH', body: { id, status: 'cancelled' } });
+              await loadDispatchManager();
+              setBadge('ok', 'cancelled');
+            } catch(e){
+              $('dispatchMsg').textContent = String(e.message || e);
+            }
+          });
+        }
+
+        setBadge('ok', 'loaded');
+      } catch(e){
+        $('dispatchMsg').textContent = String(e.message || e);
+        setBadge('warn', 'error');
+      }
+    }
+
+    async function createDispatchTask(){
+      $('dispatchCreateMsg').textContent = '';
+      try{
+        const assignedRole = String($('dispatchAssignedRole').value || '').trim();
+        if (!assignedRole) throw new Error('Select an assigned role');
+        const title = String($('dispatchTitle').value || '').trim();
+        if (!title) throw new Error('Enter a title');
+
+        const leadIdRaw = String($('dispatchLeadId').value || '').trim();
+        const leadId = leadIdRaw ? Number(leadIdRaw) : null;
+        const body = {
+          leadId: leadId || null,
+          title,
+          assignedRole,
+          assignedUserId: String($('dispatchAssignedUserId').value || '').trim() || null,
+          dueDate: $('dispatchDueDate').value || null,
+          dueTime: $('dispatchDueTime').value || '',
+          priority: Number($('dispatchPriority').value || 0),
+          notes: String($('dispatchNotes').value || ''),
+        };
+
+        await api('/api/portal/dispatch', { method:'POST', body });
+        $('dispatchTitle').value = '';
+        $('dispatchNotes').value = '';
+        $('dispatchAssignedUserId').value = '';
+        await loadDispatchManager();
+        setBadge('ok', 'created');
+      } catch(e){
+        $('dispatchCreateMsg').textContent = String(e.message || e);
+      }
     }
 
     async function aiResearch(){
@@ -963,6 +1998,173 @@
         setBadge('ok', 'submitted');
       } catch(e){
         $('closeMsg').textContent = String(e.message || e);
+      }
+    }
+
+    function fmtDate(d){
+      const s = String(d || '');
+      if (!s) return '';
+      return s.slice(0,10);
+    }
+
+    function fmtTime(t){
+      const s = String(t || '');
+      if (!s) return '';
+      return s;
+    }
+
+    async function loadAppointments(){
+      if (!$('apptsTbody')) return;
+      setBadge('warn', 'loading');
+      $('apptsMsg').textContent = '';
+      try{
+        const j = await api('/api/portal/appointments?limit=80');
+        const appts = j.appointments || [];
+        state.appointments = appts;
+
+        const tb = $('apptsTbody');
+        if (!appts.length){
+          tb.innerHTML = '<tr><td colspan="5" class="muted">No appointments yet.</td></tr>';
+          setBadge('ok', 'loaded');
+          return;
+        }
+
+        tb.innerHTML = appts.map((a) => {
+          const meta = a.meta || {};
+          const leadLine = meta.leadLabel || (meta.leadId ? ('Lead #' + meta.leadId) : '');
+          const st = a.status || '';
+          const doneBtn = st !== 'completed'
+            ? `<button class="btn secondary small" data-appt-done="${a.id}">Mark completed</button>`
+            : '';
+          return `
+            <tr>
+              <td class="muted">${escapeHtml(fmtDate(a.event_date))}</td>
+              <td class="muted">${escapeHtml(fmtTime(a.start_time))}</td>
+              <td>${escapeHtml(leadLine)}</td>
+              <td><span class="badge">${escapeHtml(st)}</span></td>
+              <td>${doneBtn}</td>
+            </tr>
+          `;
+        }).join('');
+
+        for (const btn of tb.querySelectorAll('button[data-appt-done]')){
+          btn.addEventListener('click', async () => {
+            $('apptsMsg').textContent = '';
+            try{
+              const id = Number(btn.dataset.apptDone);
+              await api('/api/portal/appointments', { method:'PATCH', body: { id, status:'completed' } });
+              await loadAppointments();
+            } catch(e){
+              $('apptsMsg').textContent = String(e.message || e);
+            }
+          });
+        }
+
+        setBadge('ok', 'loaded');
+      } catch(e){
+        $('apptsMsg').textContent = String(e.message || e);
+        setBadge('warn', 'error');
+      }
+    }
+
+    async function loadCloserQueue(){
+      if (!$('closerQueueTbody')) return;
+      $('closerQueueMsg').textContent = '';
+      setBadge('warn', 'loading');
+      try{
+        const j = await api('/api/portal/queue?kind=closer&limit=60');
+        const leads = j.leads || [];
+        const tb = $('closerQueueTbody');
+        if (!leads.length) {
+          tb.innerHTML = '<tr><td colspan="7" class="muted">No pipeline items.</td></tr>';
+          setBadge('ok', 'loaded');
+          return;
+        }
+
+        tb.innerHTML = leads.map((l) => {
+          const name = [l.first_name, l.last_name].filter(Boolean).join(' ') || '(no name)';
+          const prop = l.property_name || l.company || '';
+          const fu = l.meta && typeof l.meta === 'object' ? String(l.meta.followup || '') : '';
+          return `
+            <tr>
+              <td><span class="badge">${l.id}</span></td>
+              <td>${escapeHtml(name)}</td>
+              <td class="muted">${escapeHtml(prop)}</td>
+              <td><span class="badge">${escapeHtml(l.status || '')}</span></td>
+              <td class="muted">${escapeHtml(String(l.priority ?? 0))}</td>
+              <td class="muted">${escapeHtml(fu)}</td>
+              <td><button class="btn secondary small" data-closer-pick="${l.id}">Select</button></td>
+            </tr>
+          `;
+        }).join('');
+
+        for (const btn of tb.querySelectorAll('button[data-closer-pick]')){
+          btn.addEventListener('click', () => {
+            const id = Number(btn.dataset.closerPick);
+            const l = leads.find((x) => Number(x.id) === id) || null;
+            state.selectedLead = l;
+            setSelectedLeadLine();
+            loadTimelineInto('timelineList', 'timelineMsg').catch(()=>{});
+          });
+        }
+
+        setBadge('ok', 'loaded');
+      } catch(e){
+        $('closerQueueMsg').textContent = String(e.message || e);
+        setBadge('warn', 'error');
+      }
+    }
+
+    async function scheduleAppointment(){
+      $('scheduleApptMsg').textContent = '';
+      try{
+        const lead = requireSelectedLead('Appointment');
+        const eventDate = $('apptDate').value;
+        const startTime = $('apptStart').value;
+        if (!eventDate) throw new Error('Pick a date');
+        if (!startTime) throw new Error('Pick a start time');
+
+        await api('/api/portal/appointments', {
+          method:'POST',
+          body: {
+            leadId: lead.id,
+            eventDate,
+            startTime,
+            notes: $('apptNotes').value || '',
+          }
+        });
+
+        $('apptNotes').value = '';
+        $('scheduleApptMsg').textContent = '';
+        await loadAppointments();
+        setBadge('ok', 'scheduled');
+      } catch(e){
+        $('scheduleApptMsg').textContent = String(e.message || e);
+      }
+    }
+
+    async function loadAvailability(){
+      if (!$('availNotes')) return;
+      $('availMsg').textContent = '';
+      try{
+        const j = await api('/api/portal/availability');
+        const notes = String(j.availability?.notes || '');
+        $('availNotes').value = notes;
+      } catch(e){
+        $('availMsg').textContent = String(e.message || e);
+      }
+    }
+
+    async function saveAvailability(){
+      $('availMsg').textContent = '';
+      try{
+        await api('/api/portal/availability', {
+          method: 'PUT',
+          body: { notes: $('availNotes').value || '' }
+        });
+        setBadge('ok', 'saved');
+      } catch(e){
+        $('availMsg').textContent = String(e.message || e);
       }
     }
 
@@ -1091,7 +2293,9 @@
             const id = Number(btn.dataset.pick);
             state.selectedLead = state.leads.find((x) => Number(x.id) === id) || null;
             setSelectedLeadLine();
-            setTab('calls');
+            loadTimelineInto('timelineList', 'timelineMsg').catch(()=>{});
+            loadTimelineInto('dialerTimelineList', 'dialerTimelineMsg').catch(()=>{});
+            setTab(state.pickLeadReturnTab || 'calls');
           });
         }
 
@@ -1142,12 +2346,14 @@
       if (!outcome) return $('callMsg').textContent = 'Pick an outcome.';
 
       try{
+        const followup = String($('callFollowup').value || '').trim();
         await api('/api/portal/calls', {
           method: 'POST',
           body: {
             leadId: state.selectedLead.id,
             outcome,
             notes: $('callNotes').value,
+            payload: followup ? { followup } : {},
           }
         });
 
@@ -1156,8 +2362,15 @@
           await api('/api/portal/leads', { method:'PATCH', body: { id: state.selectedLead.id, status: nextStatus } });
         }
 
+        if (followup) {
+          const nextMeta = Object.assign({}, (state.selectedLead.meta && typeof state.selectedLead.meta === 'object') ? state.selectedLead.meta : {});
+          nextMeta.followup = followup;
+          await api('/api/portal/leads', { method:'PATCH', body: { id: state.selectedLead.id, meta: nextMeta } });
+        }
+
         $('callMsg').textContent = '';
         setBadge('ok', 'saved');
+        loadTimelineInto('dialerTimelineList', 'dialerTimelineMsg').catch(()=>{});
       } catch(e){
         $('callMsg').textContent = String(e.message || e);
         setBadge('warn', 'error');
@@ -1366,14 +2579,36 @@
       setBadge('warn', 'loading');
       try{
         const j = await api('/api/portal/users');
-        $('usersTbody').innerHTML = (j.users || []).map((u) => `
+        const users = (j.users || []);
+        state.usersCache = users;
+        $('usersTbody').innerHTML = users.map((u) => `
           <tr>
             <td>${u.fullName || ''}</td>
             <td class="muted">${u.email || ''}</td>
             <td><span class="badge">${u.role}</span></td>
             <td class="muted" style="font-family:var(--mono); font-size:12px;">${u.userId}</td>
+            <td><button class="btn secondary small" data-edit-user="${u.userId}">Edit</button></td>
           </tr>
         `).join('');
+
+        for (const btn of $('usersTbody').querySelectorAll('button[data-edit-user]')){
+          btn.addEventListener('click', async () => {
+            $('usersMsg').textContent = '';
+            try{
+              const userId = String(btn.dataset.editUser || '').trim();
+              const current = users.find((x) => String(x.userId) === userId);
+              const nextRole = prompt('Role for user:', current?.role || '');
+              if (nextRole == null) return;
+              const nextName = prompt('Full name:', current?.fullName || '');
+              if (nextName == null) return;
+              await api('/api/portal/users', { method:'PATCH', body: { userId, role: nextRole, fullName: nextName } });
+              await loadUsers();
+              setBadge('ok', 'updated');
+            } catch(e){
+              $('usersMsg').textContent = String(e.message || e);
+            }
+          });
+        }
         setBadge('ok', 'loaded');
       } catch(e){
         $('usersMsg').textContent = String(e.message || e);
@@ -1491,9 +2726,13 @@
     on('newLeadToggle', 'click', () => { $('newLeadBox').hidden = !$('newLeadBox').hidden; });
     on('createLeadBtn', 'click', () => createLead().catch(() => {}));
 
-    on('pickFromLeads', 'click', () => setTab('leads'));
+    on('closerPickLead', 'click', () => { state.pickLeadReturnTab = 'closer'; setTab('leads'); });
+    on('pickFromLeads', 'click', () => { state.pickLeadReturnTab = 'calls'; setTab('leads'); });
     on('logCallBtn', 'click', () => logCall().catch(() => {}));
     on('aiFollowupBtn', 'click', () => aiFollowup().catch(() => {}));
+
+    on('loadQueueBtn', 'click', () => loadQueue().catch(() => {}));
+    on('loadDialerTimelineBtn', 'click', () => loadTimelineInto('dialerTimelineList', 'dialerTimelineMsg').catch(() => {}));
 
     on('loadEventsBtn', 'click', () => loadEvents().catch(() => {}));
     on('newEventToggle', 'click', () => { $('newEventBox').hidden = !$('newEventBox').hidden; });
@@ -1502,12 +2741,32 @@
     on('closeSubmitBtn', 'click', () => submitClose().catch(() => {}));
     on('closeQuoteBtn', 'click', () => fillTierPrice());
 
+    on('loadApptsBtn', 'click', () => loadAppointments().catch(() => {}));
+    on('scheduleApptBtn', 'click', () => scheduleAppointment().catch(() => {}));
+    on('saveAvailBtn', 'click', () => saveAvailability().catch(() => {}));
+
+    on('loadCloserQueueBtn', 'click', () => loadCloserQueue().catch(() => {}));
+
     on('submitRecapBtn', 'click', () => submitRecap().catch(() => {}));
     on('closeRecapBtn', 'click', () => setSelectedEvent(null));
 
     on('loadPayoutsBtn', 'click', () => loadPayouts().catch(() => {}));
 
     on('loadUsersBtn', 'click', () => loadUsers().catch(() => {}));
+
+    on('leadDetailRefreshBtn', 'click', () => loadTimelineInto('timelineList', 'timelineMsg').catch(() => {}));
+    on('leadSaveBtn', 'click', () => saveLeadEdits().catch(() => {}));
+    on('timelineAddBtn', 'click', () => addTimelineNote('timelineNote', 'timelineAddMsg', 'timelineList').catch(() => {}));
+
+    on('loadStatsBtn', 'click', () => loadStats().catch(() => {}));
+    on('mgrAssignBtn', 'click', () => managerAssignLead().catch(() => {}));
+    on('loadTeamAvailBtn', 'click', () => loadTeamAvailability().catch(() => {}));
+
+    on('loadDispatchBtn', 'click', () => loadDispatchManager().catch(() => {}));
+    on('dispatchCreateBtn', 'click', () => createDispatchTask().catch(() => {}));
+
+    on('loadDialerTasksBtn', 'click', () => loadDispatchInto('dialerTasksTbody', 'dialerTasksMsg').catch(() => {}));
+    on('loadCloserTasksBtn', 'click', () => loadDispatchInto('closerTasksTbody', 'closerTasksMsg').catch(() => {}));
 
     boot().catch((e) => {
       $('authMsg').textContent = String(e.message || e);
