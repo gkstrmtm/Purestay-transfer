@@ -207,6 +207,41 @@ module.exports = async (req, res) => {
     const meta = row.meta && typeof row.meta === 'object' ? row.meta : {};
     if (meta.kind !== 'dispatch') return sendJson(res, 404, { ok: false, error: 'dispatch_not_found' });
 
+    if (String(body.action || '') === 'escalate') {
+      if (!hasRole(s.profile, ['event_coordinator', 'manager'])) {
+        return sendJson(res, 403, { ok: false, error: 'forbidden' });
+      }
+
+      const nextMeta = Object.assign({}, meta);
+      const currentPriority = clampInt(nextMeta.priority, -5, 5, 0);
+      nextMeta.priority = Math.max(currentPriority, 5);
+      nextMeta.escalatedAt = new Date().toISOString();
+      nextMeta.escalatedBy = s.user.id;
+
+      const { data, error } = await s.sbAdmin
+        .from('portal_events')
+        .update({ meta: nextMeta })
+        .eq('id', taskId)
+        .select('*')
+        .limit(1);
+
+      if (error) return sendJson(res, 500, { ok: false, error: 'dispatch_update_failed' });
+      const updated = Array.isArray(data) ? data[0] : null;
+
+      const leadId = clampInt(meta.leadId, 1, 1e12, null);
+      if (leadId) {
+        await insertLeadActivity(s.sbAdmin, {
+          leadId,
+          userId: s.user.id,
+          outcome: 'escalated',
+          notes: `Dispatch task escalated: ${String(row.title || '').trim()}`.trim(),
+          payload: { taskId, priority: nextMeta.priority },
+        });
+      }
+
+      return sendJson(res, 200, { ok: true, task: updated });
+    }
+
     const canEdit = isManager(s.profile)
       || hasRole(s.profile, ['event_coordinator'])
       || (row.assigned_user_id && row.assigned_user_id === s.user.id)

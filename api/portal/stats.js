@@ -45,6 +45,27 @@ async function countAppointments(sbAdmin, { assignedUserId, sinceDate }) {
   return Number(count || 0);
 }
 
+async function countDispatch(sbAdmin, { statusIn, overdueOnly }) {
+  let q = sbAdmin
+    .from('portal_events')
+    .select('*', { count: 'exact', head: true })
+    .contains('meta', { kind: 'dispatch' });
+
+  if (Array.isArray(statusIn) && statusIn.length) q = q.in('status', statusIn);
+  if (overdueOnly) {
+    const today = new Date();
+    const yyyy = today.getUTCFullYear();
+    const mm = String(today.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(today.getUTCDate()).padStart(2, '0');
+    const todayIso = `${yyyy}-${mm}-${dd}`;
+    q = q.lt('event_date', todayIso);
+  }
+
+  const { count, error } = await q;
+  if (error) return null;
+  return Number(count || 0);
+}
+
 module.exports = async (req, res) => {
   if (handleCors(req, res, { methods: ['GET', 'OPTIONS'] })) return;
   if (req.method !== 'GET') return sendJson(res, 405, { ok: false, error: 'method_not_allowed' });
@@ -103,6 +124,16 @@ module.exports = async (req, res) => {
     sinceDate: todayIso,
   });
 
+  const dispatchOpen = await countDispatch(s.sbAdmin, {
+    statusIn: ['open', 'assigned'],
+    overdueOnly: false,
+  });
+
+  const dispatchOverdue = await countDispatch(s.sbAdmin, {
+    statusIn: ['open', 'assigned'],
+    overdueOnly: true,
+  });
+
   return sendJson(res, 200, {
     ok: true,
     scope: manager ? scope : 'me',
@@ -110,5 +141,7 @@ module.exports = async (req, res) => {
     leadCounts,
     callsLast24h,
     upcomingAppointments,
+    dispatchOpen,
+    dispatchOverdue,
   });
 };

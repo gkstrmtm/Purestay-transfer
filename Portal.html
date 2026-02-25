@@ -546,7 +546,13 @@
                   <div style="font-weight:900;">Dispatch tasks</div>
                   <div class="muted small">Open and assigned tasks for your role</div>
                 </div>
-                <button id="loadDialerTasksBtn" class="btn secondary" type="button">Load</button>
+                <div class="row">
+                  <label class="muted small" style="display:flex; align-items:center; gap:8px; margin:0;">
+                    <input id="dialerTasksOverdue" type="checkbox" style="width:auto;" />
+                    Overdue only
+                  </label>
+                  <button id="loadDialerTasksBtn" class="btn secondary" type="button">Load</button>
+                </div>
               </div>
               <div style="height:10px"></div>
               <div id="dialerTasksMsg" class="err"></div>
@@ -785,7 +791,13 @@
                       <div style="font-weight:900;">Dispatch tasks</div>
                       <div class="muted small">Open and assigned tasks for your role</div>
                     </div>
-                    <button id="loadCloserTasksBtn" class="btn secondary" type="button">Load</button>
+                    <div class="row">
+                      <label class="muted small" style="display:flex; align-items:center; gap:8px; margin:0;">
+                        <input id="closerTasksOverdue" type="checkbox" style="width:auto;" />
+                        Overdue only
+                      </label>
+                      <button id="loadCloserTasksBtn" class="btn secondary" type="button">Load</button>
+                    </div>
                   </div>
                   <div style="height:10px"></div>
                   <div id="closerTasksMsg" class="err"></div>
@@ -988,7 +1000,41 @@
                   <div style="font-weight:900;">Dispatch</div>
                   <div class="muted small">Create and manage operational tasks</div>
                 </div>
-                <button id="loadDispatchBtn" class="btn secondary" type="button">Load tasks</button>
+                <div class="row">
+                  <label class="muted small" style="display:flex; align-items:center; gap:8px; margin:0;">
+                    <input id="dispatchOverdueOnly" type="checkbox" style="width:auto;" />
+                    Overdue only
+                  </label>
+                  <button id="loadDispatchBtn" class="btn secondary" type="button">Load tasks</button>
+                </div>
+              </div>
+
+              <div style="height:12px"></div>
+              <div class="two">
+                <div>
+                  <label>Status filter</label>
+                  <select id="dispatchStatus">
+                    <option value="">Open and assigned</option>
+                    <option value="open">open</option>
+                    <option value="assigned">assigned</option>
+                    <option value="completed">completed</option>
+                    <option value="cancelled">cancelled</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Assigned role filter</label>
+                  <select id="dispatchRole">
+                    <option value="">All roles</option>
+                    <option>dialer</option>
+                    <option>in_person_setter</option>
+                    <option>remote_setter</option>
+                    <option>closer</option>
+                    <option>account_manager</option>
+                    <option>event_coordinator</option>
+                    <option>event_host</option>
+                    <option>media_team</option>
+                  </select>
+                </div>
               </div>
 
               <div style="height:10px"></div>
@@ -1291,14 +1337,14 @@
         loadAppointments().catch(()=>{});
         loadAvailability().catch(()=>{});
         loadCloserQueue().catch(()=>{});
-        loadDispatchInto('closerTasksTbody', 'closerTasksMsg').catch(()=>{});
+        loadDispatchInto('closerTasksTbody', 'closerTasksMsg', { overdueOnly: !!$('closerTasksOverdue')?.checked }).catch(()=>{});
       }
       if (tab === 'calls') {
         loadQueue().catch(()=>{});
         if (state.selectedLead && state.selectedLead.id) {
           loadTimelineInto('dialerTimelineList', 'dialerTimelineMsg').catch(()=>{});
         }
-        loadDispatchInto('dialerTasksTbody', 'dialerTasksMsg').catch(()=>{});
+        loadDispatchInto('dialerTasksTbody', 'dialerTasksMsg', { overdueOnly: !!$('dialerTasksOverdue')?.checked }).catch(()=>{});
       }
       if (tab === 'manager') {
         loadDispatchManager().catch(()=>{});
@@ -1654,6 +1700,8 @@
             `<span class="badge warn">lost ${Number(c.lost ?? 0)}</span>`,
             `<span class="badge">calls24h ${Number(j.callsLast24h ?? 0)}</span>`,
             `<span class="badge">upcoming appts ${Number(j.upcomingAppointments ?? 0)}</span>`,
+            `<span class="badge">dispatch open ${Number(j.dispatchOpen ?? 0)}</span>`,
+            `<span class="badge warn">dispatch overdue ${Number(j.dispatchOverdue ?? 0)}</span>`,
           ].join(' ');
         }
         setBadge('ok', 'loaded');
@@ -1743,14 +1791,14 @@
       return d < today;
     }
 
-    async function loadDispatchInto(tbodyId, msgId){
+    async function loadDispatchInto(tbodyId, msgId, { overdueOnly = false } = {}){
       const tb = $(tbodyId);
       const msgEl = $(msgId);
       if (!tb) return;
       if (msgEl) msgEl.textContent = '';
       setBadge('warn', 'loading');
       try{
-        const j = await api('/api/portal/dispatch?limit=80');
+        const j = await api('/api/portal/dispatch?limit=80' + (overdueOnly ? '&overdue=1' : ''));
         const tasks = (j.tasks || []).filter((t) => !['completed','cancelled'].includes(String(t.status || '')));
         state.dispatch = tasks;
         if (!tasks.length) {
@@ -1768,6 +1816,7 @@
           const st = String(t.status || '');
           const due = dispatchDue(t);
           const overdue = isOverdue(t) ? '<span class="badge warn">overdue</span>' : '';
+          const escalated = meta.escalatedAt ? '<span class="badge warn">escalated</span>' : '';
           const canClaim = !t.assigned_user_id && st === 'open' && role && t.assigned_role === role;
           const canComplete = (t.assigned_user_id && meId && t.assigned_user_id === meId) || String(state.me?.profile?.role || '') === 'manager';
           const claimBtn = canClaim ? `<button class="btn small" data-task-claim="${t.id}">Claim</button>` : '';
@@ -1775,7 +1824,7 @@
           return `
             <tr>
               <td class="muted">${escapeHtml(due)}</td>
-              <td>${escapeHtml(String(t.title || ''))} ${overdue}</td>
+              <td>${escapeHtml(String(t.title || ''))} ${overdue} ${escalated}</td>
               <td class="muted">${escapeHtml(leadLine)}</td>
               <td><span class="badge">${escapeHtml(st)}</span></td>
               <td>${claimBtn} ${doneBtn}</td>
@@ -1824,8 +1873,22 @@
       if (!tb) return;
       setBadge('warn', 'loading');
       try{
-        const j = await api('/api/portal/dispatch?limit=140');
-        const tasks = (j.tasks || []).filter((t) => !['completed','cancelled'].includes(String(t.status || '')));
+        const statusFilter = String($('dispatchStatus')?.value || '').trim();
+        const roleFilter = String($('dispatchRole')?.value || '').trim();
+        const overdueOnly = !!$('dispatchOverdueOnly')?.checked;
+
+        const qs = [];
+        qs.push('limit=180');
+        if (statusFilter) qs.push('status=' + encodeURIComponent(statusFilter));
+        if (roleFilter) qs.push('assignedRole=' + encodeURIComponent(roleFilter));
+        if (overdueOnly) qs.push('overdue=1');
+
+        const j = await api('/api/portal/dispatch?' + qs.join('&'));
+        let tasks = (j.tasks || []);
+        if (!statusFilter) {
+          // Default view: show open/assigned only.
+          tasks = tasks.filter((t) => ['open', 'assigned'].includes(String(t.status || '')));
+        }
         state.dispatch = tasks;
         if (!tasks.length) {
           tb.innerHTML = '<tr><td colspan="7" class="muted">No tasks.</td></tr>';
@@ -1839,11 +1902,14 @@
           const st = String(t.status || '');
           const due = dispatchDue(t);
           const overdue = isOverdue(t) ? '<span class="badge warn">overdue</span>' : '';
+          const escalated = meta.escalatedAt ? '<span class="badge warn">escalated</span>' : '';
           const assigned = t.assigned_user_id ? String(t.assigned_user_id).slice(0, 8) : '';
+          const canEscalate = isOverdue(t) && !meta.escalatedAt && !['completed','cancelled'].includes(st);
+          const escBtn = canEscalate ? `<button class="btn secondary small" data-mgr-escalate="${t.id}">Escalate</button>` : '';
           return `
             <tr>
               <td class="muted">${escapeHtml(due)}</td>
-              <td>${escapeHtml(String(t.title || ''))} ${overdue}</td>
+              <td>${escapeHtml(String(t.title || ''))} ${overdue} ${escalated}</td>
               <td><span class="badge">${escapeHtml(String(t.assigned_role || ''))}</span></td>
               <td class="muted" style="font-family:var(--mono); font-size:12px;">${escapeHtml(assigned)}</td>
               <td class="muted">${escapeHtml(leadLine)}</td>
@@ -1852,6 +1918,7 @@
                 <button class="btn secondary small" data-mgr-assign="${t.id}">Assign</button>
                 <button class="btn secondary small" data-mgr-done="${t.id}">Done</button>
                 <button class="btn secondary small" data-mgr-cancel="${t.id}">Cancel</button>
+                ${escBtn}
               </td>
             </tr>
           `;
@@ -1896,6 +1963,20 @@
               await api('/api/portal/dispatch', { method:'PATCH', body: { id, status: 'cancelled' } });
               await loadDispatchManager();
               setBadge('ok', 'cancelled');
+            } catch(e){
+              $('dispatchMsg').textContent = String(e.message || e);
+            }
+          });
+        }
+
+        for (const btn of tb.querySelectorAll('button[data-mgr-escalate]')){
+          btn.addEventListener('click', async () => {
+            $('dispatchMsg').textContent = '';
+            try{
+              const id = Number(btn.dataset.mgrEscalate);
+              await api('/api/portal/dispatch', { method:'PATCH', body: { id, action: 'escalate' } });
+              await loadDispatchManager();
+              setBadge('ok', 'escalated');
             } catch(e){
               $('dispatchMsg').textContent = String(e.message || e);
             }
@@ -2765,8 +2846,8 @@
     on('loadDispatchBtn', 'click', () => loadDispatchManager().catch(() => {}));
     on('dispatchCreateBtn', 'click', () => createDispatchTask().catch(() => {}));
 
-    on('loadDialerTasksBtn', 'click', () => loadDispatchInto('dialerTasksTbody', 'dialerTasksMsg').catch(() => {}));
-    on('loadCloserTasksBtn', 'click', () => loadDispatchInto('closerTasksTbody', 'closerTasksMsg').catch(() => {}));
+    on('loadDialerTasksBtn', 'click', () => loadDispatchInto('dialerTasksTbody', 'dialerTasksMsg', { overdueOnly: !!$('dialerTasksOverdue')?.checked }).catch(() => {}));
+    on('loadCloserTasksBtn', 'click', () => loadDispatchInto('closerTasksTbody', 'closerTasksMsg', { overdueOnly: !!$('closerTasksOverdue')?.checked }).catch(() => {}));
 
     boot().catch((e) => {
       $('authMsg').textContent = String(e.message || e);
