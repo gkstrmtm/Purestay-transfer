@@ -1531,8 +1531,10 @@
       if (['dialer','remote_setter'].includes(r)) return 'Calls';
       if (r === 'in_person_setter') return 'Booked';
       if (['closer','account_manager'].includes(r)) return 'Sales';
-      if (['event_host','event_coordinator','media_team'].includes(r)) return 'Events';
-      if (r === 'manager') return 'Manager';
+      if (r === 'event_host') return 'Events';
+      if (r === 'event_coordinator') return 'Operations';
+      if (r === 'media_team') return 'Media';
+      if (r === 'manager') return 'Operations';
       return roleLabel(r);
     }
 
@@ -1579,7 +1581,6 @@
       if (!r) return [];
       if (r === 'dialer' || r === 'remote_setter') return ['dialer','remote_setter'];
       if (r === 'closer' || r === 'account_manager') return ['closer','account_manager'];
-      if (r === 'event_host' || r === 'event_coordinator' || r === 'media_team') return ['event_host','event_coordinator','media_team'];
       return [r];
     }
 
@@ -1616,7 +1617,8 @@
         if (er === 'in_person_setter') state.dialerSubtab = 'booked';
       }
       else if (['closer','account_manager'].includes(er)) state.activeTab = 'closer';
-      else if (['event_host','event_coordinator','media_team'].includes(er)) state.activeTab = 'events';
+      else if (er === 'event_coordinator') state.activeTab = 'manager';
+      else if (['event_host','media_team'].includes(er)) state.activeTab = 'events';
       else state.activeTab = 'overview';
 
       refreshMe().catch(() => {});
@@ -1952,11 +1954,13 @@
 
       const viewAsHtml = isManagerUser() ? (() => {
         const workspaces = [
-          { role: 'manager', label: 'Operations' },
+          { role: 'manager', label: 'All' },
           { role: 'dialer', label: 'Calls' },
           { role: 'in_person_setter', label: 'Booked' },
           { role: 'closer', label: 'Sales' },
           { role: 'event_host', label: 'Events' },
+          { role: 'event_coordinator', label: 'Operations' },
+          { role: 'media_team', label: 'Media' },
         ];
         const wsBtns = workspaces.map((w) => {
           const active = (w.role === 'manager' ? 'manager' : w.role) === er;
