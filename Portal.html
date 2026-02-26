@@ -1669,6 +1669,118 @@
           </div>
         </div>
 
+        <div id="viewTalent" class="hide">
+          <div class="card" style="background:#fff;">
+            <div class="bd">
+              <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
+                <div>
+                  <div class="muted small">Talent profile</div>
+                  <div style="font-weight:900; margin-top:4px;">Bio, location, specialties</div>
+                  <div id="talentEditingLine" class="muted small" style="margin-top:4px;"></div>
+                </div>
+                <div class="row">
+                  <button id="talentRefreshBtn" class="btn secondary" type="button">Refresh</button>
+                  <button id="talentStopEditingBtn" class="btn secondary hide" type="button">Stop editing</button>
+                </div>
+              </div>
+
+              <div style="height:10px"></div>
+              <div id="talentMsg" class="err"></div>
+
+              <div class="two">
+                <div>
+                  <label>Display name</label>
+                  <input id="talDisplayName" placeholder="Preferred name" />
+                </div>
+                <div>
+                  <label>Role</label>
+                  <select id="talRole">
+                    <option value="">Select…</option>
+                    <option value="event_host">event_host</option>
+                    <option value="media_team">media_team</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="two" style="margin-top:10px;">
+                <div>
+                  <label>Home base city</label>
+                  <input id="talCity" placeholder="Charlotte" />
+                </div>
+                <div>
+                  <label>Home base state</label>
+                  <input id="talState" placeholder="NC" />
+                </div>
+              </div>
+
+              <div style="margin-top:10px;">
+                <label>Specialties (comma separated)</label>
+                <input id="talSpecialties" placeholder="ex: games, luxury, families" />
+              </div>
+
+              <div style="margin-top:10px;">
+                <label>Tone / style</label>
+                <input id="talTone" placeholder="high-energy, warm, professional" />
+              </div>
+
+              <div style="margin-top:10px;">
+                <label>Gear / capabilities</label>
+                <input id="talGear" placeholder="camera, gimbal, lighting, drone (if licensed)" />
+              </div>
+
+              <div style="margin-top:10px;">
+                <label>Bio</label>
+                <textarea id="talBio" placeholder="Short bio used for matching and reporting"></textarea>
+              </div>
+
+              <div style="margin-top:10px;">
+                <label>Preferred pairings (user IDs comma separated)</label>
+                <input id="talPairings" placeholder="uuid1, uuid2" />
+              </div>
+
+              <div style="margin-top:10px;">
+                <label>Notes (internal)</label>
+                <textarea id="talNotes"></textarea>
+              </div>
+
+              <div id="talReliabilityBox" class="hide" style="margin-top:10px;">
+                <div class="two">
+                  <div>
+                    <label>Reliability score (0-100)</label>
+                    <input id="talReliabilityScore" type="number" min="0" max="100" step="1" />
+                  </div>
+                  <div>
+                    <label>Reliability flags (comma separated)</label>
+                    <input id="talReliabilityFlags" placeholder="late, no_show, great" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="row" style="margin-top:10px;">
+                <button id="talentSaveBtn" class="btn" type="button">Save profile</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="talentDirectoryWrap" class="card hide" style="margin-top:14px; background:#fff;">
+            <div class="bd">
+              <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
+                <div>
+                  <div class="muted small">Coordinator tools</div>
+                  <div style="font-weight:900; margin-top:4px;">Talent directory</div>
+                </div>
+                <div style="max-width:360px; width:100%;">
+                  <input id="talentQ" placeholder="search by name, city/state, specialty" />
+                </div>
+              </div>
+
+              <div style="height:10px"></div>
+              <div id="talentDirMsg" class="err"></div>
+              <div id="talentDirList"></div>
+            </div>
+          </div>
+        </div>
+
         <div id="viewPayments" class="hide">
           <div class="row" style="justify-content:space-between;">
             <button id="loadPayoutsBtn" class="btn secondary">Load</button>
@@ -2041,6 +2153,12 @@
       dispatch: [],
       pickLeadReturnTab: 'calls',
       usersCache: [],
+      talent: {
+        my: null,
+        profiles: [],
+        editUserId: '',
+        q: '',
+      },
       closerQueue: [],
       ui: { sidebarCollapsed: false },
       availability: { weekOffset: 0, byDate: {}, tz: '', drag: { active: false, mode: '' } },
@@ -2172,6 +2290,11 @@
       return v || 'manager';
     }
 
+    function canLoadUserDirectory(){
+      const r = effectiveRole();
+      return isManagerUser() || r === 'event_coordinator';
+    }
+
     function viewAsUserLabel(userId){
       const id = String(userId || '').trim();
       if (!id) return '';
@@ -2199,7 +2322,7 @@
     }
 
     async function ensureUsersCache(){
-      if (!isManagerUser()) return;
+      if (!canLoadUserDirectory()) return;
       if (Array.isArray(state.usersCache) && state.usersCache.length) return;
       try {
         const j = await api('/api/portal/users');
@@ -2327,6 +2450,7 @@
         accounts: 'Accounts',
         closer: 'Sales',
         events: 'Events',
+        talent: 'Talent',
         payments: 'Payments',
         manager: 'Operations'
       }[tab] || 'Overview';
@@ -2338,13 +2462,14 @@
         accounts: 'Accounts',
         closer: 'Closer',
         events: 'Events',
+        talent: 'Talent',
         payments: 'Payments',
         manager: 'Manager'
       }[tab] || 'Overview';
 
       $('viewTitle').textContent = title;
 
-      const views = ['Overview','Leads','Calls','Meetings','Accounts','Closer','Events','Payments','Manager'];
+      const views = ['Overview','Leads','Calls','Meetings','Accounts','Closer','Events','Talent','Payments','Manager'];
       for (const v of views) $('view'+v).classList.add('hide');
       const viewEl = $('view' + viewKey);
       if (viewEl) viewEl.classList.remove('hide');
@@ -2356,6 +2481,7 @@
       if (tab === 'overview') loadOverview().catch(()=>{});
       if (tab === 'leads') loadLeads().catch(()=>{});
       if (tab === 'events') loadEvents().catch(()=>{});
+      if (tab === 'talent') loadTalentTab().catch(()=>{});
       if (tab === 'meetings') {
         renderMeetingsSubtab();
         if (state.meetingsSubtab === 'availability') loadAvailability().catch(()=>{});
@@ -2426,6 +2552,9 @@
       if (tab === 'events') {
         await loadEvents().catch(()=>{});
         if (state.selectedEvent?.id) await loadRecaps(state.selectedEvent.id).catch(()=>{});
+      }
+      if (tab === 'talent') {
+        await loadTalentTab().catch(()=>{});
       }
       if (tab === 'payments') {
         await loadPayouts().catch(()=>{});
@@ -2548,6 +2677,7 @@
       }
       if (['event_host','media_team','event_coordinator'].includes(er)) {
         navItems.push({ id:'events', label: er === 'media_team' ? 'Content' : 'Events' });
+        navItems.push({ id:'talent', label:'Talent' });
       }
       if (er === 'event_coordinator' || er === 'manager') {
         navItems.push({ id:'manager', label:'Operations' });
@@ -2599,6 +2729,7 @@
         accounts: 'A',
         closer: 'S',
         events: 'E',
+        talent: 'T',
         payments: '$',
         manager: '⚙',
       };
@@ -4593,6 +4724,271 @@
       if (e) initEventOps().catch(()=>{});
     }
 
+    function splitCsvList(text, { max = 30, maxLen = 60 } = {}){
+      return String(text || '')
+        .split(',')
+        .map((x) => x.trim())
+        .filter(Boolean)
+        .map((x) => x.slice(0, maxLen))
+        .slice(0, max);
+    }
+
+    function joinCsvList(arr){
+      return (Array.isArray(arr) ? arr : []).filter(Boolean).join(', ');
+    }
+
+    function talentIsCoordinator(){
+      return isCoordinatorRole();
+    }
+
+    function setTalentEditingLine(){
+      const line = $('talentEditingLine');
+      if (!line) return;
+      const editing = String(state.talent?.editUserId || '').trim();
+      if (!editing) {
+        line.textContent = '';
+        return;
+      }
+      const u = (Array.isArray(state.usersCache) ? state.usersCache : []).find((x) => String(x.userId) === editing);
+      const label = u ? String(u.fullName || u.email || u.userId || '').trim() : editing;
+      line.textContent = `Editing: ${label}`;
+    }
+
+    function readTalentForm(){
+      const specialties = splitCsvList($('talSpecialties')?.value || '', { max: 20, maxLen: 60 });
+      const preferredPairings = splitCsvList($('talPairings')?.value || '', { max: 20, maxLen: 80 });
+      const reliabilityFlags = splitCsvList($('talReliabilityFlags')?.value || '', { max: 20, maxLen: 60 });
+
+      const out = {
+        displayName: String($('talDisplayName')?.value || '').trim(),
+        role: String($('talRole')?.value || '').trim(),
+        homeBaseCity: String($('talCity')?.value || '').trim(),
+        homeBaseState: String($('talState')?.value || '').trim(),
+        specialties,
+        tone: String($('talTone')?.value || '').trim(),
+        gear: String($('talGear')?.value || '').trim(),
+        bio: String($('talBio')?.value || '').trim(),
+        preferredPairings,
+        notes: String($('talNotes')?.value || '').trim(),
+      };
+
+      if (talentIsCoordinator() && !$('talReliabilityBox')?.classList.contains('hide')) {
+        const score = $('talReliabilityScore')?.value ? Number($('talReliabilityScore').value) : null;
+        out.reliability = {
+          score: Number.isFinite(score) ? Math.max(0, Math.min(100, Math.trunc(score))) : null,
+          flags: reliabilityFlags,
+        };
+      }
+
+      return out;
+    }
+
+    function writeTalentForm(profile){
+      const p = (profile && typeof profile === 'object') ? profile : {};
+      if ($('talDisplayName')) $('talDisplayName').value = String(p.displayName || '');
+      if ($('talRole')) $('talRole').value = String(p.role || '') || String(myPortalRole() || '');
+      if ($('talCity')) $('talCity').value = String(p.homeBaseCity || '');
+      if ($('talState')) $('talState').value = String(p.homeBaseState || '');
+      if ($('talSpecialties')) $('talSpecialties').value = joinCsvList(p.specialties);
+      if ($('talTone')) $('talTone').value = String(p.tone || '');
+      if ($('talGear')) $('talGear').value = String(p.gear || '');
+      if ($('talBio')) $('talBio').value = String(p.bio || '');
+      if ($('talPairings')) $('talPairings').value = joinCsvList(p.preferredPairings);
+      if ($('talNotes')) $('talNotes').value = String(p.notes || '');
+
+      const relBox = $('talReliabilityBox');
+      if (relBox) relBox.classList.toggle('hide', !talentIsCoordinator());
+      if (talentIsCoordinator()) {
+        const rel = p.reliability && typeof p.reliability === 'object' ? p.reliability : {};
+        if ($('talReliabilityScore')) $('talReliabilityScore').value = (rel.score == null ? '' : String(rel.score));
+        if ($('talReliabilityFlags')) $('talReliabilityFlags').value = joinCsvList(rel.flags);
+      }
+    }
+
+    async function loadTalentProfilesCache({ force = false } = {}){
+      if (!talentIsCoordinator()) return new Map();
+
+      const now = Date.now();
+      const loadedAt = Number(state._talentProfilesLoadedAt || 0);
+      const ttlMs = 5 * 60 * 1000;
+      if (!force && state._talentProfilesById instanceof Map && (now - loadedAt) < ttlMs) {
+        return state._talentProfilesById;
+      }
+
+      try {
+        const j = await api('/api/portal/talent_profiles');
+        const profiles = Array.isArray(j.profiles) ? j.profiles : [];
+        state.talent.profiles = profiles;
+        const byId = new Map(profiles.map((p) => [String(p?.userId || ''), p]));
+        state._talentProfilesById = byId;
+        state._talentProfilesLoadedAt = now;
+        return byId;
+      } catch {
+        state.talent.profiles = [];
+        const byId = new Map();
+        state._talentProfilesById = byId;
+        state._talentProfilesLoadedAt = now;
+        return byId;
+      }
+    }
+
+    async function rerenderTalentDirectoryFromCache(){
+      if (!talentIsCoordinator()) return;
+      await ensureUsersCache();
+      const profilesById = (state._talentProfilesById instanceof Map)
+        ? state._talentProfilesById
+        : new Map((Array.isArray(state.talent?.profiles) ? state.talent.profiles : []).map((p) => [String(p?.userId || ''), p]));
+      renderTalentDirectory(profilesById);
+    }
+
+    async function loadTalentTab(){
+      $('talentMsg').textContent = '';
+      $('talentDirMsg').textContent = '';
+
+      // Clear edit mode automatically for non-coordinators.
+      if (!talentIsCoordinator()) {
+        state.talent.editUserId = '';
+      }
+
+      if (talentIsCoordinator()) {
+        await ensureUsersCache();
+        $('talentDirectoryWrap')?.classList.remove('hide');
+        $('talentStopEditingBtn')?.classList.toggle('hide', !String(state.talent.editUserId || '').trim());
+      } else {
+        $('talentDirectoryWrap')?.classList.add('hide');
+        $('talentStopEditingBtn')?.classList.add('hide');
+      }
+
+      setTalentEditingLine();
+
+      const profilesById = await loadTalentProfilesCache();
+
+      // Load the active form target.
+      const targetUserId = (talentIsCoordinator() && String(state.talent.editUserId || '').trim())
+        ? String(state.talent.editUserId || '').trim()
+        : String(state.me?.user?.id || '').trim();
+
+      let profile = profilesById.get(targetUserId) || null;
+      if (!profile) {
+        try {
+          const j = await api('/api/portal/talent_profiles?userId=' + encodeURIComponent(targetUserId));
+          profile = j.profile || null;
+        } catch {
+          profile = null;
+        }
+      }
+      state.talent.my = profile;
+      writeTalentForm(profile || { role: myPortalRole() });
+
+      if (talentIsCoordinator()) {
+        renderTalentDirectory(profilesById);
+      }
+    }
+
+    function talentDirectoryRows(profilesById){
+      const users = Array.isArray(state.usersCache) ? state.usersCache : [];
+      const pool = users.filter((u) => ['event_host','media_team'].includes(String(u?.role || '').trim()));
+      const q = String($('talentQ')?.value || state.talent.q || '').trim().toLowerCase();
+      state.talent.q = q;
+
+      const rows = pool.map((u) => {
+        const uid = String(u.userId);
+        const p = profilesById.get(uid) || null;
+        const display = (p && p.displayName) ? String(p.displayName) : String(u.fullName || u.email || uid);
+        const loc = p ? [p.homeBaseCity, p.homeBaseState].filter(Boolean).join(', ') : '';
+        const specs = p && Array.isArray(p.specialties) ? p.specialties.join(', ') : '';
+        const rel = p && p.reliability && typeof p.reliability === 'object' ? p.reliability : {};
+        const relScore = (rel.score == null) ? '' : String(rel.score);
+
+        const hay = [display, String(u.email || ''), String(u.role || ''), loc, specs].join(' ').toLowerCase();
+        if (q && !hay.includes(q)) return null;
+
+        return {
+          userId: uid,
+          role: String(u.role || ''),
+          display,
+          email: String(u.email || ''),
+          loc,
+          specs,
+          relScore,
+          hasProfile: !!p,
+        };
+      }).filter(Boolean);
+
+      rows.sort((a, b) => a.display.localeCompare(b.display));
+      return rows;
+    }
+
+    function renderTalentDirectory(profilesById){
+      const list = $('talentDirList');
+      if (!list) return;
+      const rows = talentDirectoryRows(profilesById);
+      if (!rows.length) {
+        list.innerHTML = '<div class="muted small">No matching talent.</div>';
+        return;
+      }
+
+      list.innerHTML = rows.slice(0, 120).map((r) => {
+        const badge = r.hasProfile ? '<span class="badge ok">profile</span>' : '<span class="badge">missing</span>';
+        const rel = r.relScore ? `<span class="badge">rel ${escapeHtml(r.relScore)}</span>` : '';
+        return `
+          <div class="card" style="background:#fff; margin-bottom:10px;">
+            <div class="bd">
+              <div class="row" style="justify-content:space-between; gap:12px;">
+                <div>
+                  <div style="font-weight:900;">${escapeHtml(r.display)} <span class="muted">(${escapeHtml(r.role)})</span></div>
+                  <div class="muted small" style="margin-top:2px;">${escapeHtml([r.loc, r.specs].filter(Boolean).join(' • '))}</div>
+                  <div class="muted small" style="margin-top:2px; font-family:var(--mono);">${escapeHtml(r.userId)}</div>
+                </div>
+                <div class="row" style="gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                  ${badge} ${rel}
+                  <button class="btn secondary small" type="button" data-edit-talent="${escapeHtml(r.userId)}">Edit</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      for (const btn of list.querySelectorAll('button[data-edit-talent]')){
+        btn.addEventListener('click', () => {
+          state.talent.editUserId = String(btn.dataset.editTalent || '').trim();
+          $('talentStopEditingBtn')?.classList.remove('hide');
+          loadTalentTab().catch(()=>{});
+        });
+      }
+    }
+
+    async function saveTalentProfile(){
+      $('talentMsg').textContent = '';
+      try{
+        const profile = readTalentForm();
+        const body = { profile };
+        if (talentIsCoordinator() && String(state.talent.editUserId || '').trim()) {
+          body.userId = String(state.talent.editUserId || '').trim();
+        }
+        const j = await api('/api/portal/talent_profiles', { method: 'POST', body });
+        state.talent.my = j.profile || null;
+        $('talentMsg').textContent = 'Saved.';
+
+        // Refresh caches + directory and staffing dropdown labels.
+        if (talentIsCoordinator()) {
+          await loadTalentProfilesCache({ force: true });
+          await initEventOps().catch(()=>{});
+          await rerenderTalentDirectoryFromCache().catch(()=>{});
+        }
+      } catch(e){
+        $('talentMsg').textContent = String(e.message || e);
+      }
+    }
+
+    function stopTalentEditing(){
+      state.talent.editUserId = '';
+      $('talentStopEditingBtn')?.classList.add('hide');
+      setTalentEditingLine();
+      loadTalentTab().catch(()=>{});
+    }
+
     async function loadRecaps(eventId){
       $('recapMsg').textContent = '';
       $('recapsList').textContent = '';
@@ -4795,19 +5191,48 @@
       return users;
     }
 
-    function fillAssignSelects(users){
+    function fillAssignSelects(users, profilesById){
       const hostSel = $('assignHostUser');
       const mediaSel = $('assignMediaUser');
       if (!hostSel || !mediaSel) return;
       const arr = Array.isArray(users) ? users : [];
 
+      const byId = (profilesById instanceof Map)
+        ? profilesById
+        : new Map((Array.isArray(state.talent?.profiles) ? state.talent.profiles : []).map((p) => [String(p?.userId || ''), p]));
+
+      function bestName(u, p){
+        return String((p && p.displayName) || u.fullName || u.email || u.userId || '').trim();
+      }
+
+      function talentMetaBits(p){
+        if (!p || typeof p !== 'object') return [];
+        const loc = [p.homeBaseCity, p.homeBaseState].filter(Boolean).join(', ');
+        const specs = Array.isArray(p.specialties) ? p.specialties.filter(Boolean).slice(0, 3).join(', ') : '';
+        const rel = (p.reliability && typeof p.reliability === 'object' && p.reliability.score != null) ? ('rel ' + String(p.reliability.score)) : '';
+        return [loc, specs, rel].filter(Boolean);
+      }
+
       function option(u){
-        const label = [u.fullName || '', u.email || ''].filter(Boolean).join(' • ') || u.userId;
+        const p = byId.get(String(u.userId)) || null;
+        const meta = talentMetaBits(p);
+        const label = [bestName(u, p), u.email || '', meta.length ? meta.join(' • ') : ''].filter(Boolean).join(' • ') || u.userId;
         return `<option value="${escapeHtml(u.userId)}">${escapeHtml(label)}</option>`;
       }
 
-      hostSel.innerHTML = '<option value="">Assign host…</option>' + arr.filter((u) => String(u.role || '') === 'event_host').map(option).join('');
-      mediaSel.innerHTML = '<option value="">Assign media…</option>' + arr.filter((u) => String(u.role || '') === 'media_team').map(option).join('');
+      const hosts = arr.filter((u) => String(u.role || '') === 'event_host').slice().sort((a, b) => {
+        const pa = byId.get(String(a.userId)) || null;
+        const pb = byId.get(String(b.userId)) || null;
+        return bestName(a, pa).localeCompare(bestName(b, pb));
+      });
+      const medias = arr.filter((u) => String(u.role || '') === 'media_team').slice().sort((a, b) => {
+        const pa = byId.get(String(a.userId)) || null;
+        const pb = byId.get(String(b.userId)) || null;
+        return bestName(a, pa).localeCompare(bestName(b, pb));
+      });
+
+      hostSel.innerHTML = '<option value="">Assign host…</option>' + hosts.map(option).join('');
+      mediaSel.innerHTML = '<option value="">Assign media…</option>' + medias.map(option).join('');
     }
 
     async function loadAssignmentsForSelected(){
@@ -4893,8 +5318,9 @@
 
       if (isCoordinatorRole()) {
         try{
+          const profilesById = await loadTalentProfilesCache();
           const users = await loadAssignableUsers();
-          fillAssignSelects(users);
+          fillAssignSelects(users, profilesById);
         } catch {
           // ignore
         }
@@ -5906,6 +6332,20 @@
     on('importEventTypesBtn', 'click', () => importEventTypes().catch(() => {}));
     on('loadVendorsBtn', 'click', () => loadVendors().catch(() => {}));
     on('loadEventTypesBtn', 'click', () => loadEventTypes().catch(() => {}));
+
+    on('talentSaveBtn', 'click', () => saveTalentProfile().catch(() => {}));
+    on('talentRefreshBtn', 'click', async () => {
+      await loadTalentProfilesCache({ force: true }).catch(() => {});
+      await loadTalentTab().catch(() => {});
+    });
+    on('talentStopEditingBtn', 'click', () => stopTalentEditing());
+    on('talentQ', 'input', () => {
+      if (!talentIsCoordinator()) return;
+      if (state.talent.qTimer) clearTimeout(state.talent.qTimer);
+      state.talent.qTimer = setTimeout(() => {
+        rerenderTalentDirectoryFromCache().catch(() => {});
+      }, 120);
+    });
 
     on('closeSubmitBtn', 'click', () => submitClose().catch(() => {}));
     on('closeQuoteBtn', 'click', () => fillTierPrice());
