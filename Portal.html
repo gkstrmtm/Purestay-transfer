@@ -1701,6 +1701,7 @@
                       <input id="vendorQ" placeholder="search vendors (name, city, state, etc.)" />
                       <div class="row" style="margin-top:8px;">
                         <button id="loadVendorsBtn" class="btn secondary" type="button">Search</button>
+                        <button id="suggestVendorsBtn" class="btn secondary" type="button">Suggest nearby</button>
                         <div id="vendorsMsg" class="err"></div>
                       </div>
                       <div id="vendorsList" style="margin-top:10px;"></div>
@@ -5823,12 +5824,36 @@
       try{
         const q = String($('vendorQ')?.value || '').trim();
         const j = await api('/api/portal/vendors?q=' + encodeURIComponent(q));
-        const vendors = Array.isArray(j.vendors) ? j.vendors : [];
+        let vendors = Array.isArray(j.vendors) ? j.vendors : [];
+
+        const e = state.selectedEvent;
+        const evCity = String(e?.city || '').trim().toLowerCase();
+        const evState = String(e?.state || '').trim().toLowerCase();
+        function scoreVendor(v){
+          const city = String(v?.City || v?.city || '').trim().toLowerCase();
+          const st = String(v?.State || v?.state || '').trim().toLowerCase();
+          let s = 0;
+          if (evState && st && evState === st) s += 1;
+          if (evCity && city && evCity === city) s += 2;
+          return s;
+        }
+
+        if (evCity || evState) {
+          vendors = vendors.slice().sort((a, b) => {
+            const sa = scoreVendor(a);
+            const sb = scoreVendor(b);
+            if (sb !== sa) return sb - sa;
+            return vendorLabel(a).localeCompare(vendorLabel(b));
+          });
+        }
+
         $('vendorsList').innerHTML = vendors.slice(0, 30).map((v, i) => {
+          const s = (evCity || evState) ? scoreVendor(v) : 0;
+          const match = s >= 3 ? '<span class="badge ok">local</span>' : (s >= 1 ? '<span class="badge">state</span>' : '');
           return `
             <div class="card" style="background:#fff; margin-bottom:8px;">
               <div class="bd">
-                <div style="font-weight:900;">${escapeHtml(vendorLabel(v))}</div>
+                <div style="font-weight:900;">${escapeHtml(vendorLabel(v))} ${match}</div>
                 <div class="row" style="margin-top:8px;">
                   <button class="btn secondary small" type="button" data-add-vendor="${i}">Add to event</button>
                 </div>
@@ -5846,6 +5871,15 @@
       } catch (err) {
         $('vendorsMsg').textContent = String(err.message || err);
       }
+    }
+
+    function suggestVendorsForSelected(){
+      const e = state.selectedEvent;
+      const city = String(e?.city || '').trim();
+      const st = String(e?.state || '').trim();
+      const q = [city, st].filter(Boolean).join(' ');
+      if ($('vendorQ')) $('vendorQ').value = q;
+      loadVendors().catch(()=>{});
     }
 
     async function addVendorToEvent(vendor){
@@ -6651,6 +6685,7 @@
     on('importVendorsBtn', 'click', () => importVendors().catch(() => {}));
     on('importEventTypesBtn', 'click', () => importEventTypes().catch(() => {}));
     on('loadVendorsBtn', 'click', () => loadVendors().catch(() => {}));
+    on('suggestVendorsBtn', 'click', () => suggestVendorsForSelected());
     on('loadEventTypesBtn', 'click', () => loadEventTypes().catch(() => {}));
 
     on('feedbackEnableBtn', 'click', () => enableOrRegenerateFeedbackLink().catch(() => {}));
