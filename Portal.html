@@ -2974,8 +2974,55 @@
         <div class="muted small">At-a-glance only (no mixed workflows).</div>
         <div style="height:10px"></div>
         <div id="overviewMsg" class="err"></div>
+        ${me.profile.role === 'manager' ? `
+          <div class="card" style="margin: 10px 0 14px 0;">
+            <div class="bd">
+              <div style="font-weight:900;">Demo data</div>
+              <div class="muted small" style="margin-top:4px;">Seeds realistic leads, events, recaps, payouts, docs, accounts, and availability.</div>
+              <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+                <button id="seedDemoBtn" class="btn secondary" type="button">Seed demo data</button>
+                <button id="seedDemoForceBtn" class="btn" type="button">Reseed (overwrite demo)</button>
+              </div>
+              <div id="seedDemoMsg" class="muted small" style="margin-top:8px;"></div>
+            </div>
+          </div>
+        ` : ''}
         <div id="overviewCards" class="two"></div>
       `;
+
+      // Demo seeding controls (manager only)
+      try {
+        const seedDemo = async (force) => {
+          const msg = $('seedDemoMsg');
+          if (msg) msg.textContent = force ? 'Reseeding demo data…' : 'Seeding demo data…';
+          try {
+            const j = await api('/api/portal/seed', {
+              method: 'POST',
+              body: {
+                demoData: true,
+                seedData: true,
+                force: !!force,
+              },
+            });
+            const demo = j && j.demo ? j.demo : null;
+            const state = demo && demo.seedState ? demo.seedState : null;
+            if (msg) {
+              if (demo && demo.alreadySeeded) msg.textContent = 'Demo data already seeded. Use Reseed if you want to overwrite demo records.';
+              else if (state && state.counts) msg.textContent = `Seeded: ${state.counts.leads} leads, ${state.counts.events} events, ${state.counts.accounts} accounts.`;
+              else msg.textContent = 'Seed complete.';
+            }
+            // Refresh whatever the user is looking at.
+            await loadOverview().catch(() => {});
+          } catch(e) {
+            if (msg) msg.textContent = String(e.message || e);
+          }
+        };
+
+        const b1 = $('seedDemoBtn');
+        if (b1) b1.addEventListener('click', () => seedDemo(false));
+        const b2 = $('seedDemoForceBtn');
+        if (b2) b2.addEventListener('click', () => seedDemo(true));
+      } catch(_e) {}
 
       hideManualLoadButtons();
       startAutoRefresh();
@@ -4036,7 +4083,7 @@
 
     function availabilityEditable(){
       const er = effectiveRole();
-      if (!['closer','account_manager'].includes(er)) return false;
+      if (!['closer','account_manager','manager'].includes(er)) return false;
       // Manager view-as must remain read-only (server enforced too).
       if (isManagerUser() && String(state.viewAsRole || '').trim()) return false;
       return true;
@@ -4175,7 +4222,7 @@
     async function loadAvailability(){
       if (!$('availWeekGrid')) return;
       const card = $('meetingsAvailabilityCard');
-      const show = ['closer','account_manager'].includes(effectiveRole());
+      const show = ['closer','account_manager','manager'].includes(effectiveRole());
       if (card) card.classList.toggle('hide', !show);
       if (!show) return;
       $('availMsg').textContent = '';
