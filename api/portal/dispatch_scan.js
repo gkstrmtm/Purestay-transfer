@@ -35,7 +35,8 @@ async function scanAndEscalate(sbAdmin, { actorId, limit = 200 }) {
   const { data, error } = await sbAdmin
     .from('portal_events')
     .select('*')
-    .contains('meta', { kind: 'dispatch' })
+    // Back-compat: older demo rows may rely on area_tag instead of meta.kind.
+    .or('area_tag.eq.dispatch,meta->>kind.eq.dispatch')
     .in('status', ['open', 'assigned'])
     .order('event_date', { ascending: true })
     .order('id', { ascending: false })
@@ -46,7 +47,8 @@ async function scanAndEscalate(sbAdmin, { actorId, limit = 200 }) {
 
   const toEscalate = rows.filter((t) => {
     const meta = t.meta && typeof t.meta === 'object' ? t.meta : {};
-    if (meta.kind !== 'dispatch') return false;
+    const kind = String(meta.kind || t.area_tag || '');
+    if (kind !== 'dispatch') return false;
     if (meta.escalatedAt) return false;
     const due = String(t.event_date || '');
     if (due) return due < today;

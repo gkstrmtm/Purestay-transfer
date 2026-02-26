@@ -38,7 +38,8 @@ async function countAppointments(sbAdmin, { assignedUserId, sinceDate }) {
   let q = sbAdmin
     .from('portal_events')
     .select('*', { count: 'exact', head: true })
-    .contains('meta', { kind: 'appointment' });
+    // Back-compat: older demo rows may rely on area_tag instead of meta.kind.
+    .or('area_tag.eq.appointment,meta->>kind.eq.appointment');
   if (assignedUserId) q = q.eq('assigned_user_id', assignedUserId);
   if (sinceDate) q = q.gte('event_date', sinceDate);
   const { count, error } = await q;
@@ -50,7 +51,8 @@ async function countDispatch(sbAdmin, { statusIn, overdueOnly }) {
   let q = sbAdmin
     .from('portal_events')
     .select('*', { count: 'exact', head: true })
-    .contains('meta', { kind: 'dispatch' });
+    // Back-compat: older demo rows may rely on area_tag instead of meta.kind.
+    .or('area_tag.eq.dispatch,meta->>kind.eq.dispatch');
 
   if (Array.isArray(statusIn) && statusIn.length) q = q.in('status', statusIn);
   if (overdueOnly) {

@@ -78,7 +78,8 @@ module.exports = async (req, res) => {
     let query = s.sbAdmin
       .from('portal_events')
       .select('*')
-      .contains('meta', { kind: 'dispatch' })
+      // Back-compat: older demo rows may rely on area_tag instead of meta.kind.
+      .or('area_tag.eq.dispatch,meta->>kind.eq.dispatch')
       .order('event_date', { ascending: true })
       .order('start_time', { ascending: true })
       .order('id', { ascending: false })
@@ -86,7 +87,7 @@ module.exports = async (req, res) => {
 
     if (status) query = query.eq('status', status);
     if (assignedRole) query = applyRoleFilter(query, 'assigned_role', assignedRole);
-    if (leadId) query = query.contains('meta', { kind: 'dispatch', leadId });
+    if (leadId) query = query.contains('meta', { leadId });
 
     if (!isManager(s.profile)) {
       const role = String(s.profile.role || '');
@@ -123,7 +124,8 @@ module.exports = async (req, res) => {
 
     const tasks = (Array.isArray(data) ? data : []).filter((t) => {
       const meta = t.meta && typeof t.meta === 'object' ? t.meta : {};
-      if (meta.kind !== 'dispatch') return false;
+      const kind = String(meta.kind || t.area_tag || '');
+      if (kind !== 'dispatch') return false;
       const uid = String(s.effectiveUserId || s.user.id || '');
       if (!canSeeTask({ profile: s.profile, userId: uid, task: t })) return false;
       if (!overdueOnly) return true;
@@ -228,7 +230,8 @@ module.exports = async (req, res) => {
     if (!row) return sendJson(res, 404, { ok: false, error: 'dispatch_not_found' });
 
     const meta = row.meta && typeof row.meta === 'object' ? row.meta : {};
-    if (meta.kind !== 'dispatch') return sendJson(res, 404, { ok: false, error: 'dispatch_not_found' });
+    const kind = String(meta.kind || row.area_tag || '');
+    if (kind !== 'dispatch') return sendJson(res, 404, { ok: false, error: 'dispatch_not_found' });
 
     if (String(body.action || '') === 'escalate') {
       if (!hasRole(s.profile, ['event_coordinator', 'manager'])) {

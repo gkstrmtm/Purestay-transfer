@@ -86,14 +86,15 @@ module.exports = async (req, res) => {
     let query = s.sbAdmin
       .from('portal_events')
       .select('*')
-      .contains('meta', { kind: 'appointment' })
+      // Back-compat: older demo rows may rely on area_tag instead of meta.kind.
+      .or('area_tag.eq.appointment,meta->>kind.eq.appointment')
       .order('event_date', { ascending: true })
       .order('start_time', { ascending: true })
       .order('id', { ascending: false })
       .limit(limit);
 
     if (status) query = query.eq('status', status);
-    if (leadId) query = query.contains('meta', { kind: 'appointment', leadId });
+    if (leadId) query = query.contains('meta', { leadId });
 
     if (!isManager(s.profile)) {
       const role = String(s.profile?.role || '');
@@ -257,7 +258,8 @@ module.exports = async (req, res) => {
     if (!row) return sendJson(res, 404, { ok: false, error: 'appointment_not_found' });
 
     const meta = row.meta || {};
-    if (meta.kind !== 'appointment') return sendJson(res, 404, { ok: false, error: 'appointment_not_found' });
+    const kind = String((meta && typeof meta === 'object' ? meta.kind : '') || row.area_tag || '');
+    if (kind !== 'appointment') return sendJson(res, 404, { ok: false, error: 'appointment_not_found' });
 
     const canEdit = isManager(s.profile)
       || (row.assigned_user_id && row.assigned_user_id === s.actorUserId)
