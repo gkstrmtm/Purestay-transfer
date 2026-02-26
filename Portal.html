@@ -1626,6 +1626,26 @@
 
                   <div style="height:10px"></div>
                   <button id="saveChecklistBtn" class="btn secondary" type="button">Save checklist</button>
+
+                  <div style="height:14px"></div>
+
+                  <div class="card" style="background:#fff; border-color: rgba(199,154,59,.25);">
+                    <div class="bd">
+                      <div style="font-weight:900;">Report draft</div>
+                      <div class="muted small" style="margin-top:4px;">Generate a clean report for account manager + management, then copy or send.</div>
+
+                      <div class="row" style="margin-top:10px; gap:8px; flex-wrap:wrap;">
+                        <button id="genReportDraftBtn" class="btn secondary" type="button">Generate draft</button>
+                        <button id="copyReportDraftBtn" class="btn secondary" type="button">Copy</button>
+                        <button id="sendReportDraftBtn" class="btn" type="button">Send report</button>
+                      </div>
+
+                      <div id="reportSentLine" class="muted small" style="margin-top:8px;"></div>
+                      <div style="height:8px"></div>
+                      <textarea id="reportDraftText" style="min-height:180px; font-family: var(--mono);" placeholder="Generate a draft to preview here..."></textarea>
+                      <div id="reportDraftMsg" class="err" style="margin-top:8px;"></div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -5613,6 +5633,25 @@
       if ($('chkFeedbackReceived')) $('chkFeedbackReceived').checked = String(checklist.feedbackReceived || '') === 'yes';
       if ($('chkReportSent')) $('chkReportSent').checked = String(checklist.reportSent || '') === 'yes';
 
+      const reportSentAt = String(meta?.reportSentAt || '').trim();
+      if ($('reportSentLine')) {
+        $('reportSentLine').textContent = reportSentAt ? (`Last sent: ${reportSentAt}`) : '';
+      }
+
+      const draft = meta?.reportDraft && typeof meta.reportDraft === 'object' ? meta.reportDraft : null;
+      const draftText = String(draft?.plainText || '').trim() || String(draft?.markdown || '').trim();
+      if ($('reportDraftText')) {
+        const current = String($('reportDraftText').value || '').trim();
+        if (!current || current === String($('reportDraftText').placeholder || '').trim()) {
+          $('reportDraftText').value = draftText;
+        }
+      }
+
+      const canManageReport = coordinatorOpsEditable();
+      $('genReportDraftBtn')?.toggleAttribute('disabled', !isCoordinatorRole());
+      $('copyReportDraftBtn')?.toggleAttribute('disabled', !draftText);
+      $('sendReportDraftBtn')?.toggleAttribute('disabled', !canManageReport || !draftText);
+
       const plan = meta?.plan && typeof meta.plan === 'object' ? meta.plan : {};
       if ($('planStrategy')) $('planStrategy').value = String(plan.strategy || '');
       if ($('planEventType')) $('planEventType').value = String(plan.eventType || '');
@@ -5632,6 +5671,74 @@
       renderTalentAiFromCache();
 
       renderFeedbackEditor(meta);
+    }
+
+    async function generateReportDraftForSelected(){
+      if (!$('reportDraftMsg')) return;
+      $('reportDraftMsg').textContent = '';
+      try{
+        const e = state.selectedEvent;
+        if (!e || !e.id) throw new Error('select an event');
+
+        const j = await api('/api/portal/event_report?eventId=' + encodeURIComponent(String(e.id)));
+        const text = String(j.plainText || j.markdown || '').trim();
+        if ($('reportDraftText')) $('reportDraftText').value = text;
+
+        const baseMeta = (e.meta && typeof e.meta === 'object') ? e.meta : {};
+        const nextMeta = Object.assign({}, baseMeta, { reportDraft: { generatedAt: j.generatedAt || new Date().toISOString(), plainText: j.plainText || '', markdown: j.markdown || '' } });
+        updateEventInState(Object.assign({}, e, { meta: nextMeta }));
+
+        $('reportDraftMsg').textContent = 'Draft generated.';
+        await initEventOps();
+      } catch(err){
+        $('reportDraftMsg').textContent = String(err.message || err);
+      }
+    }
+
+    async function copyReportDraft(){
+      if (!$('reportDraftMsg')) return;
+      $('reportDraftMsg').textContent = '';
+      try{
+        const text = String($('reportDraftText')?.value || '').trim();
+        if (!text) throw new Error('generate_draft_first');
+        await navigator.clipboard.writeText(text);
+        $('reportDraftMsg').textContent = 'Copied.';
+      } catch(err){
+        $('reportDraftMsg').textContent = String(err.message || err);
+      }
+    }
+
+    async function sendReportDraft(){
+      if (!$('reportDraftMsg')) return;
+      $('reportDraftMsg').textContent = '';
+      try{
+        if (!coordinatorOpsEditable()) throw new Error('read_only');
+        const e = state.selectedEvent;
+        if (!e || !e.id) throw new Error('select an event');
+
+        const baseMeta = (e.meta && typeof e.meta === 'object') ? e.meta : {};
+        const draft = baseMeta.reportDraft && typeof baseMeta.reportDraft === 'object' ? baseMeta.reportDraft : {};
+        const plainText = String($('reportDraftText')?.value || '').trim() || String(draft.plainText || '').trim();
+        const markdown = String(draft.markdown || '').trim();
+        if (!plainText && !markdown) throw new Error('generate_draft_first');
+
+        const j = await api('/api/portal/event_report', {
+          method: 'POST',
+          body: {
+            eventId: e.id,
+            action: 'send',
+            plainText,
+            markdown,
+          }
+        });
+
+        if (j && j.event) updateEventInState(j.event);
+        if ($('chkReportSent')) $('chkReportSent').checked = true;
+        $('reportDraftMsg').textContent = `Sent to ${(Array.isArray(j.to) ? j.to.length : 0)} recipient(s).`;
+        await initEventOps();
+      } catch(err){
+        $('reportDraftMsg').textContent = String(err.message || err);
+      }
     }
 
     async function initEventOps(){
@@ -6992,6 +7099,10 @@
 
     on('aiRecommendTalentBtn', 'click', () => aiRecommendTalentForSelected().catch(() => {}));
     on('aiAssignTopTalentBtn', 'click', () => aiAssignTopTalentForSelected().catch(() => {}));
+
+    on('genReportDraftBtn', 'click', () => generateReportDraftForSelected().catch(() => {}));
+    on('copyReportDraftBtn', 'click', () => copyReportDraft().catch(() => {}));
+    on('sendReportDraftBtn', 'click', () => sendReportDraft().catch(() => {}));
 
     on('talentSaveBtn', 'click', () => saveTalentProfile().catch(() => {}));
     on('talentRefreshBtn', 'click', async () => {

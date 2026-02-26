@@ -309,6 +309,16 @@ const server = http.createServer(async (req, res) => {
     return handler(req, res);
   }
 
+  if (pathname === '/api/cron/dispatch-escalate' && (req.method === 'GET' || req.method === 'POST')) {
+    const handler = require('../api/cron/dispatch-escalate');
+    return handler(req, res);
+  }
+
+  if (pathname === '/api/cron/event-reminders' && (req.method === 'GET' || req.method === 'POST')) {
+    const handler = require('../api/cron/event-reminders');
+    return handler(req, res);
+  }
+
   if (pathname === '/api/settings' && req.method === 'GET') {
     const settings = sanitizeSettingsForPublic(readSettings());
     return json(res, 200, { ok: true, settings });
