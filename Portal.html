@@ -1666,8 +1666,39 @@
                     <select id="planEventType">
                       <option value="">Select…</option>
                     </select>
+                    <div class="muted small" style="margin-top:6px;">Search your library (from <span style="font-family:var(--mono);">resources/event_types.csv</span>) and pick one.</div>
+                    <div class="row" style="margin-top:8px; gap:8px; flex-wrap:wrap;">
+                      <input id="planEventTypeQ" placeholder="search event types (e.g. student, class B, DJ, trivia...)" style="max-width:420px;" />
+                      <button id="planEventTypeSearchBtn" class="btn secondary" type="button">Search</button>
+                      <button id="planEventTypeResetBtn" class="btn secondary" type="button">Reset</button>
+                      <div id="planEventTypeMsg" class="err"></div>
+                    </div>
                   </div>
                 </div>
+
+                <div style="height:12px"></div>
+
+                <div class="card" style="background:#fff; border-color: rgba(199,154,59,.25);">
+                  <div class="bd">
+                    <div class="muted small">Vendors</div>
+                    <div style="font-weight:900; margin-top:4px;">Pick vendors for this plan</div>
+                    <div class="muted small" style="margin-top:4px;">Search by vendor type/name (from <span style="font-family:var(--mono);">resources/vendors.csv</span>). Example: “mobile DJ”, “band”, “photo booth”.</div>
+
+                    <div class="row" style="margin-top:10px; gap:8px; flex-wrap:wrap; align-items:center;">
+                      <input id="planVendorQ" placeholder="search vendors (mobile DJ, band, catering...)" style="max-width:420px;" />
+                      <button id="planVendorSearchBtn" class="btn secondary" type="button">Search</button>
+                      <button id="planVendorSuggestBtn" class="btn secondary" type="button">Suggest from event type</button>
+                      <div id="planVendorMsg" class="err"></div>
+                    </div>
+
+                    <div id="planVendorResults" class="scrollCardList" style="margin-top:10px;"></div>
+
+                    <div style="height:10px"></div>
+                    <div class="muted small" style="font-weight:900;">Selected vendors</div>
+                    <div id="planVendorSelected" style="margin-top:8px;"></div>
+                  </div>
+                </div>
+
                 <div style="margin-top:10px;">
                   <label>Justification</label>
                   <textarea id="planJustification" placeholder="Why this strategy/type for this property?"></textarea>
@@ -6703,6 +6734,13 @@
       if ($('planEventType')) $('planEventType').value = String(plan.eventType || '');
       if ($('planJustification')) $('planJustification').value = String(plan.justification || '');
 
+      // Plan vendors UI
+      try{
+        const vendors = Array.isArray(plan.vendors) ? plan.vendors : [];
+        state._eventOpsPlanVendors = vendors.slice(0, 25);
+        renderPlanVendors();
+      } catch(_e) {}
+
       const budget = meta?.budget && typeof meta.budget === 'object' ? meta.budget : {};
       if ($('budHost')) $('budHost').value = centsToDollars(budget.hostPayCents || 0);
       if ($('budMedia')) $('budMedia').value = centsToDollars(budget.mediaPayCents || 0);
@@ -6717,6 +6755,200 @@
       renderTalentAiFromCache();
 
       renderFeedbackEditor(meta);
+    }
+
+    function planVendorKey(v){
+      const name = String(v?.name || v?.['Vendor Name'] || '').trim().toLowerCase();
+      const type = String(v?.type || v?.Type || '').trim().toLowerCase();
+      const coverage = String(v?.coverage || v?.['City/Coverage Area'] || '').trim().toLowerCase();
+      return [name, type, coverage].filter(Boolean).join('|');
+    }
+
+    function planVendorShort(v){
+      const base = (v && typeof v === 'object') ? v : {};
+      return {
+        name: String(base.name || base['Vendor Name'] || base.vendorName || '').trim(),
+        type: String(base.type || base.Type || '').trim(),
+        coverage: String(base.coverage || base['City/Coverage Area'] || '').trim(),
+        contact: String(base.contact || base['Phone / Email'] || '').trim(),
+        rateInfo: String(base.rateInfo || base['Rate Info'] || '').trim(),
+        notes: String(base.notes || base.Notes || '').trim(),
+      };
+    }
+
+    function renderPlanVendors(){
+      const box = $('planVendorSelected');
+      if (!box) return;
+      const vendors = Array.isArray(state._eventOpsPlanVendors) ? state._eventOpsPlanVendors : [];
+      const editable = coordinatorOpsEditable();
+
+      if (!vendors.length) {
+        box.innerHTML = '<div class="muted small">None selected yet.</div>';
+        return;
+      }
+
+      box.innerHTML = vendors.slice(0, 25).map((v, i) => {
+        const label = vendorLabel(v);
+        const contact = String(v?.contact || v?.['Phone / Email'] || '').trim();
+        const notes = String(v?.notes || v?.Notes || '').trim();
+        return `
+          <div class="card" style="background:#fff; margin-bottom:8px;">
+            <div class="bd">
+              <div class="row" style="justify-content:space-between; gap:12px; align-items:flex-start;">
+                <div>
+                  <div style="font-weight:900;">${escapeHtml(label)}</div>
+                  ${contact ? `<div class="muted small" style="margin-top:4px;">${escapeHtml(contact)}</div>` : ''}
+                  ${notes ? `<div class="muted small" style="margin-top:4px;">${escapeHtml(notes.slice(0, 180))}</div>` : ''}
+                </div>
+                <div class="row" style="gap:8px; justify-content:flex-end; flex-wrap:wrap;">
+                  <button class="btn secondary small" type="button" data-plan-vendor-remove="${i}" ${editable ? '' : 'disabled'}>Remove</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      for (const btn of box.querySelectorAll('button[data-plan-vendor-remove]')){
+        btn.addEventListener('click', () => {
+          const idx = Number(btn.dataset.planVendorRemove || 0);
+          removeVendorFromPlan(idx).catch(()=>{});
+        });
+      }
+    }
+
+    async function addVendorToPlan(v){
+      $('planVendorMsg').textContent = '';
+      try{
+        if (!coordinatorOpsEditable()) throw new Error('read_only');
+        const short = planVendorShort(v);
+        if (!short.name) throw new Error('invalid_vendor');
+
+        const cur = Array.isArray(state._eventOpsPlanVendors) ? state._eventOpsPlanVendors : [];
+        const next = cur.slice();
+        const key = planVendorKey(short);
+        const exists = next.some((x) => planVendorKey(x) === key || String(x?.name || '').trim().toLowerCase() === String(short.name).trim().toLowerCase());
+        if (!exists) next.push(short);
+
+        state._eventOpsPlanVendors = next.slice(0, 25);
+        renderPlanVendors();
+      } catch (err) {
+        $('planVendorMsg').textContent = String(err.message || err);
+      }
+    }
+
+    async function removeVendorFromPlan(idx){
+      $('planVendorMsg').textContent = '';
+      try{
+        if (!coordinatorOpsEditable()) throw new Error('read_only');
+        const cur = Array.isArray(state._eventOpsPlanVendors) ? state._eventOpsPlanVendors : [];
+        const next = cur.slice().filter((_v, i) => i !== idx);
+        state._eventOpsPlanVendors = next;
+        renderPlanVendors();
+      } catch (err) {
+        $('planVendorMsg').textContent = String(err.message || err);
+      }
+    }
+
+    async function searchPlanVendors(){
+      $('planVendorMsg').textContent = '';
+      const out = $('planVendorResults');
+      if (out) out.innerHTML = '';
+      try{
+        const q = String($('planVendorQ')?.value || '').trim();
+        if (!q) throw new Error('type a search');
+        const j = await api('/api/portal/vendors?q=' + encodeURIComponent(q));
+        const vendors = Array.isArray(j.vendors) ? j.vendors : [];
+        if (!out) return;
+
+        const editable = coordinatorOpsEditable();
+        out.innerHTML = vendors.slice(0, 20).map((v, i) => {
+          const label = vendorLabel(v);
+          const contact = String(v?.contact || v?.['Phone / Email'] || '').trim();
+          const notes = String(v?.notes || v?.Notes || '').trim();
+          return `
+            <div class="card" style="background:#fff; margin-bottom:8px;">
+              <div class="bd">
+                <div class="row" style="justify-content:space-between; gap:12px; align-items:flex-start;">
+                  <div>
+                    <div style="font-weight:900;">${escapeHtml(label)}</div>
+                    ${contact ? `<div class="muted small" style="margin-top:4px;">${escapeHtml(contact)}</div>` : ''}
+                    ${notes ? `<div class="muted small" style="margin-top:4px;">${escapeHtml(notes.slice(0, 160))}</div>` : ''}
+                  </div>
+                  <div class="row" style="gap:8px; justify-content:flex-end; flex-wrap:wrap;">
+                    <button class="btn secondary small" type="button" data-plan-vendor-add="${i}" ${editable ? '' : 'disabled'}>Add</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('') || '<div class="muted small">No vendors found.</div>';
+
+        for (const btn of out.querySelectorAll('button[data-plan-vendor-add]')){
+          btn.addEventListener('click', () => {
+            const idx = Number(btn.dataset.planVendorAdd || 0);
+            addVendorToPlan(vendors[idx]).catch(()=>{});
+          });
+        }
+      } catch (err) {
+        $('planVendorMsg').textContent = String(err.message || err);
+      }
+    }
+
+    function suggestPlanVendorsFromEventType(){
+      const et = String($('planEventType')?.value || '').trim().toLowerCase();
+      let q = '';
+      if (et.includes('dj') || et.includes('disco')) q = 'dj';
+      else if (et.includes('photo') || et.includes('headshot')) q = 'photo';
+      else if (et.includes('chef') || et.includes('tasting') || et.includes('bbq')) q = 'catering';
+      else if (et.includes('market') || et.includes('vendor')) q = 'vendor';
+      else if (et.includes('movie')) q = 'outdoor movie';
+      else if (et.includes('band') || et.includes('acoustic') || et.includes('jazz')) q = 'band';
+      else q = et.split(/\s+/g).slice(0, 3).join(' ');
+      if ($('planVendorQ')) $('planVendorQ').value = q;
+      searchPlanVendors().catch(()=>{});
+    }
+
+    function filterPlanEventTypes(){
+      $('planEventTypeMsg').textContent = '';
+      try{
+        const q = String($('planEventTypeQ')?.value || '').trim();
+        const types = Array.isArray(state._eventOpsTypes) ? state._eventOpsTypes : [];
+        const sel = $('planEventType');
+        if (!sel) return;
+        if (!q) throw new Error('type a search');
+        const qq = q.toLowerCase();
+        const filtered = types.filter((t) => JSON.stringify(t).toLowerCase().includes(qq));
+        const current = String(sel.value || '');
+        const opts = filtered.slice(0, 200).map((t) => {
+          const label = eventTypeLabel(t);
+          return `<option value="${escapeHtml(label)}">${escapeHtml(label)}</option>`;
+        });
+        sel.innerHTML = '<option value="">Select…</option>' + opts.join('');
+        if (current) {
+          const has = Array.from(sel.options).some((o) => String(o.value) === String(current));
+          if (has) sel.value = current;
+        }
+        if (!filtered.length) $('planEventTypeMsg').textContent = 'No matches.';
+      } catch (err) {
+        $('planEventTypeMsg').textContent = String(err.message || err);
+      }
+    }
+
+    function resetPlanEventTypes(){
+      $('planEventTypeMsg').textContent = '';
+      try{
+        const types = Array.isArray(state._eventOpsTypes) ? state._eventOpsTypes : [];
+        const sel = $('planEventType');
+        if (!sel) return;
+        const current = String(sel.value || '');
+        const opts = types.map((t) => {
+          const label = eventTypeLabel(t);
+          return `<option value="${escapeHtml(label)}">${escapeHtml(label)}</option>`;
+        });
+        sel.innerHTML = '<option value="">Select…</option>' + opts.join('');
+        if (current) sel.value = current;
+      } catch(_e) {}
     }
 
     async function generateReportDraftForSelected(){
@@ -6805,7 +7037,7 @@
         const sel = $('planEventType');
         if (sel) {
           const opts = types.map((t) => {
-            const label = String(t['Event Type'] || t['event_type'] || t['type'] || t['name'] || '').trim() || JSON.stringify(t).slice(0, 80);
+            const label = eventTypeLabel(t);
             return `<option value="${escapeHtml(label)}">${escapeHtml(label)}</option>`;
           });
           sel.innerHTML = '<option value="">Select…</option>' + opts.join('');
@@ -6916,7 +7148,20 @@
         const eventType = String($('planEventType')?.value || '');
         const justification = String($('planJustification')?.value || '').trim();
         if (strategy && !justification) throw new Error('justification_required');
-        const plan = { strategy, eventType, justification, updatedAt: new Date().toISOString() };
+
+        const types = Array.isArray(state._eventOpsTypes) ? state._eventOpsTypes : [];
+        const match = eventType ? (types.find((t) => eventTypeLabel(t) === eventType) || null) : null;
+        const eventTypeData = match ? {
+          name: String(match?.name || match?.['Event Type'] || '').trim(),
+          classFit: String(match?.classFit || match?.['Class Fit'] || '').trim(),
+          kind: String(match?.kind || match?.Type || '').trim(),
+          hook: String(match?.hook || match?.['Psychological Hook'] || '').trim(),
+          goal: String(match?.goal || match?.Goal || '').trim(),
+          notes: String(match?.notes || match?.Notes || '').trim(),
+        } : null;
+
+        const vendors = Array.isArray(state._eventOpsPlanVendors) ? state._eventOpsPlanVendors : [];
+        const plan = { strategy, eventType, eventTypeData, vendors: vendors.slice(0, 25), justification, updatedAt: new Date().toISOString() };
         await patchSelectedEventMeta({ plan });
         await initEventOps();
       } catch (err) {
@@ -8248,6 +8493,18 @@
     on('saveChecklistBtn', 'click', () => saveChecklist().catch(() => {}));
     on('savePlanBtn', 'click', () => savePlan().catch(() => {}));
     on('saveBudgetBtn', 'click', () => saveBudget().catch(() => {}));
+    on('planVendorSearchBtn', 'click', () => searchPlanVendors().catch(() => {}));
+    on('planVendorSuggestBtn', 'click', () => suggestPlanVendorsFromEventType());
+    on('planEventTypeSearchBtn', 'click', () => filterPlanEventTypes());
+    on('planEventTypeResetBtn', 'click', () => resetPlanEventTypes());
+
+    // Enter-to-search convenience
+    try{
+      const pv = $('planVendorQ');
+      if (pv) pv.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); searchPlanVendors().catch(()=>{}); } });
+      const pt = $('planEventTypeQ');
+      if (pt) pt.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); filterPlanEventTypes(); } });
+    } catch(_e) {}
     on('importVendorsBtn', 'click', () => importVendors().catch(() => {}));
     on('importEventTypesBtn', 'click', () => importEventTypes().catch(() => {}));
     on('loadVendorsBtn', 'click', () => loadVendors().catch(() => {}));
