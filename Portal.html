@@ -242,12 +242,14 @@
     .availWeekGrid{display:grid; grid-template-columns: 96px repeat(7, minmax(130px, 1fr)); min-width: 960px;}
     .availHeadCell{position: sticky; top: 0; z-index: 2; background:#fff; border-bottom:1px solid var(--border); padding:10px 10px; font-size:12px; color:var(--muted); font-weight:900;}
     .availHeadCell:first-child{left:0; z-index: 3; position: sticky;}
+    .availHeadCell.pastDay{background: rgba(0,0,0,.03); color: rgba(0,0,0,.38)}
     .availTimeCell{position: sticky; left: 0; z-index: 1; background:#fff; border-right:1px solid var(--border); border-bottom:1px solid var(--border); padding:10px 10px; font-family: var(--mono); font-size:12px; color:var(--muted);}
     .availSlotCell{border-bottom:1px solid var(--border); border-right:1px solid var(--border); padding:6px; background:#fff;}
+    .availSlotCell.pastDay{background: rgba(0,0,0,.02)}
     .availSlotBtn{width:100%; height:34px; appearance:none; border:1px solid rgba(0,0,0,.06); background: rgba(15,118,110,.04); border-radius: 10px; cursor:pointer;}
     .availSlotBtn:hover{border-color: rgba(199,154,59,.35)}
     .availSlotBtn.active{background: rgba(199,154,59,.30); border-color: rgba(199,154,59,.70); box-shadow: 0 0 0 2px rgba(199,154,59,.14) inset}
-    .availSlotBtn[disabled]{cursor:not-allowed; opacity:.6}
+    .availSlotBtn[disabled]{cursor:not-allowed; opacity:.55; background: rgba(0,0,0,.03)}
 
     .stageBar{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
     .stageBtn{appearance:none; border:1px solid var(--border); background:#fff; padding:8px 10px; border-radius:999px; cursor:pointer; font-weight:900; color:#3a2f2c; display:flex; align-items:center; gap:8px;}
@@ -3591,7 +3593,7 @@
         <div class="muted small">At-a-glance only (no mixed workflows).</div>
         <div style="height:10px"></div>
         <div id="overviewMsg" class="err"></div>
-        ${(me.profile.role === 'manager' && !inViewAs) ? `
+        ${(me.profile.role === 'manager') ? `
           <div class="card" style="margin: 10px 0 14px 0;">
             <div class="bd">
               <div style="font-weight:900;">Demo data</div>
@@ -4081,17 +4083,26 @@
         const c = j.leadCounts || {};
         const box = $('statsBox');
         if (box) {
-          box.innerHTML = [
-            `<span class="badge ok">new ${Number(c.new ?? 0)}</span>`,
-            `<span class="badge">working ${Number(c.working ?? 0)}</span>`,
-            `<span class="badge">booked ${Number(c.booked ?? 0)}</span>`,
-            `<span class="badge ok">won ${Number(c.won ?? 0)}</span>`,
-            `<span class="badge warn">lost ${Number(c.lost ?? 0)}</span>`,
-            `<span class="badge">calls24h ${Number(j.callsLast24h ?? 0)}</span>`,
-            `<span class="badge">upcoming appts ${Number(j.upcomingAppointments ?? 0)}</span>`,
-            `<span class="badge">dispatch open ${Number(j.dispatchOpen ?? 0)}</span>`,
-            `<span class="badge warn">dispatch overdue ${Number(j.dispatchOverdue ?? 0)}</span>`,
-          ].join(' ');
+          const tiles = [
+            { k: 'new', v: Number(c.new ?? 0), kind: 'ok' },
+            { k: 'working', v: Number(c.working ?? 0), kind: '' },
+            { k: 'booked', v: Number(c.booked ?? 0), kind: '' },
+            { k: 'won', v: Number(c.won ?? 0), kind: 'ok' },
+            { k: 'lost', v: Number(c.lost ?? 0), kind: 'warn' },
+            { k: 'calls (24h)', v: Number(j.callsLast24h ?? 0), kind: '' },
+            { k: 'upcoming appts', v: Number(j.upcomingAppointments ?? 0), kind: '' },
+            { k: 'dispatch open', v: Number(j.dispatchOpen ?? 0), kind: '' },
+            { k: 'dispatch overdue', v: Number(j.dispatchOverdue ?? 0), kind: 'warn' },
+          ];
+
+          box.innerHTML = tiles.map((t) => `
+            <div class="card" style="background:#fff; min-width: 170px; flex: 1 1 170px;">
+              <div class="bd" style="padding:12px 12px;">
+                <div class="muted small" style="font-weight:900;">${escapeHtml(String(t.k || ''))}</div>
+                <div style="margin-top:6px;"><span class="badge ${escapeHtml(String(t.kind || ''))}">${escapeHtml(String(t.v ?? 0))}</span></div>
+              </div>
+            </div>
+          `).join('');
         }
         setBadge('ok', 'loaded');
       } catch(e){
@@ -4979,6 +4990,8 @@
       const grid = $('availWeekGrid');
       if (!grid) return;
 
+      const todayKey = isoToday();
+
       const tz = localTz() || '';
       const tzLabel = $('availTzLabel');
       if (tzLabel) tzLabel.textContent = tz || 'local';
@@ -4998,7 +5011,9 @@
       const head = [];
       head.push(`<div class="availHeadCell"></div>`);
       for (const d of week) {
-        head.push(`<div class="availHeadCell">${escapeHtml(dayHeadLabel(d))}<div class="muted" style="margin-top:2px; font-weight:700;">${escapeHtml(ymd(d))}</div></div>`);
+        const dateKey = ymd(d);
+        const pastDay = (dateKey < todayKey);
+        head.push(`<div class="availHeadCell ${pastDay ? 'pastDay' : ''}">${escapeHtml(dayHeadLabel(d))}<div class="muted" style="margin-top:2px; font-weight:700;">${escapeHtml(dateKey)}</div></div>`);
       }
 
       const rows = [];
@@ -5008,13 +5023,14 @@
         for (const d of week) {
           const dateKey = ymd(d);
           const active = hasAvailSlot(dateKey, t);
+          const pastDay = (dateKey < todayKey);
           if (editable) {
             rows.push(
-              `<div class="availSlotCell"><button type="button" class="availSlotBtn ${active ? 'active' : ''}" data-avail-date="${escapeHtml(dateKey)}" data-avail-time="${escapeHtml(t)}" aria-pressed="${active ? 'true' : 'false'}"></button></div>`
+              `<div class="availSlotCell ${pastDay ? 'pastDay' : ''}"><button type="button" class="availSlotBtn ${active ? 'active' : ''}" data-avail-date="${escapeHtml(dateKey)}" data-avail-time="${escapeHtml(t)}" aria-pressed="${active ? 'true' : 'false'}" ${pastDay ? 'disabled' : ''}></button></div>`
             );
           } else {
             rows.push(
-              `<div class="availSlotCell"><div class="availSlotBtn ${active ? 'active' : ''}" data-avail-date="${escapeHtml(dateKey)}" data-avail-time="${escapeHtml(t)}" aria-hidden="true"></div></div>`
+              `<div class="availSlotCell ${pastDay ? 'pastDay' : ''}"><div class="availSlotBtn ${active ? 'active' : ''}" data-avail-date="${escapeHtml(dateKey)}" data-avail-time="${escapeHtml(t)}" aria-hidden="true"></div></div>`
             );
           }
         }
@@ -5037,6 +5053,7 @@
       }
 
       const applyCell = (btn) => {
+        if (btn.disabled) return;
         const dateKey = String(btn.dataset.availDate || '');
         const t = String(btn.dataset.availTime || '');
         if (!dateKey || !t) return;
@@ -5086,37 +5103,38 @@
       $('availMsg').textContent = '';
       ensureAvailInit();
 
-      // Allow schedulers to view a closer/AM availability read-only.
+      // Only allow a real manager (not view-as) to view another person's availability.
       try{
         await ensureUsersCache();
-        const canPick = ['dialer','remote_setter','in_person_setter','event_coordinator','manager'].includes(effectiveRole());
+        const canPick = isManagerUser() && effectiveRole() === 'manager';
         const sel = $('availPerson');
         const list = Array.isArray(state.usersCache) ? state.usersCache : [];
         const people = list.filter((u) => ['closer','account_manager','manager'].includes(String(u.role || '').trim()));
         if (sel) {
           sel.closest('.row')?.classList?.toggle('hide', !(canPick && people.length));
-          if (canPick && people.length) {
-            const cur = String(state.availability.viewUserId || '').trim();
-            if (!cur) {
-              const firstCloser = people.find((u) => String(u.role || '').trim() === 'closer');
-              state.availability.viewUserId = String((firstCloser || people[0])?.userId || '').trim();
-            }
+          if (!canPick) {
+            state.availability.viewUserId = '';
+            sel.innerHTML = '';
+          } else if (people.length) {
             const active = String(state.availability.viewUserId || '').trim();
-            sel.innerHTML = people.map((u) => {
+            const opts = [`<option value="" ${!active ? 'selected' : ''}>My availability</option>`];
+            for (const u of people) {
               const id = String(u.userId || '').trim();
+              if (!id) continue;
               const label = String(u.fullName || u.email || u.role || id).trim();
               const role = String(u.role || '').trim();
               const name = label || id;
-              return `<option value="${escapeHtml(id)}" ${id === active ? 'selected' : ''}>${escapeHtml(name)}${role ? (` • ${escapeHtml(roleViewLabel(role))}`) : ''}</option>`;
-            }).join('');
+              opts.push(`<option value="${escapeHtml(id)}" ${id === active ? 'selected' : ''}>${escapeHtml(name)}${role ? (` • ${escapeHtml(roleViewLabel(role))}`) : ''}</option>`);
+            }
+            sel.innerHTML = opts.join('');
           }
         }
       } catch(_e) {}
 
       try{
-        const editable = availabilityEditable();
-        const viewUid = String(state.availability.viewUserId || '').trim();
-        const url = (!editable && viewUid) ? (`/api/portal/availability?userId=${encodeURIComponent(viewUid)}`) : '/api/portal/availability';
+        const canPick = isManagerUser() && effectiveRole() === 'manager';
+        const viewUid = canPick ? String(state.availability.viewUserId || '').trim() : '';
+        const url = viewUid ? (`/api/portal/availability?userId=${encodeURIComponent(viewUid)}`) : '/api/portal/availability';
         const j = await api(url);
         const slots = j.availability?.slots && typeof j.availability.slots === 'object' ? j.availability.slots : {};
         const byDate = slots.byDate && typeof slots.byDate === 'object' ? slots.byDate : {};
@@ -5132,6 +5150,9 @@
     async function saveAvailability(){
       $('availMsg').textContent = '';
       ensureAvailInit();
+      const btn = $('availSaveBtn');
+      const wasDisabled = btn ? btn.disabled : false;
+      if (btn) btn.disabled = true;
       try{
         await api('/api/portal/availability', {
           method: 'PUT',
@@ -5142,9 +5163,13 @@
             }
           }
         });
+        $('availMsg').textContent = `Saved ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
         setBadge('ok', 'saved');
       } catch(e){
         $('availMsg').textContent = String(e.message || e);
+        setBadge('warn', 'error');
+      } finally {
+        if (btn) btn.disabled = wasDisabled ? true : !availabilityEditable();
       }
     }
 
@@ -5890,20 +5915,12 @@
       else if (eventStatus === 'open') offerState = 'open';
       else offerState = '';
 
-      const offerBits = [];
-      if (offerState) {
-        if (offerState === 'pending') offerBits.push(counts.pending > 1 ? `pending (${counts.pending})` : 'pending');
-        else if (offerState === 'accepted') offerBits.push((counts.accepted > 1) ? `accepted (${counts.accepted})` : 'accepted');
-        else if (offerState === 'declined') offerBits.push((counts.declined > 1) ? `declined (${counts.declined})` : 'declined');
-        else if (offerState === 'sent') offerBits.push(arr.length > 1 ? `sent (${arr.length})` : 'sent');
-        else offerBits.push(offerState);
-      }
-
-      if (counts.pending && offerState !== 'pending') offerBits.push(counts.pending > 1 ? `pending (${counts.pending})` : 'pending');
-      if (counts.accepted && offerState !== 'accepted') offerBits.push(counts.accepted > 1 ? `accepted (${counts.accepted})` : 'accepted');
-      if (counts.declined && offerState !== 'declined') offerBits.push(counts.declined > 1 ? `declined (${counts.declined})` : 'declined');
-
-      const offerText = offerBits.filter(Boolean).slice(0, 3).join(' • ');
+      let offerText = '';
+      if (offerState === 'pending') offerText = counts.pending > 1 ? `pending (${counts.pending})` : 'pending';
+      else if (offerState === 'accepted') offerText = counts.accepted > 1 ? `accepted (${counts.accepted})` : 'accepted';
+      else if (offerState === 'declined') offerText = counts.declined > 1 ? `declined (${counts.declined})` : 'declined';
+      else if (offerState === 'sent') offerText = arr.length > 1 ? `sent (${arr.length})` : 'sent';
+      else if (offerState) offerText = offerState;
       const offerKind = (offerState === 'accepted') ? 'ok' : ((offerState === 'pending') ? 'warn' : '');
       return { eventStatus, offerText, offerState, offerKind };
     }
@@ -8722,8 +8739,10 @@
     on('availClearWeek', 'click', () => {
       if (!availabilityEditable()) return;
       ensureAvailInit();
+      const todayKey = isoToday();
       const week = weekDates().map(ymd);
       for (const d of week) {
+        if (String(d) < todayKey) continue;
         if (state.availability.byDate && typeof state.availability.byDate === 'object') delete state.availability.byDate[d];
       }
       renderAvailWeekGrid();

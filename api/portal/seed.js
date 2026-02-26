@@ -156,7 +156,7 @@ async function seedDemoData(sb, {
   const isAppend = Boolean(append);
   const leadsCount = isAppend ? 18 : 28;
   const eventsCount = isAppend ? 10 : 14;
-  const appointmentsCount = isAppend ? 10 : 12;
+  const appointmentsCount = isAppend ? 16 : 20;
   const dispatchCount = isAppend ? 12 : 10;
   const payoutsCount = isAppend ? 28 : 18;
 
@@ -513,16 +513,18 @@ async function seedDemoData(sb, {
   const appointmentsToInsert = [];
   for (let i = 0; i < Math.min(appointmentsCount, leadIds.length); i++) {
     const leadId = leadIds[i];
-    const when = addDaysYmd(today, (i % 8) - 2);
+    const when = addDaysYmd(today, (i % 12) - 1);
     const createdAt = new Date();
     createdAt.setDate(createdAt.getDate() - (6 - (i % 6)));
+
+    const creatorPool = [dialerId, setterId, mgrId].filter(Boolean);
 
     const apptAssignedRole = (i % 4 === 1) ? 'account_manager' : 'closer';
     const apptAssignedUserId = (apptAssignedRole === 'account_manager') ? amId : closerId;
 
     appointmentsToInsert.push({
       created_at: createdAt.toISOString(),
-      created_by: pick([dialerId, setterId, amId, mgrId], i) || mgrId,
+      created_by: pick(creatorPool, i) || mgrId,
       status: 'scheduled',
       title: `Appointment • Demo Lead ${leadId}`,
       event_date: when,
