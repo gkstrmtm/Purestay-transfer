@@ -3083,6 +3083,9 @@
       const navItems = [];
       navItems.push({ id:'overview', label:'Overview' });
       navItems.push({ id:'leads', label:'Leads' });
+      if (er === 'manager') {
+        navItems.push({ id:'meetings', label:'Meetings' });
+      }
       if (['dialer','remote_setter','in_person_setter'].includes(er)) {
         navItems.push({ id:'calls', label: er === 'in_person_setter' ? 'Booked' : 'Calls' });
         navItems.push({ id:'meetings', label:'Meetings' });
