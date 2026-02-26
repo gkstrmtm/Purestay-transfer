@@ -105,7 +105,7 @@ module.exports = async (req, res) => {
   const leadId = clampInt(body.leadId, 1, 1e12, null);
   if (!leadId) return sendJson(res, 422, { ok: false, error: 'missing_lead_id' });
 
-  const okLead = await canTouchLead(s.sbAdmin, { profile: s.profile, userId: s.user.id, leadId });
+  const okLead = await canTouchLead(s.sbAdmin, { profile: s.profile, userId: s.actorUserId, leadId });
   if (!okLead) return sendJson(res, 403, { ok: false, error: 'forbidden' });
 
   const status = body.status != null ? cleanStr(body.status, 40) : null;
@@ -136,7 +136,7 @@ module.exports = async (req, res) => {
 
   const activity = {
     lead_id: leadId,
-    created_by: s.user.id,
+    created_by: s.actorUserId,
     activity_type: 'close',
     outcome: disposition,
     notes: payload.notes || '',

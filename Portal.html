@@ -239,7 +239,7 @@
     .availSlotCell{border-bottom:1px solid var(--border); border-right:1px solid var(--border); padding:6px; background:#fff;}
     .availSlotBtn{width:100%; height:34px; appearance:none; border:1px solid rgba(0,0,0,.06); background: rgba(15,118,110,.04); border-radius: 10px; cursor:pointer;}
     .availSlotBtn:hover{border-color: rgba(199,154,59,.35)}
-    .availSlotBtn.active{background: rgba(15,118,110,.18); border-color: rgba(15,118,110,.28)}
+    .availSlotBtn.active{background: rgba(199,154,59,.30); border-color: rgba(199,154,59,.70); box-shadow: 0 0 0 2px rgba(199,154,59,.14) inset}
     .availSlotBtn[disabled]{cursor:not-allowed; opacity:.6}
 
     .stageBar{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
@@ -408,11 +408,10 @@
                   <label>Contract tier</label>
                   <select id="acctTier">
                     <option value="">Select…</option>
-                    <option value="core">core</option>
-                    <option value="tier_1">tier_1</option>
-                    <option value="tier_2">tier_2</option>
-                    <option value="tier_3">tier_3</option>
-                    <option value="custom">custom</option>
+                    <option value="core">Core</option>
+                    <option value="culture_shift">Culture Shift</option>
+                    <option value="signature">Signature Stay</option>
+                    <option value="custom">Custom</option>
                   </select>
                 </div>
               </div>
@@ -483,7 +482,7 @@
                   </div>
                   <div>
                     <label>Contract tier</label>
-                    <input id="acctEditTier" placeholder="core / tier_1 / ..." />
+                    <input id="acctEditTier" placeholder="Core / Culture Shift / Signature Stay / custom" />
                   </div>
                 </div>
                 <div style="margin-top:10px;">
@@ -1117,7 +1116,7 @@
                     <div>
                       <div style="font-weight:900;">Availability</div>
                       <div class="muted small" style="margin-top:4px;">Select times you can take meetings. Times are shown in your local timezone (<span id="availTzLabel"></span>).</div>
-                      <div id="availReadOnlyNote" class="muted small" style="margin-top:6px; display:none;">View-as is read-only.</div>
+                      <div id="availReadOnlyNote" class="muted small" style="margin-top:6px; display:none;">Role preview is read-only — pick a person to edit.</div>
                     </div>
                     <div class="row" style="gap:8px;">
                       <button id="availPrevWeek" class="btn secondary" type="button">Prev week</button>
@@ -1223,10 +1222,10 @@
                       <label>Package tier</label>
                       <select id="closePackage">
                         <option value="">Select…</option>
-                        <option value="tier_1">tier_1 ($1000)</option>
-                        <option value="tier_2">tier_2 ($2000)</option>
-                        <option value="tier_3">tier_3 ($3000)</option>
-                        <option value="custom">custom</option>
+                        <option value="core">Core</option>
+                        <option value="culture_shift">Culture Shift</option>
+                        <option value="signature">Signature Stay</option>
+                        <option value="custom">Custom</option>
                       </select>
                     </div>
                     <div>
@@ -1264,7 +1263,6 @@
 
                   <div class="row" style="margin-top:10px;">
                     <button id="closeSubmitBtn" class="btn">Submit</button>
-                    <button id="closeQuoteBtn" class="btn secondary" type="button">Fill tier price</button>
                     <div id="closeMsg" class="err"></div>
                   </div>
                 </div>
@@ -3026,6 +3024,7 @@
       if (!j || !j.ok) {
         const err = String(j?.error || ('http_' + r.status));
         if (err === 'view_as_read_only') throw new Error('View-as is read-only');
+        if (err === 'view_as_requires_user') throw new Error('Pick a person to edit (role preview is read-only)');
         throw new Error(err);
       }
       if (String(method || 'GET').toUpperCase() !== 'GET') {
@@ -3070,9 +3069,14 @@
       // Manager view-as needs the user roster to offer a person picker.
       if (isManagerUser()) await ensureUsersCache();
 
-      const inViewAs = isManagerUser() && (!!String(state.viewAsRole || '').trim() || !!String(state.viewAsUserId || '').trim());
+      const vRole = isManagerUser() ? String(state.viewAsRole || '').trim() : '';
+      const vUser = isManagerUser() ? String(state.viewAsUserId || '').trim() : '';
+      const inViewAs = isManagerUser() && (!!vRole || !!vUser);
+      const previewOnly = isManagerUser() && !!vRole && !vUser;
       $('roleLine').textContent = inViewAs
-        ? `Viewing ${roleViewLabel(er)}${(state.viewAsUserId ? (' — ' + (viewAsUserLabel(state.viewAsUserId) || '')) : '')}`.trim()
+        ? (previewOnly
+          ? `Previewing ${roleViewLabel(er)} (role-wide)`
+          : `As ${(viewAsUserLabel(vUser) || vUser || '').trim()} — ${roleViewLabel(er)}`.trim())
         : roleViewLabel(realRole);
       $('appUser').textContent = me.user.email;
 
@@ -3108,13 +3112,13 @@
 
         const activeOpt = MANAGER_VIEW_OPTIONS.find((o) => String(o.role) === String(currentRole)) || MANAGER_VIEW_OPTIONS[0];
         const viewSelect = `
-          <div class="navTitle">Views</div>
+          <div class="navTitle">View as</div>
           <div class="dd" id="viewRoleDd" style="margin-top:6px;">
             <button id="viewRoleBtn" class="ddBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
               <span>${escapeHtml(activeOpt?.label || 'Manager')}</span>
               <span class="muted small">▼</span>
             </button>
-            <div id="viewRoleMenu" class="ddMenu hide" role="listbox" aria-label="Views">
+            <div id="viewRoleMenu" class="ddMenu hide" role="listbox" aria-label="View as">
               ${MANAGER_VIEW_OPTIONS.map((o) => {
                 const active = String(o.role) === String(currentRole);
                 return `<button class="ddItem ${active ? 'active' : ''}" type="button" data-view-role="${escapeHtml(o.role)}">${escapeHtml(o.label)}</button>`;
@@ -3126,8 +3130,10 @@
         const selectedRole = String(state.viewAsRole || '').trim();
         const people = selectedRole ? usersForViewAsRole(selectedRole) : [];
         const peopleBtns = selectedRole ? `
-          <div class="navTitle" style="margin-top:8px;">Person</div>
-          <div style="max-height:240px; overflow:auto; padding-right:4px;">
+          <div class="navTitle" style="margin-top:8px;">Person (to edit)</div>
+          <div class="muted small" style="margin-top:6px;">Role-wide preview is read-only.</div>
+          <div style="max-height:240px; overflow:auto; padding-right:4px; margin-top:6px;">
+            <button class="navBtn ${!String(state.viewAsUserId || '').trim() ? 'active' : ''}" type="button" data-viewas-user="">All (preview only)</button>
             ${people.map((u) => {
               const label = String(u.fullName || u.email || u.userId || '').trim() || u.userId;
               const active = String(u.userId) === String(state.viewAsUserId || '');
@@ -4047,13 +4053,6 @@
       }
     }
 
-    function fillTierPrice(){
-      const tier = String($('closePackage').value || '');
-      const map = { tier_1: 1000, tier_2: 2000, tier_3: 3000 };
-      const v = map[tier];
-      if (v) $('closePackagePrice').value = String(v);
-    }
-
     async function submitClose(){
       $('closeMsg').textContent = '';
       try{
@@ -4374,8 +4373,8 @@
     function availabilityEditable(){
       const er = effectiveRole();
       if (!['closer','account_manager','manager'].includes(er)) return false;
-      // Manager view-as must remain read-only (server enforced too).
-      if (isManagerUser() && String(state.viewAsRole || '').trim()) return false;
+      // Role-only preview is read-only; impersonating a specific person is editable.
+      if (isManagerUser() && String(state.viewAsRole || '').trim() && !String(state.viewAsUserId || '').trim()) return false;
       return true;
     }
 
@@ -4434,7 +4433,8 @@
 
       const editable = availabilityEditable();
       const ro = $('availReadOnlyNote');
-      if (ro) ro.style.display = (!editable && isManagerUser() && String(state.viewAsRole || '').trim()) ? 'block' : 'none';
+      const previewOnly = isManagerUser() && String(state.viewAsRole || '').trim() && !String(state.viewAsUserId || '').trim();
+      if (ro) ro.style.display = (!editable && previewOnly) ? 'block' : 'none';
       const saveBtn = $('availSaveBtn');
       if (saveBtn) saveBtn.disabled = !editable;
       const clearBtn = $('availClearWeek');
@@ -4610,8 +4610,8 @@
     function accountsEditable(){
       const er = effectiveRole();
       if (!['account_manager','manager'].includes(er)) return false;
-      // Manager view-as must remain read-only (server enforced too).
-      if (isManagerUser() && String(state.viewAsRole || '').trim()) return false;
+      // Role-only preview is read-only; impersonating a specific person is editable.
+      if (isManagerUser() && String(state.viewAsRole || '').trim() && !String(state.viewAsUserId || '').trim()) return false;
       return true;
     }
 
@@ -5638,9 +5638,15 @@
       return isManagerUser() && (!!vRole || !!vUser);
     }
 
+    function isManagerViewAsPreviewOnly(){
+      const vRole = String(state.viewAsRole || '').trim();
+      const vUser = String(state.viewAsUserId || '').trim();
+      return isManagerUser() && !!vRole && !vUser;
+    }
+
     function coordinatorOpsEditable(){
-      // Manager view-as must remain read-only (server enforced too).
-      return isCoordinatorRole() && !isManagerViewAsActive();
+      // Role-only preview is read-only; impersonating a specific person is editable.
+      return isCoordinatorRole() && !isManagerViewAsPreviewOnly();
     }
 
     function dollarsToCents(v){
@@ -7624,7 +7630,7 @@
     });
 
     on('closeSubmitBtn', 'click', () => submitClose().catch(() => {}));
-    on('closeQuoteBtn', 'click', () => fillTierPrice());
+    // closeQuoteBtn removed (package pricing is custom)
 
     on('clearSelectedLeadBtn', 'click', () => clearSelectedLead());
     on('closerClearLeadBtn', 'click', () => clearSelectedLead());

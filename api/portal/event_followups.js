@@ -145,7 +145,7 @@ module.exports = async (req, res) => {
       return;
     }
     const r = await insertDispatch(s.sbAdmin, {
-      actorId: s.user.id,
+      actorId: s.actorUserId,
       assignedRole,
       dueDate,
       title,

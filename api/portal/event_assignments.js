@@ -85,7 +85,7 @@ module.exports = async (req, res) => {
     const eventId = clampInt(url.searchParams.get('eventId'), 1, 1e12, null);
     if (!eventId) return sendJson(res, 422, { ok: false, error: 'missing_event_id' });
 
-    const okEvent = await canSeeEvent(s.sbAdmin, { profile: s.profile, userId: s.user.id, eventId });
+    const okEvent = await canSeeEvent(s.sbAdmin, { profile: s.profile, userId: s.actorUserId, eventId });
     if (!okEvent) return sendJson(res, 403, { ok: false, error: 'forbidden' });
 
     const { data, error } = await s.sbAdmin
@@ -169,7 +169,7 @@ module.exports = async (req, res) => {
       if (!role) return sendJson(res, 422, { ok: false, error: 'invalid_role' });
       if (!['accepted', 'declined'].includes(decision)) return sendJson(res, 422, { ok: false, error: 'invalid_decision' });
 
-      const uid = String(s.user.id || '');
+      const uid = String(s.actorUserId || '');
       const idx = assignments.findIndex((a) => String(a?.userId || '') === uid && String(a?.role || '') === role);
       if (idx < 0) return sendJson(res, 403, { ok: false, error: 'not_assigned' });
 

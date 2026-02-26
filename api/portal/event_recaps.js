@@ -44,7 +44,7 @@ module.exports = async (req, res) => {
     const eventId = clampInt(url.searchParams.get('eventId'), 1, 1e12, null);
     if (!eventId) return sendJson(res, 422, { ok: false, error: 'missing_event_id' });
 
-    const okEvent = await canSeeEvent(s.sbAdmin, { profile: s.profile, userId: s.user.id, eventId });
+    const okEvent = await canSeeEvent(s.sbAdmin, { profile: s.profile, userId: s.actorUserId, eventId });
     if (!okEvent) return sendJson(res, 403, { ok: false, error: 'forbidden' });
 
     const { data, error } = await s.sbAdmin
@@ -69,7 +69,7 @@ module.exports = async (req, res) => {
     const eventId = clampInt(body.eventId, 1, 1e12, null);
     if (!eventId) return sendJson(res, 422, { ok: false, error: 'missing_event_id' });
 
-    const okEvent = await canSeeEvent(s.sbAdmin, { profile: s.profile, userId: s.user.id, eventId });
+    const okEvent = await canSeeEvent(s.sbAdmin, { profile: s.profile, userId: s.actorUserId, eventId });
     if (!okEvent) return sendJson(res, 403, { ok: false, error: 'forbidden' });
 
     const mediaUrls = Array.isArray(body.mediaUrls)
@@ -78,7 +78,7 @@ module.exports = async (req, res) => {
 
     const recap = {
       event_id: eventId,
-      created_by: s.user.id,
+      created_by: s.actorUserId,
       recap: cleanStr(body.recap, 10_000),
       media_urls: mediaUrls,
       payload: (body.payload && typeof body.payload === 'object') ? body.payload : {},

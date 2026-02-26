@@ -32,7 +32,7 @@ module.exports = async (req, res) => {
   const s = await requirePortalSession(req);
   if (!s.ok) return sendJson(res, s.status || 401, { ok: false, error: s.error });
 
-  // Only for actual setter roles; manager view-as is read-only and will be blocked upstream.
+  // Only for setter roles.
   const role = String(s.profile?.role || '').trim();
   if (!['remote_setter', 'in_person_setter'].includes(role)) {
     return sendJson(res, 403, { ok: false, error: 'forbidden' });
@@ -90,7 +90,7 @@ module.exports = async (req, res) => {
     }
 
     const lead = {
-      created_by: s.user.id,
+      created_by: s.actorUserId,
       assigned_role: role,
       assigned_user_id: null,
       source: 'google_maps',

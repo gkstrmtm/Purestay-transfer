@@ -46,12 +46,12 @@ module.exports = async (req, res) => {
   const leadId = clampInt(body.leadId, 1, 1e12, null);
   if (!leadId) return sendJson(res, 422, { ok: false, error: 'missing_lead_id' });
 
-  const okLead = await canTouchLead(s.sbAdmin, { profile: s.profile, userId: s.user.id, leadId });
+  const okLead = await canTouchLead(s.sbAdmin, { profile: s.profile, userId: s.actorUserId, leadId });
   if (!okLead) return sendJson(res, 403, { ok: false, error: 'forbidden' });
 
   const activity = {
     lead_id: leadId,
-    created_by: s.user.id,
+    created_by: s.actorUserId,
     activity_type: 'call',
     outcome: cleanStr(body.outcome, 80),
     notes: cleanStr(body.notes, 5000),

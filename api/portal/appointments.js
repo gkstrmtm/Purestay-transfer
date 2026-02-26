@@ -146,7 +146,7 @@ module.exports = async (req, res) => {
     const leadId = clampInt(body.leadId, 1, 1e12, null);
     if (!leadId) return sendJson(res, 422, { ok: false, error: 'missing_lead_id' });
 
-    const okLead = await canTouchLead(s.sbAdmin, { profile: s.profile, userId: s.user.id, leadId });
+    const okLead = await canTouchLead(s.sbAdmin, { profile: s.profile, userId: s.actorUserId, leadId });
     if (!okLead) return sendJson(res, 403, { ok: false, error: 'forbidden' });
 
     const eventDate = cleanStr(body.eventDate, 20);
@@ -158,7 +158,7 @@ module.exports = async (req, res) => {
     const role = String(s.profile?.role || '');
     let assignedUserId = cleanStr(body.assignedUserId, 80) || null;
     // Closers scheduling for themselves: keep behavior.
-    if (!isManager(s.profile) && ['closer', 'account_manager'].includes(role)) assignedUserId = s.user.id;
+    if (!isManager(s.profile) && ['closer', 'account_manager'].includes(role)) assignedUserId = s.actorUserId;
     // Dialers/setters scheduling for closers: do NOT force assignment to the caller.
     if (!isManager(s.profile) && ['dialer', 'in_person_setter', 'remote_setter'].includes(role)) {
       assignedUserId = assignedUserId || null;
@@ -178,7 +178,7 @@ module.exports = async (req, res) => {
     const leadLabel = [name, prop].filter(Boolean).join(' • ');
 
     const event = {
-      created_by: s.user.id,
+      created_by: s.actorUserId,
       status: 'scheduled',
       title: cleanStr(body.title, 200) || (leadLabel ? `Appointment • ${leadLabel}` : 'Appointment'),
       event_date: eventDate,
@@ -208,7 +208,7 @@ module.exports = async (req, res) => {
     const when = [eventDate || '', startTime || ''].filter(Boolean).join(' ');
     await insertLeadActivity(s.sbAdmin, {
       leadId,
-      userId: s.user.id,
+      userId: s.actorUserId,
       outcome: 'scheduled',
       notes: `Appointment scheduled${when ? (`: ${when}`) : ''}` + (event.notes ? (`\n${event.notes}`) : ''),
       payload: { appointmentId: appt?.id || null },
@@ -260,8 +260,8 @@ module.exports = async (req, res) => {
     if (meta.kind !== 'appointment') return sendJson(res, 404, { ok: false, error: 'appointment_not_found' });
 
     const canEdit = isManager(s.profile)
-      || (row.assigned_user_id && row.assigned_user_id === s.user.id)
-      || (row.created_by && row.created_by === s.user.id);
+      || (row.assigned_user_id && row.assigned_user_id === s.actorUserId)
+      || (row.created_by && row.created_by === s.actorUserId);
 
     if (!canEdit) return sendJson(res, 403, { ok: false, error: 'forbidden' });
 
@@ -297,7 +297,7 @@ module.exports = async (req, res) => {
       if (nextStatus === 'completed') {
         await insertLeadActivity(s.sbAdmin, {
           leadId,
-          userId: s.user.id,
+          userId: s.actorUserId,
           outcome: 'completed',
           notes: 'Appointment marked completed',
           payload: { appointmentId: eventId },
@@ -306,7 +306,7 @@ module.exports = async (req, res) => {
       if (nextStatus === 'no_show') {
         await insertLeadActivity(s.sbAdmin, {
           leadId,
-          userId: s.user.id,
+          userId: s.actorUserId,
           outcome: 'no_show',
           notes: 'Appointment marked no show',
           payload: { appointmentId: eventId },

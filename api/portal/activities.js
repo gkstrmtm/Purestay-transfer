@@ -52,7 +52,7 @@ module.exports = async (req, res) => {
     const l = await loadLead(s.sbAdmin, leadId);
     if (!l.ok) return sendJson(res, l.error === 'lead_not_found' ? 404 : 500, { ok: false, error: l.error });
     const uid = String(s.effectiveUserId || s.user.id || '');
-    if (!canSeeLead({ profile: s.profile, userId: uid, lead: l.lead })) {
+    if (!canSeeLead({ profile: s.profile, userId: s.actorUserId, lead: l.lead })) {
       return sendJson(res, 403, { ok: false, error: 'forbidden' });
     }
 
@@ -84,7 +84,7 @@ module.exports = async (req, res) => {
 
     const l = await loadLead(s.sbAdmin, leadId);
     if (!l.ok) return sendJson(res, l.error === 'lead_not_found' ? 404 : 500, { ok: false, error: l.error });
-    if (!canSeeLead({ profile: s.profile, userId: s.user.id, lead: l.lead })) {
+    if (!canSeeLead({ profile: s.profile, userId: s.actorUserId, lead: l.lead })) {
       return sendJson(res, 403, { ok: false, error: 'forbidden' });
     }
 
@@ -94,7 +94,7 @@ module.exports = async (req, res) => {
 
     const activity = {
       lead_id: leadId,
-      created_by: s.user.id,
+      created_by: s.actorUserId,
       activity_type: activityType,
       outcome: cleanStr(body.outcome, 80),
       notes,

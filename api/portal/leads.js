@@ -88,7 +88,7 @@ module.exports = async (req, res) => {
     if (!body) return sendJson(res, 400, { ok: false, error: 'invalid_body' });
 
     const lead = {
-      created_by: s.user.id,
+      created_by: s.actorUserId,
       assigned_role: cleanStr(body.assignedRole || s.profile.role || 'dialer', 40),
       assigned_user_id: cleanStr(body.assignedUserId, 60) || null,
       source: cleanStr(body.source, 80),
@@ -137,8 +137,7 @@ module.exports = async (req, res) => {
     if (e1) return sendJson(res, 500, { ok: false, error: 'lead_lookup_failed' });
     const row = Array.isArray(existing) ? existing[0] : null;
     if (!row) return sendJson(res, 404, { ok: false, error: 'lead_not_found' });
-    const uid = String(s.effectiveUserId || s.user.id || '');
-    if (!canSeeLead({ profile: s.profile, userId: uid, lead: row })) {
+    if (!canSeeLead({ profile: s.profile, userId: s.actorUserId, lead: row })) {
       return sendJson(res, 403, { ok: false, error: 'forbidden' });
     }
 

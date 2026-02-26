@@ -157,13 +157,13 @@ module.exports = async (req, res) => {
     let assignedUserId = cleanStr(body.assignedUserId, 80) || null;
     if (!isManager(s.profile)) {
       // Non-managers can only assign to themselves.
-      if (assignedUserId && assignedUserId !== s.user.id) assignedUserId = null;
+      if (assignedUserId && assignedUserId !== s.actorUserId) assignedUserId = null;
     }
 
     const { leadLabel } = await lookupLeadLabel(s.sbAdmin, leadId);
 
     const task = {
-      created_by: s.user.id,
+      created_by: s.actorUserId,
       status: 'open',
       title,
       event_date: dueDate,
@@ -200,7 +200,7 @@ module.exports = async (req, res) => {
       const when = [dueDate || '', dueTime || ''].filter(Boolean).join(' ');
       await insertLeadActivity(s.sbAdmin, {
         leadId,
-        userId: s.user.id,
+        userId: s.actorUserId,
         outcome: 'created',
         notes: `Dispatch task created: ${title}${when ? (`\nDue: ${when}`) : ''}`,
         payload: { taskId: inserted?.id || null, priority },
@@ -239,7 +239,7 @@ module.exports = async (req, res) => {
       const currentPriority = clampInt(nextMeta.priority, -5, 5, 0);
       nextMeta.priority = Math.max(currentPriority, 5);
       nextMeta.escalatedAt = new Date().toISOString();
-      nextMeta.escalatedBy = s.user.id;
+      nextMeta.escalatedBy = s.actorUserId;
 
       const { data, error } = await s.sbAdmin
         .from('portal_events')
@@ -255,7 +255,7 @@ module.exports = async (req, res) => {
       if (leadId) {
         await insertLeadActivity(s.sbAdmin, {
           leadId,
-          userId: s.user.id,
+          userId: s.actorUserId,
           outcome: 'escalated',
           notes: `Dispatch task escalated: ${String(row.title || '').trim()}`.trim(),
           payload: { taskId, priority: nextMeta.priority },
@@ -267,11 +267,11 @@ module.exports = async (req, res) => {
 
     const canEdit = isManager(s.profile)
       || hasRole(s.profile, ['event_coordinator'])
-      || (row.assigned_user_id && row.assigned_user_id === s.user.id)
-      || (row.created_by && row.created_by === s.user.id);
+      || (row.assigned_user_id && row.assigned_user_id === s.actorUserId)
+      || (row.created_by && row.created_by === s.actorUserId);
 
     const requestedAssignedUserId = body.assignedUserId != null ? (cleanStr(body.assignedUserId, 80) || null) : undefined;
-    const wantsSelfAssign = requestedAssignedUserId && requestedAssignedUserId === s.user.id;
+    const wantsSelfAssign = requestedAssignedUserId && requestedAssignedUserId === s.actorUserId;
     const role = String(s.profile?.role || '');
     const canClaim = !canEdit
       && wantsSelfAssign
@@ -328,7 +328,7 @@ module.exports = async (req, res) => {
       if (nextStatus === 'completed') {
         await insertLeadActivity(s.sbAdmin, {
           leadId,
-          userId: s.user.id,
+          userId: s.actorUserId,
           outcome: 'completed',
           notes: `Dispatch task completed: ${row.title || ''}`.trim(),
           payload: { taskId },
@@ -337,7 +337,7 @@ module.exports = async (req, res) => {
       if (nextStatus === 'cancelled') {
         await insertLeadActivity(s.sbAdmin, {
           leadId,
-          userId: s.user.id,
+          userId: s.actorUserId,
           outcome: 'cancelled',
           notes: `Dispatch task cancelled: ${row.title || ''}`.trim(),
           payload: { taskId },

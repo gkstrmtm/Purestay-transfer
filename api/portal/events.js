@@ -86,7 +86,7 @@ module.exports = async (req, res) => {
     if (!body) return sendJson(res, 400, { ok: false, error: 'invalid_body' });
 
     const event = {
-      created_by: s.user.id,
+      created_by: s.actorUserId,
       status: cleanStr(body.status || 'open', 40),
       title: cleanStr(body.title, 200),
       event_date: cleanStr(body.eventDate, 20) || null,
@@ -133,11 +133,11 @@ module.exports = async (req, res) => {
 
     const canEdit = isManager(s.profile)
       || hasRole(s.profile, ['event_coordinator'])
-      || (row.assigned_user_id && row.assigned_user_id === s.user.id)
-      || (row.created_by && row.created_by === s.user.id);
+      || (row.assigned_user_id && row.assigned_user_id === s.actorUserId)
+      || (row.created_by && row.created_by === s.actorUserId);
 
     const requestedAssignedUserId = body.assignedUserId != null ? (cleanStr(body.assignedUserId, 60) || null) : undefined;
-    const wantsSelfAssign = requestedAssignedUserId && requestedAssignedUserId === s.user.id;
+    const wantsSelfAssign = requestedAssignedUserId && requestedAssignedUserId === s.actorUserId;
     const role = String(s.profile?.role || '');
     const canClaim = !canEdit
       && wantsSelfAssign
@@ -207,7 +207,7 @@ module.exports = async (req, res) => {
 
     if (error) return sendJson(res, 500, { ok: false, error: 'event_update_failed' });
     const updated = Array.isArray(data) ? data[0] : null;
-    if (updated && !canSeeEvent({ profile: s.profile, userId: s.user.id, event: updated })) {
+    if (updated && !canSeeEvent({ profile: s.profile, userId: s.actorUserId, event: updated })) {
       // If they edited it into a state they can no longer view (rare), just return ok.
       return sendJson(res, 200, { ok: true, event: null });
     }
