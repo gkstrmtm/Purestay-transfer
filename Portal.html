@@ -1274,8 +1274,8 @@
         </div>
 
         <div id="viewEvents" class="hide">
-          <div class="row" style="justify-content:space-between; gap:12px;">
-            <div class="row">
+          <div class="row" style="justify-content:space-between; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+            <div class="row" style="gap:8px; flex-wrap:wrap;">
               <select id="eventStatus" style="max-width:220px">
                 <option value="">All statuses</option>
                 <option value="open">open</option>
@@ -1283,9 +1283,13 @@
                 <option value="completed">completed</option>
                 <option value="canceled">canceled</option>
               </select>
-              <button id="loadEventsBtn" class="btn secondary">Load</button>
+              <button id="loadEventsBtn" class="btn secondary" type="button">Refresh</button>
+              <div id="eventsSegTabs" class="segTabs hide" style="gap:8px;">
+                <button id="eventsSegMy" class="segBtn" type="button">My</button>
+                <button id="eventsSegOffers" class="segBtn" type="button">Offers</button>
+              </div>
             </div>
-            <button id="newEventToggle" class="btn secondary hide">New event</button>
+            <button id="newEventToggle" class="btn secondary hide" type="button">New event</button>
           </div>
 
           <div id="newEventBox" class="card" style="margin-top:14px; background: #fff;" hidden>
@@ -1317,26 +1321,35 @@
             </div>
           </div>
 
-          <div style="height:14px"></div>
-          <div id="eventsMsg" class="err"></div>
-          <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Date</th>
-                  <th>Title</th>
-                  <th>City</th>
-                  <th>Status</th>
-                  <th>Assigned</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="eventsTbody"></tbody>
-            </table>
-          </div>
+          <div class="two" style="gap:12px; align-items:flex-start; margin-top:14px;">
+            <div style="min-width:0;">
+              <div id="eventsMsg" class="err"></div>
+              <div class="card" style="background:#fff;">
+                <div class="bd" style="padding:0;">
+                  <div style="overflow:auto; max-height:65vh;">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>Date</th>
+                          <th>Title</th>
+                          <th>City</th>
+                          <th>Status</th>
+                          <th>Assigned</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody id="eventsTbody"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-          <div id="eventRecapWrap" class="card hide" style="margin-top:14px; background:#fff;">
+            <div style="min-width:0;">
+              <div id="eventDetailsEmpty" class="muted small">Select an event to see details.</div>
+              <div id="eventDetailsWrap" class="hide">
+          <div id="eventRecapWrap" class="card hide" style="margin-top:0; background:#fff;">
             <div class="bd">
               <div class="row" style="justify-content:space-between;">
                 <div>
@@ -1365,24 +1378,13 @@
                 </div>
               </div>
 
-              <div class="two" style="margin-top:10px;">
-                <div>
-                  <label>Issues reported</label>
-                  <select id="recapIssues">
-                    <option value="">Select…</option>
-                    <option value="no">no</option>
-                    <option value="yes">yes</option>
-                  </select>
-                </div>
-                <div>
-                  <label>Photos uploaded</label>
-                  <select id="recapPhotos">
-                    <option value="">Select…</option>
-                    <option value="yes">yes</option>
-                    <option value="no">no</option>
-                    <option value="pending">pending</option>
-                  </select>
-                </div>
+              <div style="margin-top:10px;">
+                <label>Issues reported</label>
+                <select id="recapIssues">
+                  <option value="">Select…</option>
+                  <option value="no">no</option>
+                  <option value="yes">yes</option>
+                </select>
               </div>
 
               <div style="margin-top:10px;">
@@ -1432,7 +1434,7 @@
             </div>
           </div>
 
-          <div id="eventOpsWrap" class="card hide" style="margin-top:14px; background:#fff;">
+            <div id="eventOpsWrap" class="card hide" style="margin-top:12px; background:#fff;">
             <div class="bd">
               <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
                 <div>
@@ -1526,7 +1528,7 @@
                         <div>
                           <div class="muted small">AI staffing</div>
                           <div style="font-weight:900; margin-top:4px;">Recommendations</div>
-                          <div class="muted small" style="margin-top:4px;">Suggest host + media based on location, specialties, and reliability.</div>
+                          <div class="muted small" style="margin-top:4px;">Suggest host + media based on location and specialties.</div>
                         </div>
                         <div class="row" style="gap:8px; flex-wrap:wrap; justify-content:flex-end;">
                           <button id="aiRecommendTalentBtn" class="btn secondary" type="button">AI recommend</button>
@@ -1702,6 +1704,9 @@
               </div>
             </div>
           </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div id="viewTalent" class="hide">
@@ -1718,7 +1723,7 @@
                     <button id="talStep1" class="wizardStep" type="button">Basics</button>
                     <button id="talStep2" class="wizardStep" type="button">Profile</button>
                     <button id="talStep3" class="wizardStep" type="button">Notes</button>
-                    <button id="talStep4" class="wizardStep hide" type="button">Reliability</button>
+                    <button id="talStep4" class="wizardStep hide" type="button" style="display:none">Reliability</button>
                   </div>
                   <button id="talentRefreshBtn" class="btn secondary" type="button">Refresh</button>
                   <button id="talentStopEditingBtn" class="btn secondary hide" type="button">Stop editing</button>
@@ -1789,7 +1794,7 @@
                 </div>
               </div>
 
-              <div id="talReliabilityBox" class="hide talStep" style="margin-top:10px;" data-step="4">
+              <div id="talReliabilityBox" class="hide talStep" style="margin-top:10px; display:none" data-step="4">
                 <div class="two">
                   <div>
                     <label>Reliability score (0-100)</label>
@@ -2426,6 +2431,7 @@
       me: null,
       activeTab: 'overview',
       meetingsSubtab: 'list',
+      eventsSubtab: 'all',
       payoutsPeriodDays: 30,
       managerSubtab: 'tasks',
       viewAsRole: '',
@@ -2448,6 +2454,7 @@
         step: 1,
       },
       closerQueue: [],
+      allowedTabs: null,
       ui: { sidebarCollapsed: false },
       availability: { weekOffset: 0, byDate: {}, tz: '', drag: { active: false, mode: '' } },
     };
@@ -2610,6 +2617,22 @@
       if (btnAll) btnAll.classList.toggle('active', !days);
       if (btnWeek) btnWeek.classList.toggle('active', days === 7);
       if (btnMonth) btnMonth.classList.toggle('active', days === 30);
+    }
+
+    function renderEventsSubtabSeg(){
+      const t = String(state.eventsSubtab || 'all');
+      const btnMy = $('eventsSegMy');
+      const btnOffers = $('eventsSegOffers');
+      if (btnMy) btnMy.classList.toggle('active', t === 'my');
+      if (btnOffers) btnOffers.classList.toggle('active', t === 'offers');
+    }
+
+    function setEventsSubtab(next){
+      const t0 = String(next || 'all');
+      const t = (t0 === 'my' || t0 === 'offers') ? t0 : 'all';
+      state.eventsSubtab = t;
+      renderEventsSubtabSeg();
+      loadEvents().catch(() => {});
     }
 
     function setBadge(kind, text){
@@ -2850,9 +2873,13 @@
     });
 
     function setTab(tab){
-      state.activeTab = tab;
+      const allowed = Array.isArray(state.allowedTabs) ? state.allowedTabs : null;
+      const safeTab = (allowed && !allowed.includes(tab)) ? (allowed[0] || 'overview') : tab;
+
+      state.activeTab = safeTab;
       const er = effectiveRole();
       const callsTitle = er === 'in_person_setter' ? 'Booked' : 'Calls';
+      const eventsTitle = (er === 'event_host') ? 'Offers' : (er === 'media_team' ? 'Content' : 'Events');
       const title = {
         overview: 'Overview',
         leads: 'Leads',
@@ -2860,11 +2887,11 @@
         meetings: 'My meetings',
         accounts: 'Accounts',
         closer: 'Sales',
-        events: 'Events',
+        events: eventsTitle,
         talent: 'Talent',
         payments: 'Payments',
         manager: 'Operations'
-      }[tab] || 'Overview';
+      }[safeTab] || 'Overview';
       const viewKey = {
         overview: 'Overview',
         leads: 'Leads',
@@ -2876,7 +2903,7 @@
         talent: 'Talent',
         payments: 'Payments',
         manager: 'Manager'
-      }[tab] || 'Overview';
+      }[safeTab] || 'Overview';
 
       $('viewTitle').textContent = title;
 
@@ -2886,33 +2913,42 @@
       if (viewEl) viewEl.classList.remove('hide');
 
       for (const el of document.querySelectorAll('.navBtn')) {
-        el.classList.toggle('active', el.dataset.tab === tab);
+        el.classList.toggle('active', el.dataset.tab === safeTab);
       }
 
       // Ensure newly shown selects are enhanced.
       enhanceAllSelects();
 
-      if (tab === 'overview') loadOverview().catch(()=>{});
-      if (tab === 'leads') loadLeads().catch(()=>{});
-      if (tab === 'events') loadEvents().catch(()=>{});
-      if (tab === 'talent') loadTalentTab().catch(()=>{});
-      if (tab === 'meetings') {
+      if (safeTab === 'overview') loadOverview().catch(()=>{});
+      if (safeTab === 'leads') loadLeads().catch(()=>{});
+      if (safeTab === 'events') {
+        const seg = $('eventsSegTabs');
+        const showSeg = ['event_host','media_team'].includes(er);
+        if (seg) seg.classList.toggle('hide', !showSeg);
+
+        // Default to offers for host/media; coordinators see the full list.
+        if (showSeg && (state.eventsSubtab === 'all')) state.eventsSubtab = 'offers';
+        renderEventsSubtabSeg();
+        loadEvents().catch(()=>{});
+      }
+      if (safeTab === 'talent') loadTalentTab().catch(()=>{});
+      if (safeTab === 'meetings') {
         renderMeetingsSubtab();
         if (state.meetingsSubtab === 'availability') loadAvailability().catch(()=>{});
         else loadAppointmentsInto('meetingsTbody', 'meetingsMsg').catch(()=>{});
       }
-      if (tab === 'payments') {
+      if (safeTab === 'payments') {
         renderPayoutsPeriodSeg();
         loadPayouts().catch(()=>{});
       }
-      if (tab === 'accounts') {
+      if (safeTab === 'accounts') {
         loadAccounts().catch(()=>{});
       }
-      if (tab === 'closer') {
+      if (safeTab === 'closer') {
         renderCloserSubtab();
         // Closer Dispatch removed from Sales.
       }
-      if (tab === 'calls') {
+      if (safeTab === 'calls') {
         renderDialerSubtab();
         if (state.dialerSubtab === 'call') loadQueue().catch(()=>{});
         if (state.dialerSubtab === 'activity') {
@@ -3115,7 +3151,9 @@
 
       const navItems = [];
       navItems.push({ id:'overview', label:'Overview' });
-      navItems.push({ id:'leads', label:'Leads' });
+
+      const leadsAllowed = ['dialer','remote_setter','in_person_setter','closer','account_manager','manager'].includes(er);
+      if (leadsAllowed) navItems.push({ id:'leads', label:'Leads' });
       if (er === 'manager') {
         navItems.push({ id:'meetings', label:'Meetings' });
       }
@@ -3133,9 +3171,13 @@
       if (er === 'account_manager' || er === 'manager') {
         navItems.push({ id:'accounts', label:'Accounts' });
       }
+
       if (['event_host','media_team','event_coordinator'].includes(er)) {
-        navItems.push({ id:'events', label: er === 'media_team' ? 'Content' : 'Events' });
-        navItems.push({ id:'talent', label:'Talent' });
+        const label = (er === 'event_host') ? 'Offers' : (er === 'media_team' ? 'Content' : 'Events');
+        navItems.push({ id:'events', label });
+
+        // Talent is coordinator tooling; keep it off host/media.
+        if (er === 'event_coordinator') navItems.push({ id:'talent', label:'Talent' });
       }
       if (er === 'event_coordinator' || er === 'manager') {
         navItems.push({ id:'manager', label:'Operations' });
@@ -3181,6 +3223,11 @@
       $('nav').innerHTML = viewAsHtml + navItems
         .map((t) => `<button class="navBtn" type="button" data-tab="${t.id}"><span class="navIco">${escapeHtml(ico[t.id] || '•')}</span><span class="navLbl">${escapeHtml(t.label)}</span></button>`)
         .join('');
+
+      state.allowedTabs = navItems.map((t) => t.id);
+      if (state.allowedTabs.length && !state.allowedTabs.includes(String(state.activeTab || 'overview'))) {
+        state.activeTab = state.allowedTabs[0];
+      }
 
       // Role-specific UI tweaks
       try {
@@ -3250,7 +3297,11 @@
       // No explicit exit button: managers can switch back to Manager in the Views dropdown.
 
       // Manager-only controls
-      $('newEventToggle').classList.toggle('hide', !(me.profile.role === 'manager' || me.profile.role === 'event_coordinator'));
+      $('newEventToggle').classList.toggle('hide', !(['manager','event_coordinator'].includes(er)));
+
+      // Events offers/my segment only applies to host/media.
+      const eventsSeg = $('eventsSegTabs');
+      if (eventsSeg) eventsSeg.classList.toggle('hide', !(['event_host','media_team'].includes(er)));
 
       // Overview
       $('viewOverview').innerHTML = `
@@ -5249,10 +5300,19 @@
       state.selectedEvent = eventObj || null;
       const e = state.selectedEvent;
       $('selectedEventLine').textContent = e ? `#${e.id} • ${e.title || ''} • ${(e.event_date || '')}`.trim() : 'None';
+
+      const empty = $('eventDetailsEmpty');
+      const wrap = $('eventDetailsWrap');
+      if (empty) empty.classList.toggle('hide', !!e);
+      if (wrap) wrap.classList.toggle('hide', !e);
+
       $('eventRecapWrap').classList.toggle('hide', !e);
-      if ($('eventOpsWrap')) $('eventOpsWrap').classList.toggle('hide', !e);
+
+      const canUseOps = ['event_coordinator','manager'].includes(effectiveRole());
+      if ($('eventOpsWrap')) $('eventOpsWrap').classList.toggle('hide', !(e && canUseOps));
+
       if (e) loadRecaps(e.id).catch(()=>{});
-      if (e) initEventOps().catch(()=>{});
+      if (e && canUseOps) initEventOps().catch(()=>{});
     }
 
     function splitCsvList(text, { max = 30, maxLen = 60 } = {}){
@@ -5274,8 +5334,8 @@
 
     function setTalentStep(next){
       const step = Number(next || 1);
-      const max = $('talReliabilityBox')?.classList.contains('hide') ? 3 : 4;
-      const safe = Math.max(1, Math.min(step, max));
+      const max = 3;
+      const safe = Math.max(1, Math.min(step, 3));
       state.talent.step = safe;
 
       const steps = Array.from(document.querySelectorAll('#viewTalent .talStep'));
@@ -5288,7 +5348,6 @@
         { n: 1, id: 'talStep1' },
         { n: 2, id: 'talStep2' },
         { n: 3, id: 'talStep3' },
-        { n: 4, id: 'talStep4' },
       ];
       for (const b of buttons) {
         const btn = $(b.id);
@@ -5318,7 +5377,6 @@
     function readTalentForm(){
       const specialties = splitCsvList($('talSpecialties')?.value || '', { max: 20, maxLen: 60 });
       const preferredPairings = splitCsvList($('talPairings')?.value || '', { max: 20, maxLen: 80 });
-      const reliabilityFlags = splitCsvList($('talReliabilityFlags')?.value || '', { max: 20, maxLen: 60 });
 
       const out = {
         displayName: String($('talDisplayName')?.value || '').trim(),
@@ -5332,14 +5390,6 @@
         preferredPairings,
         notes: String($('talNotes')?.value || '').trim(),
       };
-
-      if (talentIsCoordinator() && !$('talReliabilityBox')?.classList.contains('hide')) {
-        const score = $('talReliabilityScore')?.value ? Number($('talReliabilityScore').value) : null;
-        out.reliability = {
-          score: Number.isFinite(score) ? Math.max(0, Math.min(100, Math.trunc(score))) : null,
-          flags: reliabilityFlags,
-        };
-      }
 
       return out;
     }
@@ -5358,14 +5408,9 @@
       if ($('talNotes')) $('talNotes').value = String(p.notes || '');
 
       const relBox = $('talReliabilityBox');
-      if (relBox) relBox.classList.toggle('hide', !talentIsCoordinator());
+      if (relBox) relBox.classList.add('hide');
       const relStepBtn = $('talStep4');
-      if (relStepBtn) relStepBtn.classList.toggle('hide', !talentIsCoordinator());
-      if (talentIsCoordinator()) {
-        const rel = p.reliability && typeof p.reliability === 'object' ? p.reliability : {};
-        if ($('talReliabilityScore')) $('talReliabilityScore').value = (rel.score == null ? '' : String(rel.score));
-        if ($('talReliabilityFlags')) $('talReliabilityFlags').value = joinCsvList(rel.flags);
-      }
+      if (relStepBtn) relStepBtn.classList.add('hide');
 
       setTalentStep(Number(state.talent?.step || 1));
     }
@@ -5462,9 +5507,6 @@
         const display = (p && p.displayName) ? String(p.displayName) : String(u.fullName || u.email || uid);
         const loc = p ? [p.homeBaseCity, p.homeBaseState].filter(Boolean).join(', ') : '';
         const specs = p && Array.isArray(p.specialties) ? p.specialties.join(', ') : '';
-        const rel = p && p.reliability && typeof p.reliability === 'object' ? p.reliability : {};
-        const relScore = (rel.score == null) ? '' : String(rel.score);
-
         const hay = [display, String(u.email || ''), String(u.role || ''), loc, specs].join(' ').toLowerCase();
         if (q && !hay.includes(q)) return null;
 
@@ -5475,7 +5517,6 @@
           email: String(u.email || ''),
           loc,
           specs,
-          relScore,
           hasProfile: !!p,
         };
       }).filter(Boolean);
@@ -5495,7 +5536,6 @@
 
       list.innerHTML = rows.slice(0, 120).map((r) => {
         const badge = r.hasProfile ? '<span class="badge ok">profile</span>' : '<span class="badge">missing</span>';
-        const rel = r.relScore ? `<span class="badge">rel ${escapeHtml(r.relScore)}</span>` : '';
         return `
           <div class="card" style="background:#fff; margin-bottom:10px;">
             <div class="bd">
@@ -5506,7 +5546,7 @@
                   <div class="muted small" style="margin-top:2px; font-family:var(--mono);">${escapeHtml(r.userId)}</div>
                 </div>
                 <div class="row" style="gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-                  ${badge} ${rel}
+                  ${badge}
                   <button class="btn secondary small" type="button" data-edit-talent="${escapeHtml(r.userId)}">Edit</button>
                 </div>
               </div>
@@ -5570,7 +5610,7 @@
           const meta = [
             p.attendanceEstimate != null ? ('attendance ' + p.attendanceEstimate) : '',
             p.rating ? ('rating ' + p.rating) : '',
-            p.photosUploaded ? ('photos ' + p.photosUploaded) : '',
+            media.length ? (media.length + ' media') : '',
           ].filter(Boolean).join(' • ');
           const mediaHtml = media.length ? (`<div class="small" style="margin-top:8px;">${media.map((u) => `<div><a href="${escapeHtml(u)}" target="_blank" rel="noopener">${escapeHtml(u)}</a></div>`).join('')}</div>`) : '';
           return `
@@ -5606,7 +5646,7 @@
           rating: $('recapRating').value || null,
           issuesReported: $('recapIssues').value || null,
           issuesDetails: $('recapIssuesDetails').value || '',
-          photosUploaded: $('recapPhotos').value || null,
+          mediaCount: mediaUrls.length,
           hostNotes: $('recapNotes').value || '',
           standouts: $('recapStandouts') ? ($('recapStandouts').value || '') : '',
           giveawayWinners: $('recapGiveawayWinners') ? ($('recapGiveawayWinners').value || '') : '',
@@ -5636,7 +5676,7 @@
     }
 
     function isCoordinatorRole(){
-      const r = myPortalRole();
+      const r = effectiveRole();
       return r === 'event_coordinator' || r === 'manager';
     }
 
@@ -6046,8 +6086,7 @@
         if (!p || typeof p !== 'object') return [];
         const loc = [p.homeBaseCity, p.homeBaseState].filter(Boolean).join(', ');
         const specs = Array.isArray(p.specialties) ? p.specialties.filter(Boolean).slice(0, 3).join(', ') : '';
-        const rel = (p.reliability && typeof p.reliability === 'object' && p.reliability.score != null) ? ('rel ' + String(p.reliability.score)) : '';
-        return [loc, specs, rel].filter(Boolean);
+        return [loc, specs].filter(Boolean);
       }
 
       function option(u){
@@ -7187,8 +7226,7 @@
       setBadge('warn', 'loading');
       $('eventsMsg').textContent = '';
 
-      // Reset selection when reloading the list.
-      setSelectedEvent(null);
+      const prevSelectedId = state.selectedEvent ? Number(state.selectedEvent.id) : null;
 
       const status = $('eventStatus').value;
       const qs = new URLSearchParams();
@@ -7197,11 +7235,36 @@
 
       try{
         const j = await api('/api/portal/events?' + qs.toString());
-        state.events = j.events || [];
+        const allEvents = j.events || [];
+
+        const er = effectiveRole();
+        const effectiveUserId = (isManagerUser() && String(state.viewAsUserId || '').trim()) ? String(state.viewAsUserId || '').trim() : String(state.me?.user?.id || '');
+
+        // Subtab filtering (host/media). Coordinators/managers see all.
+        let nextEvents = allEvents;
+        const sub = String(state.eventsSubtab || 'all');
+        if (['event_host','media_team'].includes(er)) {
+          if (sub === 'my') {
+            nextEvents = allEvents.filter((ev) => String(ev.assigned_user_id || '') === effectiveUserId);
+          } else if (sub === 'offers') {
+            nextEvents = allEvents.filter((ev) => {
+              const asg = String(ev.assigned_role || '').trim();
+              const hasAssignments = !!(ev.meta && typeof ev.meta === 'object' && Array.isArray(ev.meta.assignments) && ev.meta.assignments.length);
+              return String(ev.status || 'open') === 'open'
+                && !hasAssignments
+                && !ev.assigned_user_id
+                && !!asg
+                && asg === er;
+            });
+          }
+        }
+
+        state.events = nextEvents;
 
         const tb = $('eventsTbody');
         if (!state.events.length) {
           tb.innerHTML = '<tr><td colspan="7" class="muted">No events yet.</td></tr>';
+          if (prevSelectedId != null) setSelectedEvent(null);
           setBadge('ok', 'loaded');
           return;
         }
@@ -7212,9 +7275,13 @@
           const asg = ev.assigned_role || '';
           const selectBtn = `<button class="btn secondary small" data-pick-event="${ev.id}">Select</button>`;
 
-          const myRole = String(state.me?.profile?.role || '');
           const hasAssignments = !!(ev.meta && typeof ev.meta === 'object' && Array.isArray(ev.meta.assignments) && ev.meta.assignments.length);
-          const canAccept = !hasAssignments && !ev.assigned_user_id && asg && (myRole === 'manager' || myRole === asg) && String(ev.status || 'open') === 'open';
+          const canAccept = !isManagerViewAsPreviewOnly()
+            && !hasAssignments
+            && !ev.assigned_user_id
+            && asg
+            && (effectiveRole() === asg)
+            && String(ev.status || 'open') === 'open';
           const acceptBtn = canAccept ? `<button class="btn small" data-accept-event="${ev.id}">Accept</button>` : '';
 
           return `
@@ -7245,13 +7312,19 @@
               const id = Number(btn.dataset.acceptEvent);
               await api('/api/portal/events', {
                 method: 'PATCH',
-                body: { id, assignedUserId: state.me.user.id, status: 'assigned' },
+                body: { id, assignedUserId: effectiveUserId, status: 'assigned' },
               });
               await loadEvents();
             } catch(e){
               $('eventsMsg').textContent = String(e.message || e);
             }
           });
+        }
+
+        // Restore selection if possible.
+        if (prevSelectedId != null) {
+          const found = state.events.find((x) => Number(x.id) === prevSelectedId) || null;
+          setSelectedEvent(found);
         }
 
         setBadge('ok', 'loaded');
@@ -7608,6 +7681,8 @@
     on('dialerBookedOpenSchedule', 'click', () => scheduleDialerBooked().catch(() => {}));
 
     on('loadEventsBtn', 'click', () => loadEvents().catch(() => {}));
+    on('eventsSegMy', 'click', () => setEventsSubtab('my'));
+    on('eventsSegOffers', 'click', () => setEventsSubtab('offers'));
     on('newEventToggle', 'click', () => { $('newEventBox').hidden = !$('newEventBox').hidden; });
     on('createEventBtn', 'click', () => createEvent().catch(() => {}));
     on('createFollowupsBtn', 'click', () => createFollowups().catch(() => {}));
