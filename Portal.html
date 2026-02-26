@@ -353,6 +353,294 @@
           <div class="muted">Sign in to view your dashboard.</div>
         </div>
 
+        <div id="viewAccounts" class="hide">
+          <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
+            <div>
+              <div style="font-weight:900;">Accounts</div>
+              <div class="muted small">Zero-friction account management</div>
+            </div>
+            <div class="row" style="gap:8px;">
+              <button id="accountsRefreshBtn" class="btn secondary" type="button">Refresh</button>
+              <button id="accountsNewToggle" class="btn secondary" type="button">+ New</button>
+            </div>
+          </div>
+
+          <div id="accountsNewBox" class="card" style="margin-top:14px; background:#fff;" hidden>
+            <div class="bd">
+              <div style="font-weight:900;">Create account</div>
+              <div class="muted small" style="margin-top:4px;">Normally created automatically when a closer marks a deal as won.</div>
+              <div class="two" style="margin-top:10px;">
+                <div>
+                  <label>Property name</label>
+                  <input id="acctName" placeholder="Property / Community" />
+                </div>
+                <div>
+                  <label>Property address</label>
+                  <input id="acctAddress" placeholder="123 Main St, Raleigh, NC 27601" />
+                </div>
+              </div>
+              <div class="two" style="margin-top:10px;">
+                <div>
+                  <label>Primary contact name</label>
+                  <input id="acctContactName" placeholder="Jane Doe" />
+                </div>
+                <div>
+                  <label>Primary contact email</label>
+                  <input id="acctContactEmail" type="email" placeholder="jane@property.com" />
+                </div>
+              </div>
+              <div class="two" style="margin-top:10px;">
+                <div>
+                  <label>Primary contact phone</label>
+                  <input id="acctContactPhone" placeholder="(555) 555-5555" />
+                </div>
+                <div>
+                  <label>Contract tier</label>
+                  <select id="acctTier">
+                    <option value="">Select…</option>
+                    <option value="core">core</option>
+                    <option value="tier_1">tier_1</option>
+                    <option value="tier_2">tier_2</option>
+                    <option value="tier_3">tier_3</option>
+                    <option value="custom">custom</option>
+                  </select>
+                </div>
+              </div>
+              <div class="two" style="margin-top:10px;">
+                <div>
+                  <label>Term (months)</label>
+                  <input id="acctTermMonths" type="number" min="0" step="1" placeholder="6" />
+                </div>
+                <div>
+                  <label>Renewal reminder (days before end)</label>
+                  <input id="acctReminderDays" type="number" min="0" step="1" placeholder="30" />
+                </div>
+              </div>
+              <div class="two" style="margin-top:10px;">
+                <div>
+                  <label>Contract start date</label>
+                  <input id="acctStart" type="date" />
+                </div>
+                <div>
+                  <label>Contract end date</label>
+                  <input id="acctEnd" type="date" />
+                </div>
+              </div>
+              <div style="margin-top:10px;">
+                <label>Notes (internal)</label>
+                <textarea id="acctNotes" placeholder="Onboarding context, expectations, issues..."></textarea>
+              </div>
+              <div class="row" style="margin-top:10px;">
+                <button id="accountsCreateBtn" class="btn" type="button">Create</button>
+                <div id="accountsCreateMsg" class="err"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="height:14px"></div>
+          <div id="accountsMsg" class="err"></div>
+
+          <div class="two" style="grid-template-columns: 1fr 1.2fr;">
+            <div class="card" style="background:#fff;">
+              <div class="bd">
+                <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
+                  <div>
+                    <div class="muted small">Search</div>
+                    <input id="accountsQ" placeholder="Search property, address, contact" />
+                  </div>
+                  <div>
+                    <label class="muted small" style="display:flex; align-items:center; gap:8px; margin:0;">
+                      <input id="accountsExpiring" type="checkbox" style="width:auto;" />
+                      Expiring soon
+                    </label>
+                  </div>
+                </div>
+                <div style="height:10px"></div>
+                <div id="accountsList" style="display:flex; flex-direction:column; gap:10px;"></div>
+              </div>
+            </div>
+
+            <div class="card" style="background:#fff;">
+              <div class="bd">
+                <div class="muted small">Selected account</div>
+                <div id="acctSelected" style="font-weight:900; margin-top:4px;">None</div>
+                <div style="height:10px"></div>
+
+                <div class="two">
+                  <div>
+                    <label>Property name</label>
+                    <input id="acctEditName" placeholder="Property / Community" />
+                  </div>
+                  <div>
+                    <label>Contract tier</label>
+                    <input id="acctEditTier" placeholder="core / tier_1 / ..." />
+                  </div>
+                </div>
+                <div style="margin-top:10px;">
+                  <label>Property address</label>
+                  <input id="acctEditAddress" placeholder="123 Main St, Raleigh, NC 27601" />
+                </div>
+                <div class="two" style="margin-top:10px;">
+                  <div>
+                    <label>Primary contact name</label>
+                    <input id="acctEditContactName" placeholder="Jane Doe" />
+                  </div>
+                  <div>
+                    <label>Primary contact email</label>
+                    <input id="acctEditEmail" type="email" placeholder="jane@property.com" />
+                  </div>
+                </div>
+                <div class="two" style="margin-top:10px;">
+                  <div>
+                    <label>Primary contact phone</label>
+                    <input id="acctEditPhone" placeholder="(555) 555-5555" />
+                  </div>
+                  <div>
+                    <label>Term (months)</label>
+                    <input id="acctEditTermMonths" type="number" min="0" step="1" placeholder="6" />
+                  </div>
+                </div>
+                <div class="two" style="margin-top:10px;">
+                  <div>
+                    <label>Contract start</label>
+                    <input id="acctEditStart" type="date" />
+                  </div>
+                  <div>
+                    <label>Contract end</label>
+                    <input id="acctEditEnd" type="date" />
+                  </div>
+                </div>
+                <div class="two" style="margin-top:10px;">
+                  <div>
+                    <label>Renewal reminder (days before end)</label>
+                    <input id="acctEditReminderDays" type="number" min="0" step="1" placeholder="30" />
+                  </div>
+                  <div>
+                    <label>Renewal reminder date</label>
+                    <input id="acctEditReminderDate" type="date" />
+                  </div>
+                </div>
+                <div class="muted small" id="acctRenewalHint" style="margin-top:10px;"></div>
+                <div style="margin-top:10px;">
+                  <label>Notes</label>
+                  <textarea id="acctEditNotes" placeholder="Internal notes"></textarea>
+                </div>
+
+                <div class="row" style="margin-top:10px;">
+                  <button id="acctSaveBtn" class="btn" type="button">Save</button>
+                  <button id="acctDeleteBtn" class="btn secondary" type="button">Delete</button>
+                  <div id="acctSaveMsg" class="err"></div>
+                </div>
+
+                <div style="height:14px"></div>
+
+                <div class="card" style="background:#fff; border-color: rgba(199,154,59,.35);">
+                  <div class="bd">
+                    <div style="font-weight:900;">Sentiment log</div>
+                    <div class="muted small" style="margin-top:4px;">Track relationship health over time</div>
+                    <div style="height:10px"></div>
+                    <div class="two">
+                      <div>
+                        <label>Sentiment</label>
+                        <select id="sentimentKind">
+                          <option value="green">green</option>
+                          <option value="yellow">yellow</option>
+                          <option value="red">red</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label>Tags (optional)</label>
+                        <input id="sentimentTags" placeholder="pricing, communication, recap quality" />
+                      </div>
+                    </div>
+                    <div style="margin-top:10px;">
+                      <label>Note</label>
+                      <textarea id="sentimentNote" placeholder="What happened? What should we do next?"></textarea>
+                    </div>
+                    <div class="row" style="margin-top:10px;">
+                      <button id="sentimentAddBtn" class="btn secondary" type="button">Add entry</button>
+                      <div id="sentimentMsg" class="err"></div>
+                    </div>
+                    <div style="height:10px"></div>
+                    <div id="sentimentList"></div>
+                  </div>
+                </div>
+
+                <div style="height:14px"></div>
+
+                <div class="card" style="background:#fff; border-color: rgba(199,154,59,.35);">
+                  <div class="bd">
+                    <div style="font-weight:900;">Issues</div>
+                    <div class="muted small" style="margin-top:4px;">Internal issue tracking and escalations</div>
+                    <div style="height:10px"></div>
+                    <div class="two">
+                      <div>
+                        <label>Severity</label>
+                        <select id="issueSeverity">
+                          <option value="low">low</option>
+                          <option value="med">med</option>
+                          <option value="high">high</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label>Status</label>
+                        <select id="issueStatus">
+                          <option value="open">open</option>
+                          <option value="resolved">resolved</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div style="margin-top:10px;">
+                      <label>Issue</label>
+                      <textarea id="issueNote" placeholder="What is the issue? Who owns it? Any next steps?"></textarea>
+                    </div>
+                    <div class="row" style="margin-top:10px;">
+                      <button id="issueAddBtn" class="btn secondary" type="button">Add issue</button>
+                      <div id="issueMsg" class="err"></div>
+                    </div>
+                    <div style="height:10px"></div>
+                    <div id="issueList"></div>
+                  </div>
+                </div>
+
+                <div style="height:14px"></div>
+
+                <div class="card" style="background:#fff; border-color: rgba(199,154,59,.35);">
+                  <div class="bd">
+                    <div style="font-weight:900;">Templates</div>
+                    <div class="muted small" style="margin-top:4px;">Email / SMS templates</div>
+                    <div style="height:10px"></div>
+                    <div class="two">
+                      <div>
+                        <label>Template type</label>
+                        <select id="tplType">
+                          <option value="email">email</option>
+                          <option value="sms">sms</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label>Name</label>
+                        <input id="tplName" placeholder="Quarterly check-in" />
+                      </div>
+                    </div>
+                    <div style="margin-top:10px;">
+                      <label>Body</label>
+                      <textarea id="tplBody" placeholder="Hi {{name}}, ..."></textarea>
+                    </div>
+                    <div class="row" style="margin-top:10px;">
+                      <button id="tplSaveBtn" class="btn secondary" type="button">Save template</button>
+                      <div id="tplMsg" class="err"></div>
+                    </div>
+                    <div style="height:10px"></div>
+                    <div id="tplList"></div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div id="viewLeads" class="hide">
           <div class="row" style="justify-content:space-between; gap:12px;">
             <div class="row" style="flex: 1;">
@@ -475,11 +763,11 @@
                   <label>Status</label>
                   <select id="leadEditStatus">
                     <option value="">(unchanged)</option>
-                    <option>new</option>
-                    <option>working</option>
-                    <option>booked</option>
-                    <option>won</option>
-                    <option>lost</option>
+                    <option value="new">new</option>
+                    <option value="working">working</option>
+                    <option value="booked">booked</option>
+                    <option value="won">won</option>
+                    <option value="lost">lost</option>
                   </select>
                 </div>
                 <div>
@@ -1061,12 +1349,20 @@
           <div id="newEventBox" class="card" style="margin-top:14px; background: #fff;" hidden>
             <div class="bd">
               <div class="two">
-                <div><label>Title</label><input id="neTitle" placeholder="Property event" /></div>
+                <div><label>Property name</label><input id="nePropertyName" placeholder="Property name" /></div>
                 <div><label>Date</label><input id="neDate" type="date" /></div>
+              </div>
+              <div style="margin-top:10px;">
+                <label>Property address</label>
+                <input id="neAddress" placeholder="123 Main St" />
               </div>
               <div class="two" style="margin-top:10px;">
                 <div><label>City</label><input id="neCity" /></div>
                 <div><label>State</label><input id="neState" placeholder="NC" /></div>
+              </div>
+              <div style="margin-top:10px;">
+                <label>Title (optional override)</label>
+                <input id="neTitle" placeholder="Property event" />
               </div>
               <div style="margin-top:10px;">
                 <label>Notes</label>
@@ -1158,6 +1454,26 @@
               </div>
 
               <div style="margin-top:10px;">
+                <label>Standout moments / wins</label>
+                <textarea id="recapStandouts"></textarea>
+              </div>
+
+              <div style="margin-top:10px;">
+                <label>Giveaway winners (if any)</label>
+                <textarea id="recapGiveawayWinners" placeholder="Name / unit (or notes)"></textarea>
+              </div>
+
+              <div style="margin-top:10px;">
+                <label>Resident feedback highlights</label>
+                <textarea id="recapFeedbackHighlights"></textarea>
+              </div>
+
+              <div style="margin-top:10px;">
+                <label>Event flow doc link (optional)</label>
+                <input id="recapEventFlowDoc" placeholder="https://..." />
+              </div>
+
+              <div style="margin-top:10px;">
                 <label>Media links (one per line)</label>
                 <textarea id="recapMedia" placeholder="https://...\nhttps://..."></textarea>
               </div>
@@ -1171,6 +1487,184 @@
               <div class="muted small" style="font-weight:900;">Recent recaps</div>
               <div style="height:8px"></div>
               <div id="recapsList"></div>
+            </div>
+          </div>
+
+          <div id="eventOpsWrap" class="card hide" style="margin-top:14px; background:#fff;">
+            <div class="bd">
+              <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
+                <div>
+                  <div class="muted small">Coordinator / Ops</div>
+                  <div style="font-weight:900; margin-top:4px;">Event checklist & staffing</div>
+                </div>
+                <button id="createFollowupsBtn" class="btn secondary" type="button">Create 24h follow-ups</button>
+              </div>
+
+              <div style="height:10px"></div>
+              <div id="eventOpsMsg" class="err"></div>
+
+              <div class="two">
+                <div>
+                  <div style="font-weight:900;">Staffing</div>
+                  <div class="muted small">Assign host/media and track acceptance</div>
+                  <div style="height:10px"></div>
+
+                  <div class="row" style="gap:8px; flex-wrap:wrap;">
+                    <select id="assignHostUser" style="min-width:260px;">
+                      <option value="">Assign host…</option>
+                    </select>
+                    <button id="addHostBtn" class="btn secondary" type="button">Add host</button>
+                  </div>
+                  <div style="height:8px"></div>
+                  <div class="row" style="gap:8px; flex-wrap:wrap;">
+                    <select id="assignMediaUser" style="min-width:260px;">
+                      <option value="">Assign media…</option>
+                    </select>
+                    <button id="addMediaBtn" class="btn secondary" type="button">Add media</button>
+                  </div>
+
+                  <div style="height:10px"></div>
+                  <div id="assignmentsList"></div>
+
+                  <div id="myAssignmentActions" class="hide" style="margin-top:10px;"></div>
+                </div>
+
+                <div>
+                  <div style="font-weight:900;">Checklist</div>
+                  <div class="muted small">Track deliverables for AM/management</div>
+                  <div style="height:10px"></div>
+
+                  <div class="row" style="gap:12px; flex-wrap:wrap;">
+                    <label class="muted small" style="display:flex; align-items:center; gap:8px; margin:0;">
+                      <input id="chkRecapReceived" type="checkbox" style="width:auto;" />
+                      Recap received
+                    </label>
+                    <label class="muted small" style="display:flex; align-items:center; gap:8px; margin:0;">
+                      <input id="chkMediaReceived" type="checkbox" style="width:auto;" />
+                      Media received
+                    </label>
+                    <label class="muted small" style="display:flex; align-items:center; gap:8px; margin:0;">
+                      <input id="chkFeedbackReceived" type="checkbox" style="width:auto;" />
+                      Feedback received
+                    </label>
+                    <label class="muted small" style="display:flex; align-items:center; gap:8px; margin:0;">
+                      <input id="chkReportSent" type="checkbox" style="width:auto;" />
+                      Report sent
+                    </label>
+                  </div>
+
+                  <div style="height:10px"></div>
+                  <button id="saveChecklistBtn" class="btn secondary" type="button">Save checklist</button>
+                </div>
+              </div>
+
+              <div style="height:14px"></div>
+
+              <div class="two">
+                <div>
+                  <div style="font-weight:900;">Plan</div>
+                  <div style="height:10px"></div>
+                  <div class="two">
+                    <div>
+                      <label>Strategy</label>
+                      <select id="planStrategy">
+                        <option value="">Select…</option>
+                        <option value="anchor">Anchor</option>
+                        <option value="momentum">Momentum</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label>Event type</label>
+                      <select id="planEventType">
+                        <option value="">Select…</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div style="margin-top:10px;">
+                    <label>Justification</label>
+                    <textarea id="planJustification" placeholder="Why this strategy/type for this property?"></textarea>
+                  </div>
+                  <div class="row" style="margin-top:10px;">
+                    <button id="savePlanBtn" class="btn secondary" type="button">Save plan</button>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="font-weight:900;">Budget</div>
+                  <div class="muted small">Constraint: host pay ≥ 75% of media pay (when media included)</div>
+                  <div style="height:10px"></div>
+
+                  <div class="two">
+                    <div><label>Host pay ($)</label><input id="budHost" type="number" min="0" step="0.01" /></div>
+                    <div><label>Media pay ($)</label><input id="budMedia" type="number" min="0" step="0.01" /></div>
+                  </div>
+
+                  <div class="two" style="margin-top:10px;">
+                    <div><label>Food/catering ($)</label><input id="budFood" type="number" min="0" step="0.01" /></div>
+                    <div><label>Decor ($)</label><input id="budDecor" type="number" min="0" step="0.01" /></div>
+                  </div>
+
+                  <div class="two" style="margin-top:10px;">
+                    <div><label>Supplies ($)</label><input id="budSupplies" type="number" min="0" step="0.01" /></div>
+                    <div><label>Contingency ($)</label><input id="budContingency" type="number" min="0" step="0.01" /></div>
+                  </div>
+
+                  <div style="margin-top:10px;" class="row">
+                    <button id="saveBudgetBtn" class="btn secondary" type="button">Save budget</button>
+                    <div id="budgetMsg" class="err"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="height:14px"></div>
+              <div class="card" style="background:#fff; border-color: rgba(199,154,59,.25);">
+                <div class="bd">
+                  <div style="font-weight:900;">Vendor & Event Type CSV</div>
+                  <div class="muted small">Paste CSVs here once; they will be stored for browsing</div>
+                  <div style="height:10px"></div>
+
+                  <div class="two">
+                    <div>
+                      <label>Vendors CSV</label>
+                      <textarea id="vendorsCsv" placeholder="paste vendors CSV..."></textarea>
+                      <div class="row" style="margin-top:8px;">
+                        <button id="importVendorsBtn" class="btn secondary" type="button">Import vendors</button>
+                        <div id="importVendorsMsg" class="err"></div>
+                      </div>
+                    </div>
+                    <div>
+                      <label>Event types CSV</label>
+                      <textarea id="eventTypesCsv" placeholder="paste event types CSV..."></textarea>
+                      <div class="row" style="margin-top:8px;">
+                        <button id="importEventTypesBtn" class="btn secondary" type="button">Import event types</button>
+                        <div id="importEventTypesMsg" class="err"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style="height:10px"></div>
+                  <div class="two">
+                    <div>
+                      <label>Browse vendors</label>
+                      <input id="vendorQ" placeholder="search vendors (name, city, state, etc.)" />
+                      <div class="row" style="margin-top:8px;">
+                        <button id="loadVendorsBtn" class="btn secondary" type="button">Search</button>
+                        <div id="vendorsMsg" class="err"></div>
+                      </div>
+                      <div id="vendorsList" style="margin-top:10px;"></div>
+                    </div>
+                    <div>
+                      <label>Browse event types</label>
+                      <input id="eventTypeQ" placeholder="search event types" />
+                      <div class="row" style="margin-top:8px;">
+                        <button id="loadEventTypesBtn" class="btn secondary" type="button">Search</button>
+                        <div id="eventTypesMsg" class="err"></div>
+                      </div>
+                      <div id="eventTypesList" style="margin-top:10px;"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1830,6 +2324,7 @@
         leads: 'Leads',
         calls: callsTitle,
         meetings: 'My meetings',
+        accounts: 'Accounts',
         closer: 'Sales',
         events: 'Events',
         payments: 'Payments',
@@ -1840,6 +2335,7 @@
         leads: 'Leads',
         calls: 'Calls',
         meetings: 'Meetings',
+        accounts: 'Accounts',
         closer: 'Closer',
         events: 'Events',
         payments: 'Payments',
@@ -1848,7 +2344,7 @@
 
       $('viewTitle').textContent = title;
 
-      const views = ['Overview','Leads','Calls','Meetings','Closer','Events','Payments','Manager'];
+      const views = ['Overview','Leads','Calls','Meetings','Accounts','Closer','Events','Payments','Manager'];
       for (const v of views) $('view'+v).classList.add('hide');
       const viewEl = $('view' + viewKey);
       if (viewEl) viewEl.classList.remove('hide');
@@ -1864,6 +2360,9 @@
         renderMeetingsSubtab();
         if (state.meetingsSubtab === 'availability') loadAvailability().catch(()=>{});
         else loadAppointmentsInto('meetingsTbody', 'meetingsMsg').catch(()=>{});
+      }
+      if (tab === 'accounts') {
+        loadAccounts().catch(()=>{});
       }
       if (tab === 'closer') {
         renderCloserSubtab();
@@ -1920,6 +2419,9 @@
       }
       if (tab === 'meetings') {
         await loadAppointmentsInto('meetingsTbody', 'meetingsMsg').catch(()=>{});
+      }
+      if (tab === 'accounts') {
+        await loadAccounts().catch(()=>{});
       }
       if (tab === 'events') {
         await loadEvents().catch(()=>{});
@@ -2041,6 +2543,9 @@
         navItems.push({ id:'closer', label:'Sales' });
         navItems.push({ id:'meetings', label:'Meetings' });
       }
+      if (er === 'account_manager' || er === 'manager') {
+        navItems.push({ id:'accounts', label:'Accounts' });
+      }
       if (['event_host','media_team','event_coordinator'].includes(er)) {
         navItems.push({ id:'events', label: er === 'media_team' ? 'Content' : 'Events' });
       }
@@ -2091,6 +2596,7 @@
         leads: 'L',
         calls: 'C',
         meetings: 'M',
+        accounts: 'A',
         closer: 'S',
         events: 'E',
         payments: '$',
@@ -3433,12 +3939,658 @@
       }
     }
 
+    // Accounts (Account Manager)
+
+    function ensureAccountsInit(){
+      state.accounts = state.accounts || {
+        list: [],
+        selectedId: '',
+        selected: null,
+        sentiment: [],
+        issues: [],
+        templates: [],
+        qTimer: null,
+      };
+    }
+
+    function accountsEditable(){
+      const er = effectiveRole();
+      if (!['account_manager','manager'].includes(er)) return false;
+      // Manager view-as must remain read-only (server enforced too).
+      if (isManagerUser() && String(state.viewAsRole || '').trim()) return false;
+      return true;
+    }
+
+    function cleanYmd(s){
+      const v = String(s || '').trim();
+      if (!v) return '';
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return '';
+      return v;
+    }
+
+    function addDaysYmd(ymd, days){
+      const s = cleanYmd(ymd);
+      if (!s) return '';
+      const d = new Date(s + 'T00:00:00');
+      if (Number.isNaN(d.getTime())) return '';
+      d.setDate(d.getDate() + Number(days || 0));
+      const yyyy = String(d.getFullYear()).padStart(4,'0');
+      const mm = String(d.getMonth() + 1).padStart(2,'0');
+      const dd = String(d.getDate()).padStart(2,'0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function daysInMonth(y, m0){
+      return new Date(y, m0 + 1, 0).getDate();
+    }
+
+    function addMonthsYmd(ymd, months){
+      const s = cleanYmd(ymd);
+      if (!s) return '';
+      const m = Math.trunc(Number(months || 0));
+      if (!Number.isFinite(m) || !m) return s;
+      const [yyyy, mm, dd] = s.split('-').map((x)=>Number(x));
+      if (!yyyy || !mm || !dd) return '';
+      const fromM0 = mm - 1;
+      const base = new Date(yyyy, fromM0, 1);
+      base.setMonth(base.getMonth() + m);
+      const ty = base.getFullYear();
+      const tm0 = base.getMonth();
+      const day = Math.min(dd, daysInMonth(ty, tm0));
+      const out = new Date(ty, tm0, day);
+      const outY = String(out.getFullYear()).padStart(4,'0');
+      const outM = String(out.getMonth() + 1).padStart(2,'0');
+      const outD = String(out.getDate()).padStart(2,'0');
+      return `${outY}-${outM}-${outD}`;
+    }
+
+    function computeContractEnd({ contractStart, termMonths, contractEnd }){
+      const end = cleanYmd(contractEnd);
+      if (end) return end;
+      const start = cleanYmd(contractStart);
+      const tm = Math.trunc(Number(termMonths || 0));
+      if (!start || !Number.isFinite(tm) || tm <= 0) return '';
+      return addMonthsYmd(start, tm);
+    }
+
+    function computeRenewalReminderDate({ contractEnd, reminderDays }){
+      const end = cleanYmd(contractEnd);
+      if (!end) return '';
+      const days = Math.trunc(Number(reminderDays || 30));
+      const safe = Number.isFinite(days) ? Math.max(0, Math.min(3650, days)) : 30;
+      return addDaysYmd(end, -safe);
+    }
+
+    function renderRenewalHint({ elId, contractStart, termMonths, contractEnd, reminderDays }){
+      const el = $(elId);
+      if (!el) return;
+      const end = computeContractEnd({ contractStart, termMonths, contractEnd });
+      const rr = computeRenewalReminderDate({ contractEnd: end, reminderDays });
+      if (!end && !rr) { el.textContent = ''; return; }
+      const bits = [];
+      if (end) bits.push('Contract end: ' + end);
+      if (rr) bits.push('Renewal reminder: ' + rr);
+      el.textContent = bits.join(' • ');
+    }
+
+    function syncNewAccountDerived(){
+      const start = cleanYmd($('acctStart')?.value);
+      const termMonths = Math.trunc(Number($('acctTermMonths')?.value || 0));
+      const end = computeContractEnd({ contractStart: start, termMonths, contractEnd: $('acctEnd')?.value });
+      if ($('acctEnd') && !$('acctEnd').value && end) $('acctEnd').value = end;
+    }
+
+    function syncEditAccountDerived(){
+      const start = cleanYmd($('acctEditStart')?.value);
+      const termMonths = Math.trunc(Number($('acctEditTermMonths')?.value || 0));
+      const reminderDays = Math.trunc(Number($('acctEditReminderDays')?.value || 30));
+      const end = computeContractEnd({ contractStart: start, termMonths, contractEnd: $('acctEditEnd')?.value });
+      if ($('acctEditEnd') && !$('acctEditEnd').value && end) $('acctEditEnd').value = end;
+      const rr = computeRenewalReminderDate({ contractEnd: end, reminderDays });
+      if ($('acctEditReminderDate')) $('acctEditReminderDate').value = rr || '';
+      renderRenewalHint({ elId: 'acctRenewalHint', contractStart: start, termMonths, contractEnd: end, reminderDays });
+    }
+
+    function accountMatchesQ(a, q){
+      const qq = String(q || '').trim().toLowerCase();
+      if (!qq) return true;
+      const hay = [
+        a?.name,
+        a?.propertyName,
+        a?.address,
+        a?.city,
+        a?.state,
+        a?.postalCode,
+        a?.primaryContactName,
+        a?.primaryContactEmail,
+        a?.primaryContactPhone,
+        a?.contractTier,
+        a?.tier,
+        a?.contractStart,
+        a?.contractEnd,
+        a?.renewalReminderDate,
+        a?.email,
+        a?.phone,
+        a?.notes,
+      ]
+        .map((x) => String(x || '').toLowerCase())
+        .join(' ');
+      return hay.includes(qq);
+    }
+
+    function renderAccounts(){
+      ensureAccountsInit();
+      const list = $('accountsList');
+      if (!list) return;
+      const q = String($('accountsQ')?.value || '').trim();
+      const expiring = !!$('accountsExpiring')?.checked;
+
+      const items = (Array.isArray(state.accounts.list) ? state.accounts.list : [])
+        .filter((a) => accountMatchesQ(a, q));
+
+      const soonDays = 45;
+      const now = new Date();
+      const soon = new Date(now.getTime() + soonDays * 86400 * 1000);
+      const filtered = expiring ? items.filter((a) => {
+        const end = String(a?.contractEnd || '').trim();
+        if (!end) return false;
+        const d = new Date(end + 'T00:00:00');
+        if (Number.isNaN(d.getTime())) return false;
+        return d <= soon;
+      }) : items;
+
+      if (!filtered.length) {
+        list.innerHTML = '<div class="muted small">No accounts yet.</div>';
+        return;
+      }
+
+      const sel = String(state.accounts.selectedId || '');
+      list.innerHTML = filtered.map((a) => {
+        const id = String(a?.id || '');
+        const active = id && id === sel;
+        const name = String(a?.propertyName || a?.name || '').trim() || '(no property)';
+        const tier = String(a?.contractTier || a?.tier || '').trim();
+        const end = String(a?.contractEnd || '').trim();
+        const rr = String(a?.renewalReminderDate || '').trim();
+        const contact = String(a?.primaryContactName || '').trim();
+        const meta = [
+          contact ? contact : '',
+          tier ? ('tier ' + tier) : '',
+          rr ? ('remind ' + rr) : (end ? ('ends ' + end) : ''),
+        ].filter(Boolean).join(' • ');
+        return `
+          <button type="button" class="card" data-acct-pick="${escapeHtml(id)}" style="text-align:left; background:#fff; border-color:${active ? 'rgba(199,154,59,.55)' : 'rgba(199,154,59,.25)'}">
+            <div class="bd">
+              <div style="font-weight:900;">${escapeHtml(name)}</div>
+              ${meta ? `<div class="muted small" style="margin-top:4px;">${escapeHtml(meta)}</div>` : ''}
+            </div>
+          </button>
+        `;
+      }).join('');
+
+      for (const btn of list.querySelectorAll('[data-acct-pick]')) {
+        btn.addEventListener('click', () => {
+          selectAccount(String(btn.dataset.acctPick || '')).catch(()=>{});
+        });
+      }
+    }
+
+    function renderSelectedAccount(){
+      ensureAccountsInit();
+      const a = state.accounts.selected;
+      $('acctSelected').textContent = a ? (String(a.propertyName || a.name || '').trim() || '(no property)') : 'None';
+
+      const editable = accountsEditable();
+      const disable = !editable || !a;
+      const ids = [
+        'acctEditName','acctEditAddress','acctEditContactName','acctEditEmail','acctEditPhone',
+        'acctEditTier','acctEditTermMonths','acctEditStart','acctEditEnd','acctEditReminderDays','acctEditReminderDate',
+        'acctEditNotes','acctSaveBtn','acctDeleteBtn',
+        'sentimentKind','sentimentTags','sentimentNote','sentimentAddBtn',
+        'issueSeverity','issueStatus','issueNote','issueAddBtn',
+        'tplType','tplName','tplBody','tplSaveBtn'
+      ];
+      for (const id of ids) {
+        const el = $(id);
+        if (!el) continue;
+        if (id === 'tplType' || id === 'tplName' || id === 'tplBody' || id === 'tplSaveBtn') {
+          // Templates are global; allow even without selecting an account (if editable).
+          el.disabled = !editable;
+        } else {
+          el.disabled = disable;
+        }
+      }
+
+      // Derived field should not be edited directly.
+      if ($('acctEditReminderDate')) $('acctEditReminderDate').disabled = true;
+
+      // New toggle should be disabled in view-as.
+      if ($('accountsNewToggle')) $('accountsNewToggle').disabled = !editable;
+
+      // New-account form
+      const newIds = ['acctName','acctAddress','acctContactName','acctContactEmail','acctContactPhone','acctTier','acctTermMonths','acctReminderDays','acctStart','acctEnd','acctNotes','accountsCreateBtn'];
+      for (const id of newIds) {
+        const el = $(id);
+        if (el) el.disabled = !editable;
+      }
+
+      if (!a) {
+        if ($('acctEditName')) $('acctEditName').value = '';
+        if ($('acctEditAddress')) $('acctEditAddress').value = '';
+        if ($('acctEditContactName')) $('acctEditContactName').value = '';
+        if ($('acctEditTier')) $('acctEditTier').value = '';
+        if ($('acctEditTermMonths')) $('acctEditTermMonths').value = '';
+        if ($('acctEditStart')) $('acctEditStart').value = '';
+        if ($('acctEditEnd')) $('acctEditEnd').value = '';
+        if ($('acctEditReminderDays')) $('acctEditReminderDays').value = '';
+        if ($('acctEditReminderDate')) $('acctEditReminderDate').value = '';
+        if ($('acctEditEmail')) $('acctEditEmail').value = '';
+        if ($('acctEditPhone')) $('acctEditPhone').value = '';
+        if ($('acctEditNotes')) $('acctEditNotes').value = '';
+        if ($('acctRenewalHint')) $('acctRenewalHint').textContent = '';
+        $('sentimentList').innerHTML = '<div class="muted small">Select an account.</div>';
+        $('issueList').innerHTML = '<div class="muted small">Select an account.</div>';
+        return;
+      }
+
+      const contractStart = String(a.contractStart || '');
+      const termMonths = Number(a.termMonths || 0);
+      const contractEnd = computeContractEnd({ contractStart, termMonths, contractEnd: a.contractEnd });
+      const reminderDays = Number(a.renewalReminderDays != null ? a.renewalReminderDays : 30);
+      const reminderDate = cleanYmd(a.renewalReminderDate) || computeRenewalReminderDate({ contractEnd, reminderDays });
+
+      if ($('acctEditName')) $('acctEditName').value = String(a.propertyName || a.name || '');
+      if ($('acctEditAddress')) $('acctEditAddress').value = String(a.address || '');
+      if ($('acctEditContactName')) $('acctEditContactName').value = String(a.primaryContactName || '');
+      if ($('acctEditTier')) $('acctEditTier').value = String(a.contractTier || a.tier || '');
+      if ($('acctEditTermMonths')) $('acctEditTermMonths').value = String(a.termMonths != null ? a.termMonths : '');
+      if ($('acctEditStart')) $('acctEditStart').value = cleanYmd(a.contractStart) || '';
+      if ($('acctEditEnd')) $('acctEditEnd').value = contractEnd || '';
+      if ($('acctEditReminderDays')) $('acctEditReminderDays').value = String(a.renewalReminderDays != null ? a.renewalReminderDays : 30);
+      if ($('acctEditReminderDate')) $('acctEditReminderDate').value = reminderDate || '';
+      if ($('acctEditEmail')) $('acctEditEmail').value = String(a.primaryContactEmail || a.email || '');
+      if ($('acctEditPhone')) $('acctEditPhone').value = String(a.primaryContactPhone || a.phone || '');
+      if ($('acctEditNotes')) $('acctEditNotes').value = String(a.notes || '');
+
+      renderRenewalHint({
+        elId: 'acctRenewalHint',
+        contractStart: cleanYmd(a.contractStart),
+        termMonths: a.termMonths,
+        contractEnd,
+        reminderDays: a.renewalReminderDays,
+      });
+    }
+
+    function renderSentiment(){
+      ensureAccountsInit();
+      const el = $('sentimentList');
+      if (!el) return;
+      const items = Array.isArray(state.accounts.sentiment) ? state.accounts.sentiment : [];
+      if (!items.length) {
+        el.innerHTML = '<div class="muted small">No sentiment entries yet.</div>';
+        return;
+      }
+      el.innerHTML = items.slice().reverse().map((x) => {
+        const when = String(x?.createdAt || '');
+        const kind = String(x?.kind || '');
+        const tags = Array.isArray(x?.tags) ? x.tags.join(', ') : String(x?.tags || '');
+        const note = String(x?.note || '');
+        const meta = [kind ? kind.toUpperCase() : '', tags ? ('tags: ' + tags) : ''].filter(Boolean).join(' • ');
+        return `
+          <div class="card" style="background:#fff; margin-top:10px;">
+            <div class="bd">
+              <div class="muted small">${escapeHtml(when)}</div>
+              ${meta ? `<div class="small" style="margin-top:4px; font-weight:900;">${escapeHtml(meta)}</div>` : ''}
+              ${note ? `<div style="margin-top:6px; white-space:pre-wrap;">${escapeHtml(note)}</div>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderIssues(){
+      ensureAccountsInit();
+      const el = $('issueList');
+      if (!el) return;
+      const items = Array.isArray(state.accounts.issues) ? state.accounts.issues : [];
+      if (!items.length) {
+        el.innerHTML = '<div class="muted small">No issues yet.</div>';
+        return;
+      }
+      el.innerHTML = items.slice().reverse().map((x) => {
+        const when = String(x?.createdAt || '');
+        const sev = String(x?.severity || '');
+        const st = String(x?.status || '');
+        const note = String(x?.note || '');
+        const meta = [sev ? ('sev ' + sev) : '', st ? st : ''].filter(Boolean).join(' • ');
+        return `
+          <div class="card" style="background:#fff; margin-top:10px;">
+            <div class="bd">
+              <div class="muted small">${escapeHtml(when)}</div>
+              ${meta ? `<div class="small" style="margin-top:4px; font-weight:900;">${escapeHtml(meta)}</div>` : ''}
+              ${note ? `<div style="margin-top:6px; white-space:pre-wrap;">${escapeHtml(note)}</div>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderTemplates(){
+      ensureAccountsInit();
+      const el = $('tplList');
+      if (!el) return;
+      const items = Array.isArray(state.accounts.templates) ? state.accounts.templates : [];
+      if (!items.length) {
+        el.innerHTML = '<div class="muted small">No templates yet.</div>';
+        return;
+      }
+      el.innerHTML = items.slice().reverse().map((t) => {
+        const name = String(t?.name || '').trim() || '(no name)';
+        const type = String(t?.type || '').trim();
+        const body = String(t?.body || '').trim();
+        return `
+          <div class="card" style="background:#fff; margin-top:10px;">
+            <div class="bd">
+              <div style="font-weight:900;">${escapeHtml(name)}</div>
+              ${type ? `<div class="muted small" style="margin-top:2px;">${escapeHtml(type)}</div>` : ''}
+              ${body ? `<div class="small" style="margin-top:6px; white-space:pre-wrap;">${escapeHtml(body)}</div>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function loadAccounts(){
+      ensureAccountsInit();
+      if (!$('viewAccounts')) return;
+      $('accountsMsg').textContent = '';
+      $('acctSaveMsg').textContent = '';
+      const show = (effectiveRole() === 'account_manager' || effectiveRole() === 'manager');
+      $('viewAccounts').classList.toggle('hide', !show);
+      if (!show) return;
+
+      try {
+        const expiring = !!$('accountsExpiring')?.checked;
+        const q = String($('accountsQ')?.value || '').trim();
+        const url = '/api/portal/accounts'
+          + (q || expiring ? ('?' + new URLSearchParams({
+            q: q || '',
+            expiringSoon: expiring ? '1' : '0'
+          }).toString()) : '');
+        const j = await api(url);
+        state.accounts.list = Array.isArray(j.accounts) ? j.accounts : [];
+
+        // Keep selection if possible
+        const sel = String(state.accounts.selectedId || '');
+        const found = sel ? state.accounts.list.find((x) => String(x?.id || '') === sel) : null;
+        if (found) {
+          state.accounts.selected = found;
+        } else {
+          state.accounts.selectedId = '';
+          state.accounts.selected = null;
+        }
+
+        renderAccounts();
+        renderSelectedAccount();
+
+        if (!state.accounts.templates.length) {
+          await loadTemplates().catch(()=>{});
+        }
+      } catch (e) {
+        $('accountsMsg').textContent = String(e.message || e);
+      }
+    }
+
+    async function selectAccount(accountId){
+      ensureAccountsInit();
+      $('acctSaveMsg').textContent = '';
+      const id = String(accountId || '').trim();
+      state.accounts.selectedId = id;
+      state.accounts.selected = (Array.isArray(state.accounts.list) ? state.accounts.list : []).find((x) => String(x?.id || '') === id) || null;
+      renderAccounts();
+      renderSelectedAccount();
+      await loadSentiment().catch(()=>{});
+      await loadIssues().catch(()=>{});
+    }
+
+    async function createAccount(){
+      ensureAccountsInit();
+      $('accountsCreateMsg').textContent = '';
+      try {
+        const name = String($('acctName').value || '').trim();
+        const addr = String($('acctAddress').value || '').trim();
+        const contactName = String($('acctContactName').value || '').trim();
+        if (!name) throw new Error('property_name_required');
+        if (!addr) throw new Error('property_address_required');
+        if (!contactName) throw new Error('primary_contact_name_required');
+
+        const termMonths = Math.trunc(Number($('acctTermMonths').value || 0));
+        const reminderDays = Math.trunc(Number($('acctReminderDays').value || 30));
+        const contractStart = cleanYmd($('acctStart').value) || '';
+        const contractEnd = computeContractEnd({ contractStart, termMonths, contractEnd: $('acctEnd').value });
+        const body = {
+          name,
+          propertyName: name,
+          address: addr,
+          primaryContactName: contactName,
+          primaryContactEmail: String($('acctContactEmail').value || '').trim(),
+          primaryContactPhone: String($('acctContactPhone').value || '').trim(),
+          contractTier: String($('acctTier').value || '').trim(),
+          tier: String($('acctTier').value || '').trim(),
+          termMonths: Number.isFinite(termMonths) ? termMonths : 0,
+          renewalReminderDays: Number.isFinite(reminderDays) ? reminderDays : 30,
+          contractStart,
+          contractEnd,
+          email: String($('acctContactEmail').value || '').trim(),
+          phone: String($('acctContactPhone').value || '').trim(),
+          notes: String($('acctNotes').value || '').trim(),
+        };
+        const j = await api('/api/portal/accounts', { method:'POST', body });
+        $('accountsNewBox').hidden = true;
+        $('acctName').value = '';
+        $('acctAddress').value = '';
+        $('acctContactName').value = '';
+        $('acctContactEmail').value = '';
+        $('acctContactPhone').value = '';
+        $('acctTier').value = '';
+        $('acctTermMonths').value = '';
+        $('acctReminderDays').value = '';
+        $('acctStart').value = '';
+        $('acctEnd').value = '';
+        $('acctNotes').value = '';
+
+        await loadAccounts();
+        const id = String(j?.account?.id || '').trim();
+        if (id) await selectAccount(id);
+      } catch (e) {
+        $('accountsCreateMsg').textContent = String(e.message || e);
+      }
+    }
+
+    async function saveAccount(){
+      ensureAccountsInit();
+      $('acctSaveMsg').textContent = '';
+      try {
+        const a = state.accounts.selected;
+        if (!a || !a.id) throw new Error('select_account');
+
+        const name = String($('acctEditName').value || '').trim();
+        if (!name) throw new Error('property_name_required');
+
+        const termMonths = Math.trunc(Number($('acctEditTermMonths').value || 0));
+        const reminderDays = Math.trunc(Number($('acctEditReminderDays').value || 30));
+        const contractStart = cleanYmd($('acctEditStart').value) || '';
+        const contractEnd = computeContractEnd({ contractStart, termMonths, contractEnd: $('acctEditEnd').value });
+        const reminderDate = computeRenewalReminderDate({ contractEnd, reminderDays });
+
+        const patch = {
+          name,
+          propertyName: name,
+          address: String($('acctEditAddress').value || '').trim(),
+          primaryContactName: String($('acctEditContactName').value || '').trim(),
+          primaryContactEmail: String($('acctEditEmail').value || '').trim(),
+          primaryContactPhone: String($('acctEditPhone').value || '').trim(),
+          contractTier: String($('acctEditTier').value || '').trim(),
+          tier: String($('acctEditTier').value || '').trim(),
+          termMonths: Number.isFinite(termMonths) ? termMonths : 0,
+          renewalReminderDays: Number.isFinite(reminderDays) ? reminderDays : 30,
+          contractStart,
+          contractEnd,
+          renewalReminderDate: reminderDate,
+          email: String($('acctEditEmail').value || '').trim(),
+          phone: String($('acctEditPhone').value || '').trim(),
+          notes: String($('acctEditNotes').value || '').trim(),
+        };
+        const j = await api('/api/portal/accounts', { method:'PUT', body: { id: a.id, patch } });
+        const updated = j?.account || null;
+        if (updated && updated.id) {
+          // update local list
+          state.accounts.list = (Array.isArray(state.accounts.list) ? state.accounts.list : []).map((x) => String(x?.id || '') === String(updated.id) ? updated : x);
+          state.accounts.selected = updated;
+        }
+        renderAccounts();
+        renderSelectedAccount();
+        $('acctSaveMsg').textContent = '';
+        setBadge('ok', 'saved');
+      } catch (e) {
+        $('acctSaveMsg').textContent = String(e.message || e);
+      }
+    }
+
+    async function deleteAccount(){
+      ensureAccountsInit();
+      $('acctSaveMsg').textContent = '';
+      try {
+        const a = state.accounts.selected;
+        if (!a || !a.id) throw new Error('select_account');
+        const ok = confirm('Delete this account?');
+        if (!ok) return;
+        await api('/api/portal/accounts', { method:'DELETE', body: { id: a.id } });
+        state.accounts.selectedId = '';
+        state.accounts.selected = null;
+        state.accounts.sentiment = [];
+        state.accounts.issues = [];
+        await loadAccounts();
+        renderSelectedAccount();
+        renderSentiment();
+        renderIssues();
+      } catch (e) {
+        $('acctSaveMsg').textContent = String(e.message || e);
+      }
+    }
+
+    async function loadSentiment(){
+      ensureAccountsInit();
+      $('sentimentMsg').textContent = '';
+      const a = state.accounts.selected;
+      if (!a || !a.id) { state.accounts.sentiment = []; renderSentiment(); return; }
+      try {
+        const j = await api('/api/portal/account_sentiment?accountId=' + encodeURIComponent(String(a.id)));
+        state.accounts.sentiment = Array.isArray(j.entries) ? j.entries : [];
+        renderSentiment();
+      } catch (e) {
+        $('sentimentMsg').textContent = String(e.message || e);
+      }
+    }
+
+    async function addSentiment(){
+      ensureAccountsInit();
+      $('sentimentMsg').textContent = '';
+      const a = state.accounts.selected;
+      if (!a || !a.id) { $('sentimentMsg').textContent = 'select an account'; return; }
+      try {
+        const tags = String($('sentimentTags').value || '').split(',').map((x)=>x.trim()).filter(Boolean).slice(0, 10);
+        await api('/api/portal/account_sentiment', {
+          method:'POST',
+          body: {
+            accountId: a.id,
+            kind: String($('sentimentKind').value || 'green'),
+            tags,
+            note: String($('sentimentNote').value || '').trim(),
+          }
+        });
+        $('sentimentTags').value = '';
+        $('sentimentNote').value = '';
+        await loadSentiment();
+      } catch (e) {
+        $('sentimentMsg').textContent = String(e.message || e);
+      }
+    }
+
+    async function loadIssues(){
+      ensureAccountsInit();
+      $('issueMsg').textContent = '';
+      const a = state.accounts.selected;
+      if (!a || !a.id) { state.accounts.issues = []; renderIssues(); return; }
+      try {
+        const j = await api('/api/portal/account_issues?accountId=' + encodeURIComponent(String(a.id)));
+        state.accounts.issues = Array.isArray(j.issues) ? j.issues : [];
+        renderIssues();
+      } catch (e) {
+        $('issueMsg').textContent = String(e.message || e);
+      }
+    }
+
+    async function addIssue(){
+      ensureAccountsInit();
+      $('issueMsg').textContent = '';
+      const a = state.accounts.selected;
+      if (!a || !a.id) { $('issueMsg').textContent = 'select an account'; return; }
+      try {
+        await api('/api/portal/account_issues', {
+          method:'POST',
+          body: {
+            accountId: a.id,
+            severity: String($('issueSeverity').value || 'low'),
+            status: String($('issueStatus').value || 'open'),
+            note: String($('issueNote').value || '').trim(),
+          }
+        });
+        $('issueNote').value = '';
+        await loadIssues();
+      } catch (e) {
+        $('issueMsg').textContent = String(e.message || e);
+      }
+    }
+
+    async function loadTemplates(){
+      ensureAccountsInit();
+      $('tplMsg').textContent = '';
+      try {
+        const j = await api('/api/portal/account_templates');
+        state.accounts.templates = Array.isArray(j.templates) ? j.templates : [];
+        renderTemplates();
+      } catch (e) {
+        $('tplMsg').textContent = String(e.message || e);
+      }
+    }
+
+    async function saveTemplate(){
+      ensureAccountsInit();
+      $('tplMsg').textContent = '';
+      try {
+        const type = String($('tplType').value || 'email');
+        const name = String($('tplName').value || '').trim();
+        const body = String($('tplBody').value || '').trim();
+        if (!name) throw new Error('name_required');
+        if (!body) throw new Error('body_required');
+        await api('/api/portal/account_templates', { method:'POST', body: { type, name, body } });
+        $('tplName').value = '';
+        $('tplBody').value = '';
+        await loadTemplates();
+      } catch (e) {
+        $('tplMsg').textContent = String(e.message || e);
+      }
+    }
+
     function setSelectedEvent(eventObj){
       state.selectedEvent = eventObj || null;
       const e = state.selectedEvent;
       $('selectedEventLine').textContent = e ? `#${e.id} • ${e.title || ''} • ${(e.event_date || '')}`.trim() : 'None';
       $('eventRecapWrap').classList.toggle('hide', !e);
+      if ($('eventOpsWrap')) $('eventOpsWrap').classList.toggle('hide', !e);
       if (e) loadRecaps(e.id).catch(()=>{});
+      if (e) initEventOps().catch(()=>{});
     }
 
     async function loadRecaps(eventId){
@@ -3495,6 +4647,10 @@
           issuesDetails: $('recapIssuesDetails').value || '',
           photosUploaded: $('recapPhotos').value || null,
           hostNotes: $('recapNotes').value || '',
+          standouts: $('recapStandouts') ? ($('recapStandouts').value || '') : '',
+          giveawayWinners: $('recapGiveawayWinners') ? ($('recapGiveawayWinners').value || '') : '',
+          feedbackHighlights: $('recapFeedbackHighlights') ? ($('recapFeedbackHighlights').value || '') : '',
+          eventFlowDocUrl: $('recapEventFlowDoc') ? ($('recapEventFlowDoc').value || '') : '',
         };
 
         await api('/api/portal/event_recaps', {
@@ -3511,6 +4667,489 @@
         await loadRecaps(e.id);
       } catch(e){
         $('recapMsg').textContent = String(e.message || e);
+      }
+    }
+
+    function myPortalRole(){
+      return String(state.me?.profile?.role || '');
+    }
+
+    function isCoordinatorRole(){
+      const r = myPortalRole();
+      return r === 'event_coordinator' || r === 'manager';
+    }
+
+    function dollarsToCents(v){
+      const n = Number(String(v || '').trim());
+      if (!Number.isFinite(n) || n < 0) return 0;
+      return Math.round(n * 100);
+    }
+
+    function centsToDollars(c){
+      const n = Number(c || 0);
+      if (!Number.isFinite(n)) return '';
+      return (n / 100).toFixed(2);
+    }
+
+    function mergeMeta(base, patch){
+      const a = (base && typeof base === 'object') ? base : {};
+      const b = (patch && typeof patch === 'object') ? patch : {};
+      return Object.assign({}, a, b);
+    }
+
+    function updateEventInState(updated){
+      if (!updated || !updated.id) return;
+      const id = Number(updated.id);
+      state.events = Array.isArray(state.events) ? state.events : [];
+      const idx = state.events.findIndex((x) => Number(x?.id) === id);
+      if (idx >= 0) state.events[idx] = updated;
+      if (state.selectedEvent && Number(state.selectedEvent.id) === id) state.selectedEvent = updated;
+    }
+
+    function renderAssignments(assignments, usersById){
+      const box = $('assignmentsList');
+      if (!box) return;
+      const arr = Array.isArray(assignments) ? assignments : [];
+      if (!arr.length) {
+        box.innerHTML = '<div class="muted small">No assignments yet.</div>';
+        return;
+      }
+
+      const canManage = isCoordinatorRole();
+
+      box.innerHTML = arr.map((a) => {
+        const uid = String(a?.userId || '');
+        const role = String(a?.role || '');
+        const status = String(a?.status || 'pending');
+        const u = usersById && usersById.get ? usersById.get(uid) : null;
+        const name = String(u?.fullName || u?.email || uid).trim();
+        const badge = `<span class="badge ${status === 'accepted' ? 'ok' : ''}">${escapeHtml(status)}</span>`;
+        const removeBtn = canManage
+          ? `<button class="btn secondary small" data-remove-asg="1" data-asg-role="${escapeHtml(role)}" data-asg-user="${escapeHtml(uid)}">Remove</button>`
+          : '';
+        return `
+          <div class="card" style="background:#fff; margin-top:8px;">
+            <div class="bd">
+              <div class="row" style="justify-content:space-between; gap:12px;">
+                <div>
+                  <div style="font-weight:900;">${escapeHtml(role)} — ${escapeHtml(name)}</div>
+                  <div class="muted small" style="margin-top:2px;">${escapeHtml(uid)}</div>
+                </div>
+                <div class="row" style="gap:8px;">${badge} ${removeBtn}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      for (const btn of box.querySelectorAll('button[data-remove-asg]')){
+        btn.addEventListener('click', () => {
+          const uid = String(btn.dataset.asgUser || '');
+          const role = String(btn.dataset.asgRole || '');
+          removeAssignment(uid, role).catch(()=>{});
+        });
+      }
+    }
+
+    function renderMyAssignmentActions(assignments){
+      const el = $('myAssignmentActions');
+      if (!el) return;
+      const arr = Array.isArray(assignments) ? assignments : [];
+      const uid = String(state.me?.user?.id || '');
+      const mine = arr.filter((a) => String(a?.userId || '') === uid && String(a?.status || '') === 'pending');
+      if (!mine.length) {
+        el.classList.add('hide');
+        el.innerHTML = '';
+        return;
+      }
+
+      el.classList.remove('hide');
+      el.innerHTML = `
+        <div style="font-weight:900;">Your assignment</div>
+        <div class="muted small" style="margin-top:4px;">Accept/decline so Ops can reassign quickly.</div>
+        <div class="row" style="margin-top:10px; gap:8px; flex-wrap:wrap;">
+          ${mine.map((a) => {
+            const role = String(a?.role || '');
+            return `
+              <button class="btn" type="button" data-asg-accept="1" data-asg-role="${escapeHtml(role)}">Accept ${escapeHtml(role)}</button>
+              <button class="btn secondary" type="button" data-asg-decline="1" data-asg-role="${escapeHtml(role)}">Decline</button>
+            `;
+          }).join('')}
+        </div>
+      `;
+
+      for (const btn of el.querySelectorAll('button[data-asg-accept]')) {
+        btn.addEventListener('click', () => respondAssignment(String(btn.dataset.asgRole || ''), 'accepted').catch(()=>{}));
+      }
+      for (const btn of el.querySelectorAll('button[data-asg-decline]')) {
+        btn.addEventListener('click', () => respondAssignment(String(btn.dataset.asgRole || ''), 'declined').catch(()=>{}));
+      }
+    }
+
+    async function loadAssignableUsers(){
+      if (!isCoordinatorRole()) return [];
+      if (Array.isArray(state._eventOpsUsers) && state._eventOpsUsers.length) return state._eventOpsUsers;
+      const j = await api('/api/portal/users');
+      const users = Array.isArray(j.users) ? j.users : [];
+      state._eventOpsUsers = users;
+      return users;
+    }
+
+    function fillAssignSelects(users){
+      const hostSel = $('assignHostUser');
+      const mediaSel = $('assignMediaUser');
+      if (!hostSel || !mediaSel) return;
+      const arr = Array.isArray(users) ? users : [];
+
+      function option(u){
+        const label = [u.fullName || '', u.email || ''].filter(Boolean).join(' • ') || u.userId;
+        return `<option value="${escapeHtml(u.userId)}">${escapeHtml(label)}</option>`;
+      }
+
+      hostSel.innerHTML = '<option value="">Assign host…</option>' + arr.filter((u) => String(u.role || '') === 'event_host').map(option).join('');
+      mediaSel.innerHTML = '<option value="">Assign media…</option>' + arr.filter((u) => String(u.role || '') === 'media_team').map(option).join('');
+    }
+
+    async function loadAssignmentsForSelected(){
+      const e = state.selectedEvent;
+      if (!e || !e.id) return { assignments: [], usersById: new Map() };
+
+      const j = await api('/api/portal/event_assignments?eventId=' + encodeURIComponent(String(e.id)));
+      const assignments = Array.isArray(j.assignments) ? j.assignments : [];
+
+      let users = [];
+      try {
+        users = await loadAssignableUsers();
+      } catch {
+        users = [];
+      }
+      const byId = new Map((Array.isArray(users) ? users : []).map((u) => [String(u.userId), u]));
+      return { assignments, usersById: byId };
+    }
+
+    function renderEventOpsFromSelected(meta, assignments, usersById){
+      const wrap = $('eventOpsWrap');
+      if (!wrap) return;
+
+      const e = state.selectedEvent;
+      wrap.classList.toggle('hide', !e);
+      if (!e) return;
+
+      const canManage = isCoordinatorRole();
+      $('assignHostUser')?.toggleAttribute('disabled', !canManage);
+      $('assignMediaUser')?.toggleAttribute('disabled', !canManage);
+      $('addHostBtn')?.toggleAttribute('disabled', !canManage);
+      $('addMediaBtn')?.toggleAttribute('disabled', !canManage);
+
+      const checklist = meta?.checklist && typeof meta.checklist === 'object' ? meta.checklist : {};
+      if ($('chkRecapReceived')) $('chkRecapReceived').checked = String(checklist.recapReceived || '') === 'yes';
+      if ($('chkMediaReceived')) $('chkMediaReceived').checked = String(checklist.mediaReceived || '') === 'yes';
+      if ($('chkFeedbackReceived')) $('chkFeedbackReceived').checked = String(checklist.feedbackReceived || '') === 'yes';
+      if ($('chkReportSent')) $('chkReportSent').checked = String(checklist.reportSent || '') === 'yes';
+
+      const plan = meta?.plan && typeof meta.plan === 'object' ? meta.plan : {};
+      if ($('planStrategy')) $('planStrategy').value = String(plan.strategy || '');
+      if ($('planEventType')) $('planEventType').value = String(plan.eventType || '');
+      if ($('planJustification')) $('planJustification').value = String(plan.justification || '');
+
+      const budget = meta?.budget && typeof meta.budget === 'object' ? meta.budget : {};
+      if ($('budHost')) $('budHost').value = centsToDollars(budget.hostPayCents || 0);
+      if ($('budMedia')) $('budMedia').value = centsToDollars(budget.mediaPayCents || 0);
+      if ($('budFood')) $('budFood').value = centsToDollars(budget.foodCents || 0);
+      if ($('budDecor')) $('budDecor').value = centsToDollars(budget.decorCents || 0);
+      if ($('budSupplies')) $('budSupplies').value = centsToDollars(budget.suppliesCents || 0);
+      if ($('budContingency')) $('budContingency').value = centsToDollars(budget.contingencyCents || 0);
+
+      renderAssignments(assignments, usersById);
+      renderMyAssignmentActions(assignments);
+    }
+
+    async function initEventOps(){
+      const e = state.selectedEvent;
+      if (!e || !e.id) {
+        if ($('eventOpsWrap')) $('eventOpsWrap').classList.add('hide');
+        return;
+      }
+
+      $('eventOpsMsg').textContent = '';
+      $('budgetMsg').textContent = '';
+
+      // Load event types for select.
+      try{
+        const j = await api('/api/portal/event_types');
+        const types = Array.isArray(j.types) ? j.types : [];
+        state._eventOpsTypes = types;
+        const sel = $('planEventType');
+        if (sel) {
+          const opts = types.map((t) => {
+            const label = String(t['Event Type'] || t['event_type'] || t['type'] || t['name'] || '').trim() || JSON.stringify(t).slice(0, 80);
+            return `<option value="${escapeHtml(label)}">${escapeHtml(label)}</option>`;
+          });
+          sel.innerHTML = '<option value="">Select…</option>' + opts.join('');
+        }
+      } catch {
+        // ignore
+      }
+
+      if (isCoordinatorRole()) {
+        try{
+          const users = await loadAssignableUsers();
+          fillAssignSelects(users);
+        } catch {
+          // ignore
+        }
+      }
+
+      const { assignments, usersById } = await loadAssignmentsForSelected();
+      const meta = e.meta && typeof e.meta === 'object' ? e.meta : {};
+      renderEventOpsFromSelected(meta, assignments, usersById);
+    }
+
+    async function addAssignment(role){
+      $('eventOpsMsg').textContent = '';
+      try{
+        const e = state.selectedEvent;
+        if (!e || !e.id) throw new Error('select an event');
+        const userId = role === 'event_host' ? String($('assignHostUser')?.value || '') : String($('assignMediaUser')?.value || '');
+        if (!userId) throw new Error('select a user');
+        const j = await api('/api/portal/event_assignments', { method: 'PATCH', body: { action: 'add', eventId: e.id, role, userId } });
+        const next = Array.isArray(j.assignments) ? j.assignments : [];
+        const meta = e.meta && typeof e.meta === 'object' ? e.meta : {};
+        const nextMeta = Object.assign({}, meta, { assignments: next });
+        const updated = Object.assign({}, e, { meta: nextMeta });
+        updateEventInState(updated);
+        await initEventOps();
+      } catch (err) {
+        $('eventOpsMsg').textContent = String(err.message || err);
+      }
+    }
+
+    async function removeAssignment(userId, role){
+      $('eventOpsMsg').textContent = '';
+      try{
+        const e = state.selectedEvent;
+        if (!e || !e.id) throw new Error('select an event');
+        const j = await api('/api/portal/event_assignments', { method: 'PATCH', body: { action: 'remove', eventId: e.id, role, userId } });
+        const next = Array.isArray(j.assignments) ? j.assignments : [];
+        const meta = e.meta && typeof e.meta === 'object' ? e.meta : {};
+        const nextMeta = Object.assign({}, meta, { assignments: next });
+        const updated = Object.assign({}, e, { meta: nextMeta });
+        updateEventInState(updated);
+        await initEventOps();
+      } catch (err) {
+        $('eventOpsMsg').textContent = String(err.message || err);
+      }
+    }
+
+    async function respondAssignment(role, decision){
+      $('eventOpsMsg').textContent = '';
+      try{
+        const e = state.selectedEvent;
+        if (!e || !e.id) throw new Error('select an event');
+        const j = await api('/api/portal/event_assignments', { method: 'PATCH', body: { action: 'respond', eventId: e.id, role, decision } });
+        const next = Array.isArray(j.assignments) ? j.assignments : [];
+        const meta = e.meta && typeof e.meta === 'object' ? e.meta : {};
+        const nextMeta = Object.assign({}, meta, { assignments: next });
+        const updated = Object.assign({}, e, { meta: nextMeta, status: j.status || e.status });
+        updateEventInState(updated);
+        await initEventOps();
+      } catch (err) {
+        $('eventOpsMsg').textContent = String(err.message || err);
+      }
+    }
+
+    async function patchSelectedEventMeta(partial){
+      const e = state.selectedEvent;
+      if (!e || !e.id) throw new Error('select an event');
+      const baseMeta = (e.meta && typeof e.meta === 'object') ? e.meta : {};
+      const nextMeta = mergeMeta(baseMeta, partial);
+      const j = await api('/api/portal/events', { method: 'PATCH', body: { id: e.id, meta: nextMeta } });
+      if (j && j.event) updateEventInState(j.event);
+      else updateEventInState(Object.assign({}, e, { meta: nextMeta }));
+    }
+
+    async function saveChecklist(){
+      $('eventOpsMsg').textContent = '';
+      try{
+        const checklist = {
+          recapReceived: $('chkRecapReceived')?.checked ? 'yes' : 'no',
+          mediaReceived: $('chkMediaReceived')?.checked ? 'yes' : 'no',
+          feedbackReceived: $('chkFeedbackReceived')?.checked ? 'yes' : 'no',
+          reportSent: $('chkReportSent')?.checked ? 'yes' : 'no',
+          updatedAt: new Date().toISOString(),
+        };
+        await patchSelectedEventMeta({ checklist });
+        await initEventOps();
+      } catch (err) {
+        $('eventOpsMsg').textContent = String(err.message || err);
+      }
+    }
+
+    async function savePlan(){
+      $('eventOpsMsg').textContent = '';
+      try{
+        const strategy = String($('planStrategy')?.value || '');
+        const eventType = String($('planEventType')?.value || '');
+        const justification = String($('planJustification')?.value || '').trim();
+        if (strategy && !justification) throw new Error('justification_required');
+        const plan = { strategy, eventType, justification, updatedAt: new Date().toISOString() };
+        await patchSelectedEventMeta({ plan });
+        await initEventOps();
+      } catch (err) {
+        $('eventOpsMsg').textContent = String(err.message || err);
+      }
+    }
+
+    async function saveBudget(){
+      $('budgetMsg').textContent = '';
+      try{
+        const hostPayCents = dollarsToCents($('budHost')?.value);
+        const mediaPayCents = dollarsToCents($('budMedia')?.value);
+        if (mediaPayCents > 0) {
+          const minHost = Math.ceil(mediaPayCents * 0.75);
+          if (hostPayCents < minHost) throw new Error(`host_pay_must_be_at_least_${(minHost/100).toFixed(2)}`);
+        }
+        const budget = {
+          hostPayCents,
+          mediaPayCents,
+          foodCents: dollarsToCents($('budFood')?.value),
+          decorCents: dollarsToCents($('budDecor')?.value),
+          suppliesCents: dollarsToCents($('budSupplies')?.value),
+          contingencyCents: dollarsToCents($('budContingency')?.value),
+          updatedAt: new Date().toISOString(),
+        };
+        await patchSelectedEventMeta({ budget });
+        await initEventOps();
+      } catch (err) {
+        $('budgetMsg').textContent = String(err.message || err);
+      }
+    }
+
+    async function createFollowups(){
+      $('eventOpsMsg').textContent = '';
+      try{
+        const e = state.selectedEvent;
+        if (!e || !e.id) throw new Error('select an event');
+        const j = await api('/api/portal/event_followups', { method: 'POST', body: { eventId: e.id } });
+        const created = Array.isArray(j.created) ? j.created.length : 0;
+        const skipped = Array.isArray(j.skipped) ? j.skipped.length : 0;
+        $('eventOpsMsg').textContent = `Follow-ups: ${created} created, ${skipped} already existed.`;
+      } catch (err) {
+        $('eventOpsMsg').textContent = String(err.message || err);
+      }
+    }
+
+    async function importVendors(){
+      $('importVendorsMsg').textContent = '';
+      try{
+        const csvText = String($('vendorsCsv')?.value || '').trim();
+        if (!csvText) throw new Error('paste_csv');
+        const j = await api('/api/portal/vendors', { method: 'POST', body: { csvText } });
+        $('importVendorsMsg').textContent = `Imported ${Number(j.count || 0)} vendors.`;
+      } catch (err) {
+        $('importVendorsMsg').textContent = String(err.message || err);
+      }
+    }
+
+    async function importEventTypes(){
+      $('importEventTypesMsg').textContent = '';
+      try{
+        const csvText = String($('eventTypesCsv')?.value || '').trim();
+        if (!csvText) throw new Error('paste_csv');
+        const j = await api('/api/portal/event_types', { method: 'POST', body: { csvText } });
+        $('importEventTypesMsg').textContent = `Imported ${Number(j.count || 0)} event types.`;
+        await initEventOps();
+      } catch (err) {
+        $('importEventTypesMsg').textContent = String(err.message || err);
+      }
+    }
+
+    function vendorLabel(v){
+      const name = String(v?.Vendor || v?.vendor || v?.Name || v?.name || '').trim();
+      const city = String(v?.City || v?.city || '').trim();
+      const st = String(v?.State || v?.state || '').trim();
+      const extra = [city, st].filter(Boolean).join(', ');
+      return [name, extra].filter(Boolean).join(' • ') || JSON.stringify(v).slice(0, 80);
+    }
+
+    async function loadVendors(){
+      $('vendorsMsg').textContent = '';
+      try{
+        const q = String($('vendorQ')?.value || '').trim();
+        const j = await api('/api/portal/vendors?q=' + encodeURIComponent(q));
+        const vendors = Array.isArray(j.vendors) ? j.vendors : [];
+        $('vendorsList').innerHTML = vendors.slice(0, 30).map((v, i) => {
+          return `
+            <div class="card" style="background:#fff; margin-bottom:8px;">
+              <div class="bd">
+                <div style="font-weight:900;">${escapeHtml(vendorLabel(v))}</div>
+                <div class="row" style="margin-top:8px;">
+                  <button class="btn secondary small" type="button" data-add-vendor="${i}">Add to event</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('') || '<div class="muted small">No vendors found.</div>';
+
+        for (const btn of $('vendorsList').querySelectorAll('button[data-add-vendor]')){
+          btn.addEventListener('click', () => {
+            const idx = Number(btn.dataset.addVendor || 0);
+            addVendorToEvent(vendors[idx]).catch(()=>{});
+          });
+        }
+      } catch (err) {
+        $('vendorsMsg').textContent = String(err.message || err);
+      }
+    }
+
+    async function addVendorToEvent(vendor){
+      $('vendorsMsg').textContent = '';
+      try{
+        const e = state.selectedEvent;
+        if (!e || !e.id) throw new Error('select an event');
+        const baseMeta = (e.meta && typeof e.meta === 'object') ? e.meta : {};
+        const chosen = Array.isArray(baseMeta.vendorsChosen) ? baseMeta.vendorsChosen : [];
+        const next = chosen.concat([vendor]).slice(0, 20);
+        await patchSelectedEventMeta({ vendorsChosen: next });
+        $('vendorsMsg').textContent = 'Added.';
+      } catch (err) {
+        $('vendorsMsg').textContent = String(err.message || err);
+      }
+    }
+
+    function eventTypeLabel(t){
+      return String(t?.['Event Type'] || t?.event_type || t?.type || t?.name || '').trim() || JSON.stringify(t).slice(0, 80);
+    }
+
+    async function loadEventTypes(){
+      $('eventTypesMsg').textContent = '';
+      try{
+        const q = String($('eventTypeQ')?.value || '').trim();
+        const j = await api('/api/portal/event_types?q=' + encodeURIComponent(q));
+        const types = Array.isArray(j.types) ? j.types : [];
+        $('eventTypesList').innerHTML = types.slice(0, 30).map((t, i) => {
+          const label = eventTypeLabel(t);
+          return `
+            <div class="card" style="background:#fff; margin-bottom:8px;">
+              <div class="bd">
+                <div style="font-weight:900;">${escapeHtml(label)}</div>
+                <div class="row" style="margin-top:8px;">
+                  <button class="btn secondary small" type="button" data-use-type="${i}">Use as event type</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('') || '<div class="muted small">No event types found.</div>';
+
+        for (const btn of $('eventTypesList').querySelectorAll('button[data-use-type]')){
+          btn.addEventListener('click', () => {
+            const idx = Number(btn.dataset.useType || 0);
+            const label = eventTypeLabel(types[idx]);
+            if ($('planEventType')) $('planEventType').value = label;
+          });
+        }
+      } catch (err) {
+        $('eventTypesMsg').textContent = String(err.message || err);
       }
     }
 
@@ -3911,7 +5550,8 @@
           const selectBtn = `<button class="btn secondary small" data-pick-event="${ev.id}">Select</button>`;
 
           const myRole = String(state.me?.profile?.role || '');
-          const canAccept = !ev.assigned_user_id && asg && (myRole === 'manager' || myRole === asg) && String(ev.status || 'open') === 'open';
+          const hasAssignments = !!(ev.meta && typeof ev.meta === 'object' && Array.isArray(ev.meta.assignments) && ev.meta.assignments.length);
+          const canAccept = !hasAssignments && !ev.assigned_user_id && asg && (myRole === 'manager' || myRole === asg) && String(ev.status || 'open') === 'open';
           const acceptBtn = canAccept ? `<button class="btn small" data-accept-event="${ev.id}">Accept</button>` : '';
 
           return `
@@ -3961,19 +5601,36 @@
     async function createEvent(){
       $('createEventMsg').textContent = '';
       try{
+        const propertyName = String($('nePropertyName')?.value || '').trim();
+        if (!propertyName) throw new Error('property_name_required');
+        const address = String($('neAddress')?.value || '').trim();
+        const title = String($('neTitle')?.value || '').trim() || propertyName;
         await api('/api/portal/events', {
           method: 'POST',
           body: {
-            title: $('neTitle').value,
+            title,
             eventDate: $('neDate').value,
+            address,
             city: $('neCity').value,
             state: $('neState').value,
             notes: $('neNotes').value,
             status: 'open',
             assignedRole: 'event_host',
+            meta: {
+              propertyName,
+              propertyAddress: address,
+              createdFrom: 'portal_new_event',
+            }
           }
         });
         $('newEventBox').hidden = true;
+        if ($('nePropertyName')) $('nePropertyName').value = '';
+        if ($('neAddress')) $('neAddress').value = '';
+        if ($('neTitle')) $('neTitle').value = '';
+        if ($('neDate')) $('neDate').value = '';
+        if ($('neCity')) $('neCity').value = '';
+        if ($('neState')) $('neState').value = '';
+        if ($('neNotes')) $('neNotes').value = '';
         await loadEvents();
       } catch(e){
         $('createEventMsg').textContent = String(e.message || e);
@@ -4239,6 +5896,16 @@
     on('loadEventsBtn', 'click', () => loadEvents().catch(() => {}));
     on('newEventToggle', 'click', () => { $('newEventBox').hidden = !$('newEventBox').hidden; });
     on('createEventBtn', 'click', () => createEvent().catch(() => {}));
+    on('createFollowupsBtn', 'click', () => createFollowups().catch(() => {}));
+    on('addHostBtn', 'click', () => addAssignment('event_host').catch(() => {}));
+    on('addMediaBtn', 'click', () => addAssignment('media_team').catch(() => {}));
+    on('saveChecklistBtn', 'click', () => saveChecklist().catch(() => {}));
+    on('savePlanBtn', 'click', () => savePlan().catch(() => {}));
+    on('saveBudgetBtn', 'click', () => saveBudget().catch(() => {}));
+    on('importVendorsBtn', 'click', () => importVendors().catch(() => {}));
+    on('importEventTypesBtn', 'click', () => importEventTypes().catch(() => {}));
+    on('loadVendorsBtn', 'click', () => loadVendors().catch(() => {}));
+    on('loadEventTypesBtn', 'click', () => loadEventTypes().catch(() => {}));
 
     on('closeSubmitBtn', 'click', () => submitClose().catch(() => {}));
     on('closeQuoteBtn', 'click', () => fillTierPrice());
@@ -4264,6 +5931,33 @@
       }
       renderAvailWeekGrid();
     });
+
+    on('accountsRefreshBtn', 'click', () => loadAccounts().catch(() => {}));
+    on('accountsNewToggle', 'click', () => { const b = $('accountsNewBox'); if (b) b.hidden = !b.hidden; });
+    on('accountsCreateBtn', 'click', () => createAccount().catch(() => {}));
+    on('acctSaveBtn', 'click', () => saveAccount().catch(() => {}));
+    on('acctDeleteBtn', 'click', () => deleteAccount().catch(() => {}));
+    on('sentimentAddBtn', 'click', () => addSentiment().catch(() => {}));
+    on('issueAddBtn', 'click', () => addIssue().catch(() => {}));
+    on('tplSaveBtn', 'click', () => saveTemplate().catch(() => {}));
+    on('accountsExpiring', 'change', () => loadAccounts().catch(() => {}));
+    on('accountsQ', 'input', () => {
+      ensureAccountsInit();
+      if (state.accounts.qTimer) clearTimeout(state.accounts.qTimer);
+      state.accounts.qTimer = setTimeout(() => {
+        // Filter locally and refresh server list occasionally.
+        renderAccounts();
+      }, 120);
+    });
+
+    on('acctStart', 'change', () => syncNewAccountDerived());
+    on('acctTermMonths', 'input', () => syncNewAccountDerived());
+    on('acctEnd', 'change', () => syncNewAccountDerived());
+
+    on('acctEditStart', 'change', () => syncEditAccountDerived());
+    on('acctEditTermMonths', 'input', () => syncEditAccountDerived());
+    on('acctEditEnd', 'change', () => syncEditAccountDerived());
+    on('acctEditReminderDays', 'input', () => syncEditAccountDerived());
 
     on('closerSegDisposition', 'click', () => setCloserSubtab('disposition'));
     on('closerSegPipeline', 'click', () => setCloserSubtab('pipeline'));

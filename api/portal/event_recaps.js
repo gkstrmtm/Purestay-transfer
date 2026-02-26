@@ -26,7 +26,9 @@ async function canSeeEvent(sbAdmin, { profile, userId, eventId }) {
   return (
     (event.assigned_user_id && event.assigned_user_id === userId) ||
     (event.created_by && event.created_by === userId) ||
-    (role && event.assigned_role && roleMatchesAny(event.assigned_role, role))
+    (role && event.assigned_role && roleMatchesAny(event.assigned_role, role)) ||
+    (role === 'event_host' && event.assigned_role === 'media_team') ||
+    (role === 'media_team' && event.assigned_role === 'event_host')
   );
 }
 

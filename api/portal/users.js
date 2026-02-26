@@ -1,5 +1,5 @@
 const { sendJson, handleCors, readJson } = require('../../lib/vercelApi');
-const { requirePortalSession, isManager } = require('../../lib/portalAuth');
+const { requirePortalSession, hasRole, isManager } = require('../../lib/portalAuth');
 
 function cleanStr(v, maxLen) {
   return String(v || '').trim().slice(0, maxLen);
@@ -10,9 +10,13 @@ module.exports = async (req, res) => {
 
   const s = await requirePortalSession(req);
   if (!s.ok) return sendJson(res, s.status || 401, { ok: false, error: s.error });
-  if (!isManager(s.realProfile)) return sendJson(res, 403, { ok: false, error: 'forbidden' });
+
+  // Managers and event coordinators can view the directory; only managers can edit.
+  const canList = isManager(s.realProfile) || hasRole(s.realProfile, ['event_coordinator']);
+  if (!canList) return sendJson(res, 403, { ok: false, error: 'forbidden' });
 
   if (req.method === 'PATCH') {
+    if (!isManager(s.realProfile)) return sendJson(res, 403, { ok: false, error: 'forbidden' });
     const body = await readJson(req);
     if (!body) return sendJson(res, 400, { ok: false, error: 'invalid_body' });
 

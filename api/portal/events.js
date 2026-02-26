@@ -18,7 +18,10 @@ function canSeeEvent({ profile, userId, event }) {
   return (
     (event.assigned_user_id && event.assigned_user_id === userId) ||
     (event.created_by && event.created_by === userId) ||
-    (role && event.assigned_role && roleMatchesAny(event.assigned_role, role))
+    (role && event.assigned_role && roleMatchesAny(event.assigned_role, role)) ||
+    // Allow Events + Media to collaborate on the same event records.
+    (role === 'event_host' && event.assigned_role === 'media_team') ||
+    (role === 'media_team' && event.assigned_role === 'event_host')
   );
 }
 
@@ -52,13 +55,19 @@ module.exports = async (req, res) => {
       const uid = String(s.effectiveUserId || s.user.id || '');
 
       if (s.viewAsRole && role && !s.effectiveUserId) {
-        query = applyRoleFilter(query, 'assigned_role', role);
+        if (role === 'event_host') query = query.in('assigned_role', ['event_host', 'media_team']);
+        else if (role === 'media_team') query = query.in('assigned_role', ['media_team', 'event_host']);
+        else query = applyRoleFilter(query, 'assigned_role', role);
       } else {
         const parts = [
           `assigned_user_id.eq.${uid}`,
           `created_by.eq.${uid}`,
         ];
-        if (role) parts.push(...buildRoleOrParts('assigned_role', role));
+        if (role) {
+          parts.push(...buildRoleOrParts('assigned_role', role));
+          if (role === 'event_host') parts.push(...buildRoleOrParts('assigned_role', 'media_team'));
+          if (role === 'media_team') parts.push(...buildRoleOrParts('assigned_role', 'event_host'));
+        }
         query = query.or(parts.join(','));
       }
     }
@@ -157,6 +166,20 @@ module.exports = async (req, res) => {
       notes: body.notes != null ? cleanStr(body.notes, 5000) : undefined,
       meta: body.meta != null ? ((body.meta && typeof body.meta === 'object') ? body.meta : {}) : undefined,
     };
+
+    if (patch.meta) {
+      const budget = patch.meta?.budget && typeof patch.meta.budget === 'object' ? patch.meta.budget : null;
+      if (budget) {
+        const hostPayCents = Number(budget.hostPayCents || 0);
+        const mediaPayCents = Number(budget.mediaPayCents || 0);
+        if (Number.isFinite(hostPayCents) && Number.isFinite(mediaPayCents) && mediaPayCents > 0) {
+          const minHost = Math.ceil(mediaPayCents * 0.75);
+          if (hostPayCents < minHost) {
+            return sendJson(res, 422, { ok: false, error: 'budget_constraint_failed', minHostPayCents: minHost });
+          }
+        }
+      }
+    }
 
     for (const k of Object.keys(patch)) {
       if (patch[k] === undefined) delete patch[k];

@@ -18,6 +18,58 @@ function cleanStr(v, maxLen) {
   return String(v || '').trim().slice(0, maxLen);
 }
 
+function cleanDate(v) {
+  const s = cleanStr(v, 20);
+  if (!s) return '';
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return '';
+  return s;
+}
+
+function daysInMonth(year, monthIndex0) {
+  return new Date(year, monthIndex0 + 1, 0).getDate();
+}
+
+function addMonthsYmd(ymd, months) {
+  const s = cleanDate(ymd);
+  if (!s) return '';
+  const m = clampInt(months, -1200, 1200, 0);
+  if (!m) return s;
+  const [yyyy, mm, dd] = s.split('-').map((x) => Number(x));
+  if (!yyyy || !mm || !dd) return '';
+  const fromM0 = mm - 1;
+  const base = new Date(yyyy, fromM0, 1);
+  base.setMonth(base.getMonth() + m);
+  const ty = base.getFullYear();
+  const tm0 = base.getMonth();
+  const day = Math.min(dd, daysInMonth(ty, tm0));
+  const out = new Date(ty, tm0, day);
+  const outY = String(out.getFullYear()).padStart(4, '0');
+  const outM = String(out.getMonth() + 1).padStart(2, '0');
+  const outD = String(out.getDate()).padStart(2, '0');
+  return `${outY}-${outM}-${outD}`;
+}
+
+async function getKv(sbAdmin, key) {
+  const { data, error } = await sbAdmin
+    .from('purestay_kv')
+    .select('key, value, updated_at')
+    .eq('key', key)
+    .limit(1);
+  if (error) return { ok: false, error: 'kv_read_failed' };
+  const row = Array.isArray(data) ? data[0] : null;
+  return { ok: true, row };
+}
+
+async function upsertKv(sbAdmin, key, value) {
+  const { data, error } = await sbAdmin
+    .from('purestay_kv')
+    .upsert({ key, value }, { onConflict: 'key' })
+    .select('key, value, updated_at')
+    .limit(1);
+  if (error) return { ok: false, error: 'kv_write_failed' };
+  return { ok: true, row: Array.isArray(data) ? data[0] : null };
+}
+
 async function canTouchLead(sbAdmin, { profile, userId, leadId }) {
   if (isManager(profile)) return true;
   const { data, error } = await sbAdmin
@@ -98,5 +150,110 @@ module.exports = async (req, res) => {
     .limit(1);
 
   if (error) return sendJson(res, 500, { ok: false, error: 'close_log_failed' });
-  return sendJson(res, 200, { ok: true, activity: Array.isArray(data) ? data[0] : null });
+
+  // Zero-friction Accounts: when a deal is marked won, auto-upsert an account.
+  let accountUpserted = false;
+  let accountError = '';
+  try {
+    const isWon = String(disposition || '') === 'won' || String(status || '') === 'won';
+    if (isWon) {
+      const { data: leads, error: le } = await s.sbAdmin
+        .from('portal_leads')
+        .select('id, property_name, address, city, state, postal_code, first_name, last_name, email, phone')
+        .eq('id', leadId)
+        .limit(1);
+      if (!le) {
+        const lead = Array.isArray(leads) ? leads[0] : null;
+        if (lead) {
+          const key = 'portal:accounts:v1';
+          const r = await getKv(s.sbAdmin, key);
+          if (!r.ok) throw new Error(r.error);
+          const store = (r.row?.value && typeof r.row.value === 'object') ? r.row.value : {};
+          const list = Array.isArray(store.accounts) ? store.accounts : [];
+
+          const leadIdStr = String(leadId);
+          const existingIdx = list.findIndex((x) => String(x?.leadId || '') === leadIdStr);
+          const existing = existingIdx >= 0 ? list[existingIdx] : null;
+
+          const first = cleanStr(lead.first_name, 120);
+          const last = cleanStr(lead.last_name, 120);
+          const contactName = cleanStr([first, last].filter(Boolean).join(' '), 200);
+
+          const prop = cleanStr(lead.property_name, 200);
+          const baseName = prop || contactName || ('Lead ' + leadIdStr);
+
+          const addr1 = cleanStr(lead.address, 240);
+          const city = cleanStr(lead.city, 120);
+          const st = cleanStr(lead.state, 20);
+          const zip = cleanStr(lead.postal_code, 20);
+          const addrParts = [addr1, [city, st].filter(Boolean).join(', ').trim(), zip].filter(Boolean);
+          const addrFull = cleanStr(addrParts.join(' ').replace(/\s+/g, ' ').trim(), 240);
+
+          const nowIso = new Date().toISOString();
+          const today = nowIso.slice(0, 10);
+
+          const closedOn = cleanDate(payload.closedOn);
+          const sendOn = cleanDate(payload.contractSendDate);
+          const termMonths = clampInt(payload.termMonths, 0, 1200, 0);
+          const contractStart = closedOn || sendOn || today;
+          const contractEnd = termMonths > 0 ? addMonthsYmd(contractStart, termMonths) : cleanDate(existing?.contractEnd);
+
+          const reminderDays = existing?.renewalReminderDays != null
+            ? clampInt(existing.renewalReminderDays, 0, 3650, 30)
+            : 30;
+
+          const next = {
+            ...(existing && typeof existing === 'object' ? existing : {}),
+            id: cleanStr(existing?.id, 80) || ('acct_lead_' + leadIdStr),
+            name: cleanStr(existing?.name, 200) || baseName,
+            leadId: leadIdStr,
+
+            propertyName: cleanStr(existing?.propertyName, 200) || prop || baseName,
+            address: cleanStr(existing?.address, 240) || addrFull,
+            city: cleanStr(existing?.city, 120) || city,
+            state: cleanStr(existing?.state, 20) || st,
+            postalCode: cleanStr(existing?.postalCode, 20) || zip,
+
+            primaryContactName: cleanStr(existing?.primaryContactName, 200) || contactName,
+            primaryContactEmail: cleanStr(existing?.primaryContactEmail, 200) || cleanStr(lead.email, 200),
+            primaryContactPhone: cleanStr(existing?.primaryContactPhone, 80) || cleanStr(lead.phone, 80),
+
+            // Keep legacy convenience fields in sync.
+            email: cleanStr(existing?.email, 200) || cleanStr(lead.email, 200),
+            phone: cleanStr(existing?.phone, 80) || cleanStr(lead.phone, 80),
+
+            contractTier: cleanStr(payload.packageTier, 40) || cleanStr(existing?.contractTier || existing?.tier, 40),
+            tier: cleanStr(payload.packageTier, 40) || cleanStr(existing?.tier, 40),
+            termMonths,
+            contractSendDate: sendOn || cleanDate(existing?.contractSendDate),
+            contractStart,
+            contractEnd,
+            renewalReminderDays: reminderDays,
+
+            createdAt: cleanStr(existing?.createdAt, 80) || nowIso,
+            updatedAt: nowIso,
+          };
+
+          const nextList = list.slice();
+          if (existingIdx >= 0) nextList.splice(existingIdx, 1);
+          // Remove any duplicate that shares the leadId.
+          const deduped = nextList.filter((x) => String(x?.leadId || '') !== leadIdStr);
+          deduped.unshift(next);
+
+          const w = await upsertKv(s.sbAdmin, key, { accounts: deduped });
+          if (!w.ok) throw new Error(w.error);
+          accountUpserted = true;
+        }
+      }
+    }
+  } catch (e) {
+    accountError = String(e?.message || e);
+  }
+
+  return sendJson(res, 200, {
+    ok: true,
+    activity: Array.isArray(data) ? data[0] : null,
+    accountUpserted,
+    ...(accountError ? { accountError } : {}),
+  });
 };
