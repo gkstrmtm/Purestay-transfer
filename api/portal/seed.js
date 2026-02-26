@@ -171,7 +171,7 @@ async function seedDemoData(sb, {
   ];
 
   const leadSources = ['web', 'referral', 'cold_call', 'event', 'partner'];
-  const leadStatuses = ['new', 'contacted', 'booked', 'won', 'lost'];
+  const leadStatuses = ['new', 'working', 'booked', 'won', 'lost'];
   const states = ['NC', 'SC', 'VA'];
   const cities = ['Raleigh', 'Durham', 'Cary', 'Charlotte', 'Wilmington', 'Greensboro'];
   const propertyTypes = ['Apartment', 'Condo', 'Townhome', 'Single-family', 'Build-to-rent'];
@@ -441,6 +441,92 @@ async function seedDemoData(sb, {
   }
 
   // -----------------------------
+  // Appointments (Booked Meetings)
+  // -----------------------------
+  const appointmentsToInsert = [];
+  for (let i = 0; i < Math.min(12, leadIds.length); i++) {
+    const leadId = leadIds[i];
+    const when = addDaysYmd(today, (i % 8) - 2);
+    const createdAt = new Date();
+    createdAt.setDate(createdAt.getDate() - (6 - (i % 6)));
+    appointmentsToInsert.push({
+      created_at: createdAt.toISOString(),
+      created_by: pick([dialerId, setterId, mgrId], i) || mgrId,
+      status: 'scheduled',
+      title: `Appointment • Demo Lead ${leadId}`,
+      event_date: when,
+      start_time: pick(['09:00', '10:30', '13:00', '15:30', '17:00'], i),
+      end_time: pick(['09:30', '11:00', '13:30', '16:00', '17:30'], i),
+      area_tag: 'appointment',
+      assigned_role: 'closer',
+      assigned_user_id: closerId,
+      payout_cents: 0,
+      notes: pick([
+        'Discovery + next steps.',
+        'Quick intro and qualification.',
+        'Review package tiers and timeline.',
+      ], i),
+      meta: {
+        ...seedTag,
+        kind: 'appointment',
+        leadId,
+        leadLabel: `Demo Lead ${leadId}`,
+      },
+    });
+  }
+
+  if (appointmentsToInsert.length) {
+    const { error: apptErr } = await sb
+      .from('portal_events')
+      .insert(appointmentsToInsert);
+    if (apptErr) return { ok: false, error: 'seed_appointments_failed', detail: apptErr.message || '' };
+  }
+
+  // -----------------------------
+  // Dispatch Tasks (seed a few)
+  // -----------------------------
+  const dispatchTasks = [];
+  for (let i = 0; i < 10; i++) {
+    const leadId = leadIds[(i * 2) % leadIds.length] || null;
+    const due = addDaysYmd(today, (i % 10) - 3);
+    dispatchTasks.push({
+      created_at: nowIso(),
+      created_by: mgrId,
+      status: pick(['open', 'assigned', 'completed'], i),
+      title: pick([
+        'Prep call talking points',
+        'Verify contact email + decision maker',
+        'Send recap template + examples',
+        'Confirm best time window for meeting',
+      ], i),
+      event_date: due,
+      start_time: pick(['', '09:00', '12:00', '16:00'], i),
+      area_tag: 'dispatch',
+      assigned_role: pick(['remote_setter', 'dialer', 'event_coordinator'], i) || 'remote_setter',
+      assigned_user_id: (i % 3 === 0) ? null : pick([setterId, dialerId, coordId], i) || null,
+      payout_cents: 0,
+      notes: pick([
+        'Demo task seeded for workflow testing.',
+        'Demo: keep notes short and factual.',
+      ], i),
+      meta: {
+        ...seedTag,
+        kind: 'dispatch',
+        leadId,
+        leadLabel: leadId ? `Demo Lead ${leadId}` : '',
+        priority: [0, 1, 3, 5][i % 4],
+      },
+    });
+  }
+
+  if (dispatchTasks.length) {
+    const { error: dErr } = await sb
+      .from('portal_events')
+      .insert(dispatchTasks);
+    if (dErr) return { ok: false, error: 'seed_dispatch_failed', detail: dErr.message || '' };
+  }
+
+  // -----------------------------
   // Payouts
   // -----------------------------
   const payoutsToInsert = [];
@@ -676,6 +762,8 @@ async function seedDemoData(sb, {
       leadActivities: activities.length,
       events: events.length,
       recaps: recapsToInsert.length,
+      appointments: appointmentsToInsert.length,
+      dispatchTasks: dispatchTasks.length,
       payouts: payoutsToInsert.length,
       docs: docsToInsert.length,
       accounts: demoAccounts.length,

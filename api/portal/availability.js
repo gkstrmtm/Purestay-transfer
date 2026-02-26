@@ -64,6 +64,18 @@ async function upsertKv(sbAdmin, key, value) {
   return { ok: true, row: Array.isArray(data) ? data[0] : null };
 }
 
+async function getUserRole(sbAdmin, userId) {
+  if (!userId) return '';
+  const { data, error } = await sbAdmin
+    .from('portal_profiles')
+    .select('role')
+    .eq('user_id', userId)
+    .limit(1);
+  if (error) return '';
+  const row = Array.isArray(data) ? data[0] : null;
+  return String(row?.role || '').trim();
+}
+
 module.exports = async (req, res) => {
   if (handleCors(req, res, { methods: ['GET', 'PUT', 'OPTIONS'] })) return;
 
@@ -78,7 +90,18 @@ module.exports = async (req, res) => {
   const requestedUserId = clampUuid(url.searchParams.get('userId'));
 
   const baseUserId = String(s.effectiveUserId || s.user.id || '');
-  const userId = (s.realIsManager && requestedUserId) ? requestedUserId : baseUserId;
+  let userId = (s.realIsManager && requestedUserId) ? requestedUserId : baseUserId;
+
+  // Read-only team visibility: allow setters/dialers/coordinators to view a closer/AM's availability.
+  if (req.method === 'GET' && requestedUserId && !s.realIsManager) {
+    const canViewTeam = hasRole(s.profile, ['dialer', 'remote_setter', 'in_person_setter', 'event_coordinator']);
+    if (canViewTeam) {
+      const targetRole = await getUserRole(s.sbAdmin, requestedUserId);
+      if (['closer', 'account_manager', 'manager'].includes(targetRole)) {
+        userId = requestedUserId;
+      }
+    }
+  }
   const key = `portal:availability:${userId}`;
 
   if (req.method === 'GET') {

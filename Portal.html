@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700;800&family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <style>
     :root{
       --ink:#0e0d0c;
@@ -180,8 +181,17 @@
       padding:10px 12px;
       outline:none;
     }
+    select{
+      appearance:none;
+      padding-right: 38px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b6460' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 14px 14px;
+    }
     input:focus, select:focus, textarea:focus{box-shadow: 0 0 0 3px var(--ring); border-color: rgba(199,154,59,.55)}
     textarea{min-height: 120px; resize: vertical;}
+    .scrollBox{scrollbar-gutter: stable;}
     .two{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
     @media (max-width: 520px){ .two{grid-template-columns:1fr;} }
 
@@ -409,11 +419,11 @@
               <div class="two" style="margin-top:10px;">
                 <div>
                   <label>Contract start date</label>
-                  <input id="acctStart" type="date" />
+                  <input id="acctStart" type="text" data-picker="date" placeholder="YYYY-MM-DD" />
                 </div>
                 <div>
                   <label>Contract end date</label>
-                  <input id="acctEnd" type="date" />
+                  <input id="acctEnd" type="text" data-picker="date" placeholder="YYYY-MM-DD" />
                 </div>
               </div>
               <div style="margin-top:10px;">
@@ -493,11 +503,11 @@
                 <div class="two" style="margin-top:10px;">
                   <div>
                     <label>Contract start</label>
-                    <input id="acctEditStart" type="date" />
+                    <input id="acctEditStart" type="text" data-picker="date" placeholder="YYYY-MM-DD" />
                   </div>
                   <div>
                     <label>Contract end</label>
-                    <input id="acctEditEnd" type="date" />
+                    <input id="acctEditEnd" type="text" data-picker="date" placeholder="YYYY-MM-DD" />
                   </div>
                 </div>
                 <div class="two" style="margin-top:10px;">
@@ -507,7 +517,7 @@
                   </div>
                   <div>
                     <label>Renewal reminder date</label>
-                    <input id="acctEditReminderDate" type="date" />
+                    <input id="acctEditReminderDate" type="text" data-picker="date" placeholder="YYYY-MM-DD" />
                   </div>
                 </div>
                 <div class="muted small" id="acctRenewalHint" style="margin-top:10px;"></div>
@@ -714,118 +724,124 @@
           <div style="height:14px"></div>
           <div id="leadsMsg" class="err"></div>
           <div id="leadsEmpty" class="muted small" style="margin-top:6px;"></div>
-          <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Name</th>
-                  <th>Property</th>
-                  <th>City</th>
-                  <th>Status</th>
-                  <th>Assigned</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="leadsTbody"></tbody>
-            </table>
-          </div>
 
-          <div style="height:14px"></div>
-
-          <div class="card" style="background:#fff;">
-            <div class="bd">
-              <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
-                <div>
-                  <div class="muted small">Selected lead</div>
-                  <div id="leadDetailTitle" style="font-weight:900; margin-top:4px;">None</div>
-                </div>
-                <div class="row">
-                  <button id="leadDetailRefreshBtn" class="btn secondary" type="button">Refresh timeline</button>
-                </div>
+          <div class="two" style="align-items:flex-start; gap:14px;">
+            <div>
+              <div class="scrollBox" style="overflow:auto; border:1px solid var(--border); border-radius: 12px; max-height: 62vh;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Name</th>
+                      <th>Property</th>
+                      <th>City</th>
+                      <th>Status</th>
+                      <th>Assigned</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="leadsTbody"></tbody>
+                </table>
               </div>
+            </div>
 
-              <div style="height:10px"></div>
-              <div id="leadDetailMsg" class="err"></div>
-
-              <div class="two">
-                <div>
-                  <label>Status</label>
-                  <select id="leadEditStatus">
-                    <option value="">(unchanged)</option>
-                    <option value="new">new</option>
-                    <option value="working">working</option>
-                    <option value="booked">booked</option>
-                    <option value="won">won</option>
-                    <option value="lost">lost</option>
-                  </select>
-                </div>
-                <div>
-                  <label>Priority</label>
-                  <select id="leadEditPriority">
-                    <option value="">(unchanged)</option>
-                    <option value="5">5</option>
-                    <option value="4">4</option>
-                    <option value="3">3</option>
-                    <option value="2">2</option>
-                    <option value="1">1</option>
-                    <option value="0">0</option>
-                    <option value="-1">-1</option>
-                    <option value="-2">-2</option>
-                    <option value="-3">-3</option>
-                    <option value="-4">-4</option>
-                    <option value="-5">-5</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="two" style="margin-top:10px;">
-                <div>
-                  <label>Assigned workspace</label>
-                  <select id="leadEditAssignedRole">
-                    <option value="">(unchanged)</option>
-                    <option value="dialer">Calls</option>
-                    <option value="in_person_setter">Booked</option>
-                    <option value="closer">Sales</option>
-                    <option value="event_host">Events</option>
-                    <option value="event_coordinator">Operations</option>
-                    <option value="media_team">Content</option>
-                  </select>
-                </div>
-                <div>
-                  <label>Assigned user id (manager only)</label>
-                  <input id="leadEditAssignedUser" placeholder="uuid" />
-                </div>
-              </div>
-
-              <div style="margin-top:10px;">
-                <label>Next follow up (ISO or free text)</label>
-                <input id="leadEditFollowup" placeholder="2026-02-25 14:30 ET" />
-              </div>
-
-              <div class="row" style="margin-top:10px;">
-                <button id="leadSaveBtn" class="btn secondary" type="button">Save updates</button>
-                <div id="leadSaveMsg" class="err"></div>
-              </div>
-
-              <div style="height:14px"></div>
-
-              <div class="card" style="background:#fff; border-color: rgba(231,225,218,.9);">
+            <div class="leadDetailSticky" style="position: sticky; top: 12px;">
+              <div class="card" style="background:#fff;">
                 <div class="bd">
-                  <div style="font-weight:900;">Timeline</div>
-                  <div class="muted small" style="margin-top:4px;">Calls, closes, notes, and follow ups</div>
-                  <div style="height:10px"></div>
-                  <div id="timelineMsg" class="err"></div>
-                  <div id="timelineList"></div>
-
-                  <div style="height:12px"></div>
-                  <div>
-                    <label>Add note</label>
-                    <textarea id="timelineNote" placeholder="Add factual notes and next step."></textarea>
+                  <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
+                    <div>
+                      <div class="muted small">Selected lead</div>
+                      <div id="leadDetailTitle" style="font-weight:900; margin-top:4px;">None</div>
+                    </div>
+                    <div class="row">
+                      <button id="leadClearBtn" class="btn secondary" type="button">Clear</button>
+                      <button id="leadDetailRefreshBtn" class="btn secondary" type="button">Refresh timeline</button>
+                    </div>
                   </div>
+
+                  <div style="height:10px"></div>
+                  <div id="leadDetailMsg" class="err"></div>
+
+                  <div class="two">
+                    <div>
+                      <label>Status</label>
+                      <select id="leadEditStatus">
+                        <option value="">(unchanged)</option>
+                        <option value="new">new</option>
+                        <option value="working">working</option>
+                        <option value="booked">booked</option>
+                        <option value="won">won</option>
+                        <option value="lost">lost</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label>Priority</label>
+                      <select id="leadEditPriority">
+                        <option value="">(unchanged)</option>
+                        <option value="5">5</option>
+                        <option value="4">4</option>
+                        <option value="3">3</option>
+                        <option value="2">2</option>
+                        <option value="1">1</option>
+                        <option value="0">0</option>
+                        <option value="-1">-1</option>
+                        <option value="-2">-2</option>
+                        <option value="-3">-3</option>
+                        <option value="-4">-4</option>
+                        <option value="-5">-5</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="two" style="margin-top:10px;">
+                    <div>
+                      <label>Assigned workspace</label>
+                      <select id="leadEditAssignedRole">
+                        <option value="">(unchanged)</option>
+                        <option value="dialer">Calls</option>
+                        <option value="in_person_setter">Booked</option>
+                        <option value="closer">Sales</option>
+                        <option value="event_host">Events</option>
+                        <option value="event_coordinator">Operations</option>
+                        <option value="media_team">Content</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label>Assigned user id (manager only)</label>
+                      <input id="leadEditAssignedUser" placeholder="uuid" />
+                    </div>
+                  </div>
+
+                  <div style="margin-top:10px;">
+                    <label>Next follow up (ISO or free text)</label>
+                    <input id="leadEditFollowup" placeholder="2026-02-25 14:30 ET" />
+                  </div>
+
                   <div class="row" style="margin-top:10px;">
-                    <button id="timelineAddBtn" class="btn" type="button">Add note</button>
-                    <div id="timelineAddMsg" class="err"></div>
+                    <button id="leadSaveBtn" class="btn secondary" type="button">Save updates</button>
+                    <div id="leadSaveMsg" class="err"></div>
+                  </div>
+
+                  <div style="height:14px"></div>
+
+                  <div class="card" style="background:#fff; border-color: rgba(231,225,218,.9);">
+                    <div class="bd" style="max-height: 44vh; overflow:auto;">
+                      <div style="font-weight:900;">Timeline</div>
+                      <div class="muted small" style="margin-top:4px;">Calls, closes, notes, and follow ups</div>
+                      <div style="height:10px"></div>
+                      <div id="timelineMsg" class="err"></div>
+                      <div id="timelineList"></div>
+
+                      <div style="height:12px"></div>
+                      <div>
+                        <label>Add note</label>
+                        <textarea id="timelineNote" placeholder="Add factual notes and next step."></textarea>
+                      </div>
+                      <div class="row" style="margin-top:10px;">
+                        <button id="timelineAddBtn" class="btn" type="button">Add note</button>
+                        <div id="timelineAddMsg" class="err"></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -839,7 +855,7 @@
               <button id="dialerSegCall" class="segBtn" type="button">Queue & Call</button>
               <button id="dialerSegActivity" class="segBtn" type="button">Activity</button>
               <button id="dialerSegBooked" class="segBtn" type="button">Booked</button>
-              <button id="dialerSegTasks" class="segBtn" type="button">Dispatch</button>
+              <button id="dialerSegTasks" class="segBtn" type="button">Tasks</button>
             </div>
           </div>
 
@@ -883,7 +899,10 @@
                   <div class="muted small">Selected lead</div>
                   <div id="selectedLeadLine" style="font-weight:700; margin-top:4px;">None</div>
                 </div>
-                <button id="pickFromLeads" class="btn secondary">Pick from Leads</button>
+                <div class="row">
+                  <button id="clearSelectedLeadBtn" class="btn secondary" type="button">Clear</button>
+                  <button id="pickFromLeads" class="btn secondary" type="button">Pick from Leads</button>
+                </div>
               </div>
               <div style="height:10px"></div>
               <div id="dialerCallForm">
@@ -999,11 +1018,11 @@
                     <div class="two">
                       <div>
                         <label>Date</label>
-                        <input id="dialerBookedDate" type="date" />
+                        <input id="dialerBookedDate" type="text" data-picker="date" placeholder="YYYY-MM-DD" />
                       </div>
                       <div>
                         <label>Start time</label>
-                        <input id="dialerBookedStart" type="time" />
+                        <input id="dialerBookedStart" type="text" data-picker="time" placeholder="HH:MM" />
                       </div>
                     </div>
                     <div style="margin-top:10px;">
@@ -1025,8 +1044,8 @@
               <div class="bd">
                 <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
                   <div>
-                    <div style="font-weight:900;">Dispatch tasks</div>
-                    <div class="muted small">Open tasks assigned to you or unassigned</div>
+                    <div style="font-weight:900;">Tasks</div>
+                    <div class="muted small">To-dos assigned to you or your role</div>
                   </div>
                   <div class="row">
                     <select id="dialerTasksScope" style="max-width:220px">
@@ -1108,11 +1127,11 @@
                   <div class="two">
                     <div>
                       <label>Date</label>
-                      <input id="meetingDate" type="date" />
+                      <input id="meetingDate" type="text" data-picker="date" placeholder="YYYY-MM-DD" />
                     </div>
                     <div>
                       <label>Start time</label>
-                      <input id="meetingStart" type="time" />
+                      <input id="meetingStart" type="text" data-picker="time" placeholder="HH:MM" />
                     </div>
                   </div>
                   <div style="margin-top:10px;">
@@ -1149,6 +1168,10 @@
                   <div style="height:10px"></div>
                   <div class="row" style="justify-content:space-between; gap:10px;">
                     <div class="muted small" id="availWeekLabel">—</div>
+                    <div class="row hide" style="gap:8px;">
+                      <div class="muted small" style="font-weight:900;">Viewing</div>
+                      <select id="availPerson" style="max-width: 360px;"></select>
+                    </div>
                   </div>
                   <div style="height:10px"></div>
                   <div id="availMsg" class="err"></div>
@@ -1179,7 +1202,10 @@
                   <div class="muted small">Selected lead</div>
                   <div id="closerSelectedLead" style="font-weight:700; margin-top:4px;">None</div>
                 </div>
-                <button id="closerPickLead" class="btn secondary">Pick from Leads</button>
+                <div class="row">
+                  <button id="closerClearLeadBtn" class="btn secondary" type="button">Clear</button>
+                  <button id="closerPickLead" class="btn secondary" type="button">Pick from Leads</button>
+                </div>
               </div>
 
               <div style="height:12px"></div>
@@ -1226,7 +1252,7 @@
                     </div>
                     <div>
                       <label>Closed on (if won)</label>
-                      <input id="closeDate" type="date" />
+                      <input id="closeDate" type="text" data-picker="date" placeholder="YYYY-MM-DD" />
                     </div>
                   </div>
 
@@ -1265,7 +1291,7 @@
                     </div>
                     <div>
                       <label>Contract send date (optional)</label>
-                      <input id="closeContractSend" type="date" />
+                      <input id="closeContractSend" type="text" data-picker="date" placeholder="YYYY-MM-DD" />
                     </div>
                   </div>
 
@@ -1340,7 +1366,7 @@
             <div class="bd">
               <div class="two">
                 <div><label>Property name</label><input id="nePropertyName" placeholder="Property name" /></div>
-                <div><label>Date</label><input id="neDate" type="date" /></div>
+                <div><label>Date</label><input id="neDate" type="text" data-picker="date" placeholder="YYYY-MM-DD" /></div>
               </div>
               <div style="margin-top:10px;">
                 <label>Property address</label>
@@ -1908,7 +1934,7 @@
             <div class="bd">
               <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
                 <div>
-                  <div style="font-weight:900;">Dispatch</div>
+                  <div style="font-weight:900;">Tasks</div>
                   <div class="muted small">Create and manage operational tasks</div>
                 </div>
                 <div class="row">
@@ -1981,11 +2007,11 @@
                   <div class="two" style="margin-top:10px;">
                     <div>
                       <label>Due date</label>
-                      <input id="dispatchDueDate" type="date" />
+                      <input id="dispatchDueDate" type="text" data-picker="date" placeholder="YYYY-MM-DD" />
                     </div>
                     <div>
                       <label>Due time</label>
-                      <input id="dispatchDueTime" type="time" />
+                      <input id="dispatchDueTime" type="text" data-picker="time" placeholder="HH:MM" />
                     </div>
                   </div>
 
@@ -2163,6 +2189,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script>
     (function stripCloudflareChallengeParams(){
       try{
@@ -2412,7 +2439,7 @@
 
     function canLoadUserDirectory(){
       const r = effectiveRole();
-      return isManagerUser() || r === 'event_coordinator';
+      return isManagerUser() || r === 'event_coordinator' || ['dialer','remote_setter','in_person_setter'].includes(r);
     }
 
     function viewAsUserLabel(userId){
@@ -2460,7 +2487,8 @@
         state.activeTab = 'calls';
         if (er === 'in_person_setter') state.dialerSubtab = 'booked';
       }
-      else if (['closer','account_manager'].includes(er)) state.activeTab = 'closer';
+      else if (er === 'closer') state.activeTab = 'closer';
+      else if (er === 'account_manager') state.activeTab = 'accounts';
       else if (er === 'event_coordinator') state.activeTab = 'manager';
       else if (['event_host','media_team'].includes(er)) state.activeTab = 'events';
       else state.activeTab = 'overview';
@@ -2810,8 +2838,11 @@
         navItems.push({ id:'calls', label: er === 'in_person_setter' ? 'Booked' : 'Calls' });
         navItems.push({ id:'meetings', label:'Meetings' });
       }
-      if (['closer','account_manager'].includes(er)) {
+      if (er === 'closer') {
         navItems.push({ id:'closer', label:'Sales' });
+        navItems.push({ id:'meetings', label:'Meetings' });
+      }
+      if (er === 'account_manager') {
         navItems.push({ id:'meetings', label:'Meetings' });
       }
       if (er === 'account_manager' || er === 'manager') {
@@ -3075,10 +3106,10 @@
           });
 
           cards.push({
-            title: 'Dispatch',
+            title: 'Tasks',
             sub: 'Open tasks',
             value: `${fmtNum(openTasks.length)}${overdueTasks.length ? (` • overdue ${fmtNum(overdueTasks.length)}`) : ''}`,
-            hint: 'Open Calls → Dispatch',
+            hint: 'Open Calls → Tasks',
           });
 
           cards.push({
@@ -3108,7 +3139,7 @@
 
           cards.push({ title: 'Meetings', sub: 'Scheduled appointments', value: fmtNum(upcoming.length), hint: 'Open Sales → Meetings' });
           cards.push({ title: 'Availability', sub: 'Days with slots saved', value: fmtNum(days), hint: 'Open Sales → Availability' });
-          cards.push({ title: 'Dispatch', sub: 'Open tasks', value: `${fmtNum(openTasks.length)}${overdueTasks.length ? (` • overdue ${fmtNum(overdueTasks.length)}`) : ''}`, hint: 'Open Sales → Dispatch' });
+          cards.push({ title: 'Tasks', sub: 'Open tasks', value: `${fmtNum(openTasks.length)}${overdueTasks.length ? (` • overdue ${fmtNum(overdueTasks.length)}`) : ''}`, hint: 'Open Sales → Tasks' });
           cards.push({ title: 'Commissions', sub: 'Recent payouts', value: `$${sumMoney(payouts).toFixed(2)}`, hint: 'Open Payments' });
         } else if (er === 'manager') {
           cards.push({ title: 'Manager', sub: 'Use Manager tab for ops/stats', value: '—', hint: 'Open Manager' });
@@ -3151,6 +3182,13 @@
       if ($('closerSelectedLead')) $('closerSelectedLead').textContent = line;
       if ($('leadDetailTitle')) $('leadDetailTitle').textContent = line;
 
+      // When cleared, make downstream panes obvious.
+      if (!l) {
+        if ($('timelineList')) $('timelineList').innerHTML = '<div class="muted small">Select a lead to view timeline.</div>';
+        if ($('dialerTimelineList')) $('dialerTimelineList').innerHTML = '<div class="muted small">Select a lead to view activity.</div>';
+        if ($('leadDetailMsg')) $('leadDetailMsg').textContent = '';
+      }
+
       // Populate lead edit defaults for convenience
       if (l) {
         if ($('leadEditStatus')) $('leadEditStatus').value = '';
@@ -3160,6 +3198,17 @@
         const fu = l.meta && typeof l.meta === 'object' ? String(l.meta.followup || '') : '';
         if ($('leadEditFollowup')) $('leadEditFollowup').value = fu;
       }
+    }
+
+    function clearSelectedLead(){
+      state.selectedLead = null;
+      try{
+        if ($('meetingScheduleMsg')) $('meetingScheduleMsg').textContent = '';
+        if ($('dialerBookedScheduleMsg')) $('dialerBookedScheduleMsg').textContent = '';
+        if ($('callMsg')) $('callMsg').textContent = '';
+        if ($('closeMsg')) $('closeMsg').textContent = '';
+      } catch(_e) {}
+      setSelectedLeadLine();
     }
 
     function leadDisplayName(l){
@@ -4163,9 +4212,15 @@
         for (const d of week) {
           const dateKey = ymd(d);
           const active = hasAvailSlot(dateKey, t);
-          rows.push(
-            `<div class="availSlotCell"><button ${editable ? '' : 'disabled'} type="button" class="availSlotBtn ${active ? 'active' : ''}" data-avail-date="${escapeHtml(dateKey)}" data-avail-time="${escapeHtml(t)}" aria-pressed="${active ? 'true' : 'false'}"></button></div>`
-          );
+          if (editable) {
+            rows.push(
+              `<div class="availSlotCell"><button type="button" class="availSlotBtn ${active ? 'active' : ''}" data-avail-date="${escapeHtml(dateKey)}" data-avail-time="${escapeHtml(t)}" aria-pressed="${active ? 'true' : 'false'}"></button></div>`
+            );
+          } else {
+            rows.push(
+              `<div class="availSlotCell"><div class="availSlotBtn ${active ? 'active' : ''}" data-avail-date="${escapeHtml(dateKey)}" data-avail-time="${escapeHtml(t)}" aria-hidden="true"></div></div>`
+            );
+          }
         }
       }
 
@@ -4175,6 +4230,15 @@
       const drag = state.availability.drag;
       drag.active = false;
       drag.mode = '';
+
+      // Read-only view: no pointer handlers.
+      if (!editable) {
+        grid.onpointerdown = null;
+        grid.onpointerover = null;
+        grid.onpointerup = null;
+        grid.onpointercancel = null;
+        return;
+      }
 
       const applyCell = (btn) => {
         const dateKey = String(btn.dataset.availDate || '');
@@ -4191,7 +4255,6 @@
       grid.onpointerdown = (ev) => {
         const btn = ev.target && ev.target.closest ? ev.target.closest('button.availSlotBtn') : null;
         if (!btn) return;
-        if (btn.disabled) return;
         ev.preventDefault();
         const dateKey = String(btn.dataset.availDate || '');
         const t = String(btn.dataset.availTime || '');
@@ -4206,7 +4269,6 @@
         if (!drag.active) return;
         const btn = ev.target && ev.target.closest ? ev.target.closest('button.availSlotBtn') : null;
         if (!btn) return;
-        if (btn.disabled) return;
         applyCell(btn);
       };
 
@@ -4222,13 +4284,44 @@
     async function loadAvailability(){
       if (!$('availWeekGrid')) return;
       const card = $('meetingsAvailabilityCard');
-      const show = ['closer','account_manager','manager'].includes(effectiveRole());
+      const show = ['dialer','remote_setter','in_person_setter','closer','account_manager','manager','event_coordinator'].includes(effectiveRole());
       if (card) card.classList.toggle('hide', !show);
       if (!show) return;
       $('availMsg').textContent = '';
       ensureAvailInit();
+
+      // Allow schedulers to view a closer/AM availability read-only.
       try{
-        const j = await api('/api/portal/availability');
+        await ensureUsersCache();
+        const canPick = ['dialer','remote_setter','in_person_setter','event_coordinator','manager'].includes(effectiveRole());
+        const sel = $('availPerson');
+        const list = Array.isArray(state.usersCache) ? state.usersCache : [];
+        const people = list.filter((u) => ['closer','account_manager','manager'].includes(String(u.role || '').trim()));
+        if (sel) {
+          sel.closest('.row')?.classList?.toggle('hide', !(canPick && people.length));
+          if (canPick && people.length) {
+            const cur = String(state.availability.viewUserId || '').trim();
+            if (!cur) {
+              const firstCloser = people.find((u) => String(u.role || '').trim() === 'closer');
+              state.availability.viewUserId = String((firstCloser || people[0])?.userId || '').trim();
+            }
+            const active = String(state.availability.viewUserId || '').trim();
+            sel.innerHTML = people.map((u) => {
+              const id = String(u.userId || '').trim();
+              const label = String(u.fullName || u.email || u.role || id).trim();
+              const role = String(u.role || '').trim();
+              const name = label || id;
+              return `<option value="${escapeHtml(id)}" ${id === active ? 'selected' : ''}>${escapeHtml(name)}${role ? (` • ${escapeHtml(roleViewLabel(role))}`) : ''}</option>`;
+            }).join('');
+          }
+        }
+      } catch(_e) {}
+
+      try{
+        const editable = availabilityEditable();
+        const viewUid = String(state.availability.viewUserId || '').trim();
+        const url = (!editable && viewUid) ? (`/api/portal/availability?userId=${encodeURIComponent(viewUid)}`) : '/api/portal/availability';
+        const j = await api(url);
         const slots = j.availability?.slots && typeof j.availability.slots === 'object' ? j.availability.slots : {};
         const byDate = slots.byDate && typeof slots.byDate === 'object' ? slots.byDate : {};
         state.availability.byDate = byDate;
@@ -7055,9 +7148,34 @@
       if (el) el.addEventListener(eventName, handler);
     }
 
+    let __pickersInited = false;
+    function initPickersOnce(){
+      if (__pickersInited) return;
+      if (typeof window.flatpickr !== 'function') return;
+      __pickersInited = true;
+
+      for (const el of Array.from(document.querySelectorAll('input[data-picker="date"]'))) {
+        window.flatpickr(el, {
+          dateFormat: 'Y-m-d',
+          allowInput: true,
+        });
+      }
+      for (const el of Array.from(document.querySelectorAll('input[data-picker="time"]'))) {
+        window.flatpickr(el, {
+          enableTime: true,
+          noCalendar: true,
+          dateFormat: 'H:i',
+          time_24hr: true,
+          allowInput: true,
+        });
+      }
+    }
+
     async function boot(){
       $('authMsg').textContent = '';
       $('authOk').textContent = '';
+
+      initPickersOnce();
 
       restoreUiPrefs();
 
@@ -7223,6 +7341,9 @@
     on('closeSubmitBtn', 'click', () => submitClose().catch(() => {}));
     on('closeQuoteBtn', 'click', () => fillTierPrice());
 
+    on('clearSelectedLeadBtn', 'click', () => clearSelectedLead());
+    on('closerClearLeadBtn', 'click', () => clearSelectedLead());
+
     on('loadApptsBtn', 'click', () => loadAppointments().catch(() => {}));
     on('scheduleApptBtn', 'click', () => scheduleAppointment().catch(() => {}));
     on('meetingsRefreshBtn', 'click', () => loadAppointmentsInto('meetingsTbody', 'meetingsMsg').catch(() => {}));
@@ -7232,6 +7353,11 @@
     on('meetingsSegAvailability', 'click', () => setMeetingsSubtab('availability'));
 
     on('availSaveBtn', 'click', () => saveAvailability().catch(() => {}));
+    on('availPerson', 'change', () => {
+      ensureAvailInit();
+      state.availability.viewUserId = String($('availPerson')?.value || '').trim();
+      loadAvailability().catch(() => {});
+    });
     on('availPrevWeek', 'click', () => { ensureAvailInit(); state.availability.weekOffset -= 1; renderAvailWeekGrid(); });
     on('availNextWeek', 'click', () => { ensureAvailInit(); state.availability.weekOffset += 1; renderAvailWeekGrid(); });
     on('availToday', 'click', () => { ensureAvailInit(); state.availability.weekOffset = 0; renderAvailWeekGrid(); });
@@ -7280,6 +7406,8 @@
     on('loadCloserQueueBtn', 'click', () => loadCloserQueue().catch(() => {}));
 
     on('submitRecapBtn', 'click', () => submitRecap().catch(() => {}));
+
+    on('leadClearBtn', 'click', () => clearSelectedLead());
     on('closeRecapBtn', 'click', () => setSelectedEvent(null));
 
     on('pipelineClose', 'click', () => closePipelineModal());

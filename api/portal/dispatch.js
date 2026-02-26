@@ -119,7 +119,7 @@ module.exports = async (req, res) => {
     }
 
     const { data, error } = await query;
-    if (error) return sendJson(res, 500, { ok: false, error: 'dispatch_query_failed' });
+    if (error) return sendJson(res, 500, { ok: false, error: 'dispatch_query_failed', detail: error.message || '' });
 
     const tasks = (Array.isArray(data) ? data : []).filter((t) => {
       const meta = t.meta && typeof t.meta === 'object' ? t.meta : {};

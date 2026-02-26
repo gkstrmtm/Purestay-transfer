@@ -11,9 +11,11 @@ module.exports = async (req, res) => {
   const s = await requirePortalSession(req);
   if (!s.ok) return sendJson(res, s.status || 401, { ok: false, error: s.error });
 
-  // Managers and event coordinators can view the directory; only managers can edit.
-  const canList = isManager(s.realProfile) || hasRole(s.realProfile, ['event_coordinator']);
-  if (!canList) return sendJson(res, 403, { ok: false, error: 'forbidden' });
+  // Managers and event coordinators can view the full directory; only managers can edit.
+  // Dialers/setters/closers/AMs can view a limited list (no emails) for scheduling.
+  const canListFull = isManager(s.realProfile) || hasRole(s.realProfile, ['event_coordinator']);
+  const canListLimited = hasRole(s.profile, ['dialer', 'remote_setter', 'in_person_setter', 'closer', 'account_manager']);
+  if (!canListFull && !canListLimited) return sendJson(res, 403, { ok: false, error: 'forbidden' });
 
   if (req.method === 'PATCH') {
     if (!isManager(s.realProfile)) return sendJson(res, 403, { ok: false, error: 'forbidden' });
@@ -51,16 +53,26 @@ module.exports = async (req, res) => {
 
   if (req.method !== 'GET') return sendJson(res, 405, { ok: false, error: 'method_not_allowed' });
 
-  const { data: profiles, error } = await s.sbAdmin
+  let query = s.sbAdmin
     .from('portal_profiles')
     .select('user_id, role, full_name, created_at')
     .order('created_at', { ascending: true })
     .limit(500);
 
+  if (!canListFull) {
+    // Limited directory: only return people relevant for scheduling.
+    query = query.in('role', ['closer', 'account_manager', 'manager', 'event_coordinator']);
+  }
+
+  const { data: profiles, error } = await query;
+
   if (error) return sendJson(res, 500, { ok: false, error: 'profiles_query_failed' });
 
-  const listed = await s.sbAdmin.auth.admin.listUsers({ page: 1, perPage: 200 });
-  const byId = new Map((listed?.data?.users || []).map((u) => [u.id, u]));
+  let byId = new Map();
+  if (canListFull) {
+    const listed = await s.sbAdmin.auth.admin.listUsers({ page: 1, perPage: 200 });
+    byId = new Map((listed?.data?.users || []).map((u) => [u.id, u]));
+  }
 
   const users = (profiles || []).map((p) => {
     const u = byId.get(p.user_id);
@@ -68,7 +80,7 @@ module.exports = async (req, res) => {
       userId: p.user_id,
       role: p.role,
       fullName: p.full_name || '',
-      email: u?.email || '',
+      email: canListFull ? (u?.email || '') : '',
       createdAt: p.created_at,
     };
   });
