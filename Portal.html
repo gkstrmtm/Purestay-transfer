@@ -192,6 +192,8 @@
     input:focus, select:focus, textarea:focus{box-shadow: 0 0 0 3px var(--ring); border-color: rgba(199,154,59,.55)}
     textarea{min-height: 120px; resize: vertical;}
     .scrollBox{scrollbar-gutter: stable;}
+    .scrollY{overflow:auto; scrollbar-gutter: stable;}
+    .scrollCardList{overflow:auto; max-height: 52vh; scrollbar-gutter: stable;}
     .two{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
     @media (max-width: 520px){ .two{grid-template-columns:1fr;} }
 
@@ -212,6 +214,7 @@
     .segBtn.active{background: rgba(122,46,38,.08); border-color: rgba(122,46,38,.22); color: var(--maroon)}
 
     .dd{position:relative;}
+    .nativeSelectHidden{display:none !important;}
     .ddBtn{width:100%; appearance:none; border:1px solid var(--border); background:#fff; padding:10px 12px; border-radius:12px; font-weight:900; color:#3a2f2c; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:10px;}
     .ddBtn:focus-visible{outline:none; box-shadow: 0 0 0 3px var(--ring); border-color: rgba(199,154,59,.55)}
     .ddMenu{position:absolute; left:0; right:0; top: calc(100% + 8px); background:#fff; border:1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); padding: 6px; z-index: 40; max-height: 320px; overflow:auto;}
@@ -255,6 +258,7 @@
     .modalBackdrop{position:fixed; inset:0; background: rgba(0,0,0,.38); z-index: 80; display:none; padding: 20px;}
     .modalBackdrop.show{display:block;}
     .modal{max-width: 1040px; margin: 30px auto; background:#fff; border:1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow); overflow:hidden;}
+    .modal.sm{max-width: 760px;}
     .modalHd{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; border-bottom:1px solid var(--border);}
     .modalHd .t{font-weight:900;}
     .modalBd{padding:16px;}
@@ -282,6 +286,12 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .small{font-size:12px;}
+
+    .wizardTop{display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+    .wizardSteps{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+    .wizardStep{font-size:12px; font-weight:900; color:#3a2f2c; border:1px solid var(--border); background:#fff; padding:8px 10px; border-radius:999px; cursor:pointer;}
+    .wizardStep.active{background: rgba(122,46,38,.08); border-color: rgba(122,46,38,.22); color: var(--maroon)}
+    .wizardNav{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
   </style>
 </head>
 <body>
@@ -830,7 +840,7 @@
                       <div class="muted small" style="margin-top:4px;">Calls, closes, notes, and follow ups</div>
                       <div style="height:10px"></div>
                       <div id="timelineMsg" class="err"></div>
-                      <div id="timelineList"></div>
+                      <div id="timelineList" class="scrollCardList"></div>
 
                       <div style="height:12px"></div>
                       <div>
@@ -902,6 +912,7 @@
                 <div class="row">
                   <button id="clearSelectedLeadBtn" class="btn secondary" type="button">Clear</button>
                   <button id="pickFromLeads" class="btn secondary" type="button">Pick from Leads</button>
+                  <button id="openScheduleBtn" class="btn" type="button">Schedule…</button>
                 </div>
               </div>
               <div style="height:10px"></div>
@@ -972,7 +983,7 @@
                 </div>
                 <div style="height:10px"></div>
                 <div id="dialerTimelineMsg" class="err"></div>
-                <div id="dialerTimelineList"></div>
+                <div id="dialerTimelineList" class="scrollCardList"></div>
               </div>
             </div>
           </div>
@@ -987,6 +998,7 @@
                   </div>
                   <div class="row">
                     <button id="dialerBookedRefreshBtn" class="btn secondary" type="button">Refresh</button>
+                    <button id="dialerBookedOpenSchedule" class="btn" type="button">Schedule…</button>
                   </div>
                 </div>
 
@@ -1009,32 +1021,7 @@
                 </div>
 
                 <div style="height:12px"></div>
-                <div class="card" style="background:#fff; border-color: rgba(199,154,59,.35);">
-                  <div class="bd">
-                    <div style="font-weight:900;">Schedule for selected lead</div>
-                    <div class="muted small" style="margin-top:4px;">Creates an appointment. Track outcomes in Activity.</div>
-
-                    <div style="height:10px"></div>
-                    <div class="two">
-                      <div>
-                        <label>Date</label>
-                        <input id="dialerBookedDate" type="text" data-picker="date" placeholder="YYYY-MM-DD" />
-                      </div>
-                      <div>
-                        <label>Start time</label>
-                        <input id="dialerBookedStart" type="text" data-picker="time" placeholder="HH:MM" />
-                      </div>
-                    </div>
-                    <div style="margin-top:10px;">
-                      <label>Notes (optional)</label>
-                      <textarea id="dialerBookedNotes" placeholder="Any context for the meeting."></textarea>
-                    </div>
-                    <div class="row" style="margin-top:10px;">
-                      <button id="dialerBookedScheduleBtn" class="btn" type="button">Schedule</button>
-                      <div id="dialerBookedScheduleMsg" class="err"></div>
-                    </div>
-                  </div>
-                </div>
+                <div class="muted small">Tip: Select a lead (Calls → Pick from Leads), then use “Schedule…”</div>
               </div>
             </div>
           </div>
@@ -1096,6 +1083,7 @@
                 </div>
                 <div class="row">
                   <button id="meetingsRefreshBtn" class="btn secondary" type="button">Refresh</button>
+                  <button id="meetingsOpenSchedule" class="btn" type="button">Schedule…</button>
                 </div>
               </div>
 
@@ -1118,32 +1106,7 @@
               </div>
 
               <div style="height:12px"></div>
-              <div class="card" style="background:#fff; border-color: rgba(199,154,59,.35);">
-                <div class="bd">
-                  <div style="font-weight:900;">Schedule</div>
-                  <div class="muted small" style="margin-top:4px;">Schedules for the currently selected lead</div>
-
-                  <div style="height:10px"></div>
-                  <div class="two">
-                    <div>
-                      <label>Date</label>
-                      <input id="meetingDate" type="text" data-picker="date" placeholder="YYYY-MM-DD" />
-                    </div>
-                    <div>
-                      <label>Start time</label>
-                      <input id="meetingStart" type="text" data-picker="time" placeholder="HH:MM" />
-                    </div>
-                  </div>
-                  <div style="margin-top:10px;">
-                    <label>Notes</label>
-                    <textarea id="meetingNotes" placeholder="Agenda and next steps."></textarea>
-                  </div>
-                  <div class="row" style="margin-top:10px;">
-                    <button id="meetingScheduleBtn" class="btn" type="button">Schedule for selected lead</button>
-                    <div id="meetingScheduleMsg" class="err"></div>
-                  </div>
-                </div>
-              </div>
+              <div class="muted small">Use “Schedule…” to schedule for the selected lead.</div>
 
               </div>
 
@@ -1502,7 +1465,7 @@
               <div style="height:14px"></div>
               <div class="muted small" style="font-weight:900;">Recent recaps</div>
               <div style="height:8px"></div>
-              <div id="recapsList"></div>
+              <div id="recapsList" class="scrollCardList"></div>
             </div>
           </div>
 
@@ -1592,7 +1555,7 @@
                   </div>
 
                   <div style="height:10px"></div>
-                  <div id="assignmentsList"></div>
+                  <div id="assignmentsList" class="scrollCardList"></div>
 
                   <div class="card" style="background:#fff; border-color: rgba(199,154,59,.25); margin-top:10px;">
                     <div class="bd">
@@ -1760,7 +1723,7 @@
                         <button id="aiSuggestVendorsBtn" class="btn secondary" type="button">AI suggest</button>
                         <div id="vendorsMsg" class="err"></div>
                       </div>
-                      <div id="vendorsList" style="margin-top:10px;"></div>
+                      <div id="vendorsList" class="scrollCardList" style="margin-top:10px;"></div>
                     </div>
                     <div>
                       <label>Browse event types</label>
@@ -1769,7 +1732,7 @@
                         <button id="loadEventTypesBtn" class="btn secondary" type="button">Search</button>
                         <div id="eventTypesMsg" class="err"></div>
                       </div>
-                      <div id="eventTypesList" style="margin-top:10px;"></div>
+                      <div id="eventTypesList" class="scrollCardList" style="margin-top:10px;"></div>
                     </div>
                   </div>
                 </div>
@@ -1781,13 +1744,19 @@
         <div id="viewTalent" class="hide">
           <div class="card" style="background:#fff;">
             <div class="bd">
-              <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
+              <div class="wizardTop">
                 <div>
                   <div class="muted small">Talent profile</div>
                   <div style="font-weight:900; margin-top:4px;">Bio, location, specialties</div>
                   <div id="talentEditingLine" class="muted small" style="margin-top:4px;"></div>
                 </div>
-                <div class="row">
+                <div class="wizardNav">
+                  <div class="wizardSteps" aria-label="Talent steps">
+                    <button id="talStep1" class="wizardStep" type="button">Basics</button>
+                    <button id="talStep2" class="wizardStep" type="button">Profile</button>
+                    <button id="talStep3" class="wizardStep" type="button">Notes</button>
+                    <button id="talStep4" class="wizardStep hide" type="button">Reliability</button>
+                  </div>
                   <button id="talentRefreshBtn" class="btn secondary" type="button">Refresh</button>
                   <button id="talentStopEditingBtn" class="btn secondary hide" type="button">Stop editing</button>
                 </div>
@@ -1796,63 +1765,68 @@
               <div style="height:10px"></div>
               <div id="talentMsg" class="err"></div>
 
-              <div class="two">
-                <div>
-                  <label>Display name</label>
-                  <input id="talDisplayName" placeholder="Preferred name" />
+              <div id="talentStep1" class="talStep" data-step="1">
+                <div class="two">
+                  <div>
+                    <label>Display name</label>
+                    <input id="talDisplayName" placeholder="Preferred name" />
+                  </div>
+                  <div>
+                    <label>Role</label>
+                    <select id="talRole">
+                      <option value="">Select…</option>
+                      <option value="event_host">event_host</option>
+                      <option value="media_team">media_team</option>
+                    </select>
+                  </div>
                 </div>
-                <div>
-                  <label>Role</label>
-                  <select id="talRole">
-                    <option value="">Select…</option>
-                    <option value="event_host">event_host</option>
-                    <option value="media_team">media_team</option>
-                  </select>
+
+                <div class="two" style="margin-top:10px;">
+                  <div>
+                    <label>Home base city</label>
+                    <input id="talCity" placeholder="Charlotte" />
+                  </div>
+                  <div>
+                    <label>Home base state</label>
+                    <input id="talState" placeholder="NC" />
+                  </div>
                 </div>
               </div>
 
-              <div class="two" style="margin-top:10px;">
+              <div id="talentStep2" class="talStep hide" data-step="2">
                 <div>
-                  <label>Home base city</label>
-                  <input id="talCity" placeholder="Charlotte" />
+                  <label>Specialties (comma separated)</label>
+                  <input id="talSpecialties" placeholder="ex: games, luxury, families" />
                 </div>
+
+                <div style="margin-top:10px;">
+                  <label>Tone / style</label>
+                  <input id="talTone" placeholder="high-energy, warm, professional" />
+                </div>
+
+                <div style="margin-top:10px;">
+                  <label>Gear / capabilities</label>
+                  <input id="talGear" placeholder="camera, gimbal, lighting, drone (if licensed)" />
+                </div>
+
+                <div style="margin-top:10px;">
+                  <label>Bio</label>
+                  <textarea id="talBio" placeholder="Short bio used for matching and reporting"></textarea>
+                </div>
+              </div>
+
+              <div id="talentStep3" class="talStep hide" data-step="3">
                 <div>
-                  <label>Home base state</label>
-                  <input id="talState" placeholder="NC" />
+                  <label>Preferred pairings (user IDs comma separated)</label>
+                  <input id="talPairings" placeholder="uuid1, uuid2" />
+                </div>
+                <div style="margin-top:10px;">
+                  <label>Notes (internal)</label>
+                  <textarea id="talNotes"></textarea>
                 </div>
               </div>
 
-              <div style="margin-top:10px;">
-                <label>Specialties (comma separated)</label>
-                <input id="talSpecialties" placeholder="ex: games, luxury, families" />
-              </div>
-
-              <div style="margin-top:10px;">
-                <label>Tone / style</label>
-                <input id="talTone" placeholder="high-energy, warm, professional" />
-              </div>
-
-              <div style="margin-top:10px;">
-                <label>Gear / capabilities</label>
-                <input id="talGear" placeholder="camera, gimbal, lighting, drone (if licensed)" />
-              </div>
-
-              <div style="margin-top:10px;">
-                <label>Bio</label>
-                <textarea id="talBio" placeholder="Short bio used for matching and reporting"></textarea>
-              </div>
-
-              <div style="margin-top:10px;">
-                <label>Preferred pairings (user IDs comma separated)</label>
-                <input id="talPairings" placeholder="uuid1, uuid2" />
-              </div>
-
-              <div style="margin-top:10px;">
-                <label>Notes (internal)</label>
-                <textarea id="talNotes"></textarea>
-              </div>
-
-              <div id="talReliabilityBox" class="hide" style="margin-top:10px;">
+              <div id="talReliabilityBox" class="hide talStep" style="margin-top:10px;" data-step="4">
                 <div class="two">
                   <div>
                     <label>Reliability score (0-100)</label>
@@ -1865,7 +1839,11 @@
                 </div>
               </div>
 
-              <div class="row" style="margin-top:10px;">
+              <div class="row" style="margin-top:12px; justify-content:space-between;">
+                <div class="row" style="gap:8px;">
+                  <button id="talPrevBtn" class="btn secondary" type="button">Back</button>
+                  <button id="talNextBtn" class="btn secondary" type="button">Next</button>
+                </div>
                 <button id="talentSaveBtn" class="btn" type="button">Save profile</button>
               </div>
             </div>
@@ -1885,7 +1863,7 @@
 
               <div style="height:10px"></div>
               <div id="talentDirMsg" class="err"></div>
-              <div id="talentDirList"></div>
+              <div id="talentDirList" class="scrollCardList"></div>
             </div>
           </div>
         </div>
@@ -1913,6 +1891,14 @@
         </div>
 
         <div id="viewManager" class="hide">
+          <div class="segTabs" style="gap:8px; margin-bottom:12px;">
+            <button id="mgrSegStats" class="segBtn" type="button">Stats</button>
+            <button id="mgrSegTasks" class="segBtn" type="button">Tasks</button>
+            <button id="mgrSegAssign" class="segBtn" type="button">Lead assignment</button>
+            <button id="mgrSegUsers" class="segBtn" type="button">Users</button>
+          </div>
+
+          <div id="mgrPaneStats" class="hide">
           <div id="mgrStatsCard" class="card" style="background:#fff;">
             <div class="bd">
               <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
@@ -1929,7 +1915,10 @@
           </div>
 
           <div style="height:14px"></div>
+          <div class="muted small">Tip: Use Tasks/Users subtabs for ops work.</div>
+          </div>
 
+          <div id="mgrPaneTasks" class="hide">
           <div class="card" style="background:#fff;">
             <div class="bd">
               <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
@@ -2071,7 +2060,10 @@
           </div>
 
           <div style="height:14px"></div>
+          <div class="muted small">Tip: keep Tasks scoped by workspace + status.</div>
+          </div>
 
+          <div id="mgrPaneAssign" class="hide">
           <div class="card" style="background:#fff;">
             <div class="bd">
               <div style="font-weight:900;">Lead assignment</div>
@@ -2107,7 +2099,10 @@
           </div>
 
           <div style="height:14px"></div>
+          <div class="muted small">Tip: user id assignment overrides workspace routing.</div>
+          </div>
 
+          <div id="mgrPaneUsers" class="hide">
           <div class="card" style="background:#fff;">
             <div class="bd">
               <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
@@ -2143,14 +2138,61 @@
                   <button id="loadTeamAvailBtn" class="btn secondary" type="button">Load availability</button>
                   <div style="height:10px"></div>
                   <div id="teamAvailMsg" class="err"></div>
-                  <div id="teamAvailList"></div>
+                  <div id="teamAvailList" class="scrollCardList"></div>
                 </div>
+              </div>
+            </div>
+          </div>
+          </div>
+        </div>
+      </div>
+        </section>
+
+    <div id="scheduleModal" class="modalBackdrop" role="dialog" aria-modal="true" aria-label="Schedule meeting">
+      <div class="modal sm">
+        <div class="modalHd">
+          <div>
+            <div class="t" id="scheduleModalTitle">Schedule meeting</div>
+            <div class="muted small" id="scheduleModalSub">For selected lead</div>
+          </div>
+          <div class="row" style="gap:8px;">
+            <button id="schedulePickLead" class="btn secondary" type="button">Pick from Leads</button>
+            <button id="scheduleClose" class="btn secondary" type="button">Close</button>
+          </div>
+        </div>
+        <div class="modalBd">
+          <div class="card" style="background:#fff; border-color: rgba(199,154,59,.35); box-shadow:none;">
+            <div class="bd">
+              <div class="muted small">Selected lead</div>
+              <div id="scheduleLeadLine" style="font-weight:900; margin-top:4px;">None</div>
+
+              <div style="height:12px"></div>
+              <div class="two">
+                <div>
+                  <label>Date</label>
+                  <input id="scheduleDate" type="text" data-picker="date" placeholder="YYYY-MM-DD" />
+                </div>
+                <div>
+                  <label>Start time</label>
+                  <input id="scheduleStart" type="text" data-picker="time" placeholder="HH:MM" />
+                </div>
+              </div>
+
+              <div style="margin-top:10px;">
+                <label>Notes</label>
+                <textarea id="scheduleNotes" placeholder="Agenda and next steps."></textarea>
+              </div>
+
+              <div class="row" style="margin-top:10px;">
+                <button id="scheduleSaveBtn" class="btn" type="button">Schedule</button>
+                <button id="scheduleClearLead" class="btn secondary" type="button">Clear lead</button>
+                <div id="scheduleMsg" class="err"></div>
               </div>
             </div>
           </div>
         </div>
       </div>
-        </section>
+    </div>
 
     <div id="pipelineModal" class="modalBackdrop" role="dialog" aria-modal="true" aria-label="Pipeline stage">
       <div class="modal">
@@ -2211,6 +2253,164 @@
 
     const $ = (id) => document.getElementById(id);
 
+    const enhancedSelects = new Map();
+
+    function selectSignature(sel){
+      try{
+        const parts = [];
+        for (const o of Array.from(sel?.options || [])) {
+          parts.push([String(o.value), String(o.textContent || ''), o.disabled ? '1' : '0'].join('\u0001'));
+        }
+        return parts.join('\u0002');
+      } catch { return ''; }
+    }
+
+    function closeAllDdMenus(){
+      for (const { btn, menu } of enhancedSelects.values()){
+        if (menu && !menu.classList.contains('hide')) menu.classList.add('hide');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+      }
+    }
+
+    function buildEnhancedSelectMenu(sel){
+      const entry = enhancedSelects.get(sel);
+      if (!entry) return;
+      const { menu } = entry;
+      if (!menu) return;
+
+      const opts = Array.from(sel.options || []);
+      menu.innerHTML = opts.map((o, idx) => {
+        const v = String(o.value);
+        const t = String(o.textContent || o.label || v);
+        const dis = o.disabled ? 'disabled' : '';
+        return `<button type="button" class="ddItem" role="option" data-dd-value="${escapeHtml(v)}" data-dd-idx="${idx}" ${dis}>${escapeHtml(t || '—')}</button>`;
+      }).join('');
+
+      for (const item of menu.querySelectorAll('button[data-dd-idx]')){
+        item.addEventListener('click', () => {
+          if (item.disabled) return;
+          const idx = Number(item.dataset.ddIdx || -1);
+          const opt = sel.options && sel.options[idx];
+          if (!opt) return;
+          sel.value = String(opt.value);
+          sel.dispatchEvent(new Event('change', { bubbles: true }));
+          syncEnhancedSelect(sel);
+          closeAllDdMenus();
+        });
+      }
+    }
+
+    function syncEnhancedSelect(sel){
+      const entry = enhancedSelects.get(sel);
+      if (!entry) return;
+      const { btn, menu, labelEl } = entry;
+      if (!btn || !labelEl) return;
+
+      const sig = selectSignature(sel);
+      if (sig !== entry.sig) {
+        entry.sig = sig;
+        buildEnhancedSelectMenu(sel);
+      }
+
+      const opt = sel.selectedOptions && sel.selectedOptions[0]
+        ? sel.selectedOptions[0]
+        : (sel.options ? sel.options[sel.selectedIndex] : null);
+      const txt = opt ? String(opt.textContent || opt.label || opt.value || '') : '';
+      labelEl.textContent = txt || 'Select…';
+
+      btn.disabled = !!sel.disabled;
+
+      if (menu) {
+        for (const item of menu.querySelectorAll('button.ddItem')){
+          const v = String(item.dataset.ddValue || '');
+          item.classList.toggle('active', String(sel.value) === v);
+        }
+      }
+    }
+
+    function enhanceSelect(sel){
+      if (!sel || !(sel instanceof HTMLSelectElement)) return;
+      if (enhancedSelects.has(sel)) return;
+      if (sel.closest('.dd')) return;
+      if (sel.dataset && sel.dataset.noEnhance === '1') return;
+
+      const parent = sel.parentNode;
+      if (!parent) return;
+
+      const wrap = document.createElement('div');
+      wrap.className = 'dd';
+
+      // Preserve inline sizing styles on the original select.
+      const inlineStyle = sel.getAttribute('style');
+      if (inlineStyle) {
+        wrap.setAttribute('style', inlineStyle);
+        sel.removeAttribute('style');
+      }
+
+      parent.insertBefore(wrap, sel);
+      wrap.appendChild(sel);
+
+      sel.classList.add('nativeSelectHidden');
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ddBtn';
+      btn.setAttribute('aria-haspopup', 'listbox');
+      btn.setAttribute('aria-expanded', 'false');
+
+      const labelEl = document.createElement('span');
+      labelEl.textContent = 'Select…';
+      const caret = document.createElement('span');
+      caret.innerHTML = '&#9662;';
+      caret.setAttribute('aria-hidden', 'true');
+      caret.style.opacity = '0.6';
+      caret.style.fontSize = '12px';
+
+      btn.appendChild(labelEl);
+      btn.appendChild(caret);
+
+      const menu = document.createElement('div');
+      menu.className = 'ddMenu hide';
+      menu.setAttribute('role', 'listbox');
+
+      wrap.appendChild(btn);
+      wrap.appendChild(menu);
+
+      enhancedSelects.set(sel, { wrap, btn, menu, labelEl, sig: '' });
+      buildEnhancedSelectMenu(sel);
+      syncEnhancedSelect(sel);
+
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const open = !menu.classList.contains('hide');
+        closeAllDdMenus();
+        if (!open) {
+          menu.classList.remove('hide');
+          btn.setAttribute('aria-expanded', 'true');
+        }
+      });
+
+      sel.addEventListener('change', () => syncEnhancedSelect(sel));
+    }
+
+    function enhanceAllSelects(){
+      for (const sel of document.querySelectorAll('select')) {
+        enhanceSelect(sel);
+      }
+    }
+
+    // Keep custom dropdown labels in sync with programmatic select.value changes.
+    setInterval(() => {
+      for (const sel of enhancedSelects.keys()) syncEnhancedSelect(sel);
+    }, 600);
+
+    document.addEventListener('click', (ev) => {
+      // Click outside closes any open menus.
+      if (!(ev.target instanceof Element)) { closeAllDdMenus(); return; }
+      if (!ev.target.closest('.dd')) closeAllDdMenus();
+    });
+
     function setAuthLoading(loading, label){
       const loginBtn = $('loginBtn');
       const signupBtn = $('signupBtn');
@@ -2251,6 +2451,7 @@
       me: null,
       activeTab: 'overview',
       meetingsSubtab: 'list',
+      managerSubtab: 'tasks',
       viewAsRole: '',
       viewAsUserId: '',
       dialerSubtab: 'call',
@@ -2268,11 +2469,14 @@
         profiles: [],
         editUserId: '',
         q: '',
+        step: 1,
       },
       closerQueue: [],
       ui: { sidebarCollapsed: false },
       availability: { weekOffset: 0, byDate: {}, tz: '', drag: { active: false, mode: '' } },
     };
+
+    const scheduleModalState = { after: null };
 
     function setSessionTokens(session){
       const s = (session && typeof session === 'object') ? session : {};
@@ -2333,6 +2537,69 @@
         if (state.meetingsSubtab === 'availability') loadAvailability().catch(()=>{});
         else loadAppointmentsInto('meetingsTbody', 'meetingsMsg').catch(()=>{});
       }
+    }
+
+    function setManagerSubtab(next){
+      state.managerSubtab = String(next || 'tasks');
+      renderManagerSubtab();
+
+      if (state.activeTab === 'manager') {
+        if (state.managerSubtab === 'stats') {
+          if (myRole() === 'manager') loadStats().catch(()=>{});
+        }
+        if (state.managerSubtab === 'tasks') {
+          loadDispatchManager().catch(()=>{});
+        }
+      }
+    }
+
+    function renderManagerSubtab(){
+      const t = String(state.managerSubtab || 'tasks');
+      const map = {
+        stats: { btn: 'mgrSegStats', pane: 'mgrPaneStats' },
+        tasks: { btn: 'mgrSegTasks', pane: 'mgrPaneTasks' },
+        assign: { btn: 'mgrSegAssign', pane: 'mgrPaneAssign' },
+        users: { btn: 'mgrSegUsers', pane: 'mgrPaneUsers' },
+      };
+      for (const k of Object.keys(map)){
+        const btn = $(map[k].btn);
+        const pane = $(map[k].pane);
+        if (btn) btn.classList.toggle('active', k === t);
+        if (pane) pane.classList.toggle('hide', k !== t);
+      }
+    }
+
+    function openScheduleModal({ after } = {}){
+      const modal = $('scheduleModal');
+      if (!modal) return;
+      scheduleModalState.after = typeof after === 'function' ? after : null;
+      const lead = state.selectedLead;
+      const line = $('scheduleLeadLine');
+      if (line) line.textContent = lead ? leadLabelLine(lead) : 'None';
+      if ($('scheduleMsg')) $('scheduleMsg').textContent = '';
+      modal.classList.add('show');
+      initPickersOnce();
+    }
+
+    function closeScheduleModal(){
+      const modal = $('scheduleModal');
+      if (!modal) return;
+      modal.classList.remove('show');
+      scheduleModalState.after = null;
+      if ($('scheduleMsg')) $('scheduleMsg').textContent = '';
+    }
+
+    async function scheduleFromModal(){
+      return scheduleAppointmentFrom({
+        dateId: 'scheduleDate',
+        timeId: 'scheduleStart',
+        notesId: 'scheduleNotes',
+        msgId: 'scheduleMsg',
+        after: async () => {
+          if (scheduleModalState.after) await scheduleModalState.after();
+          closeScheduleModal();
+        }
+      });
     }
 
     function renderMeetingsSubtab(){
@@ -2626,6 +2893,9 @@
         el.classList.toggle('active', el.dataset.tab === tab);
       }
 
+      // Ensure newly shown selects are enhanced.
+      enhanceAllSelects();
+
       if (tab === 'overview') loadOverview().catch(()=>{});
       if (tab === 'leads') loadLeads().catch(()=>{});
       if (tab === 'events') loadEvents().catch(()=>{});
@@ -2657,7 +2927,13 @@
         }
       }
       if (tab === 'manager') {
-        loadDispatchManager().catch(()=>{});
+        renderManagerSubtab();
+        if (!state.managerSubtab) state.managerSubtab = 'tasks';
+        if (state.managerSubtab === 'stats') {
+          if (myRole() === 'manager') loadStats().catch(()=>{});
+        } else if (state.managerSubtab === 'tasks') {
+          loadDispatchManager().catch(()=>{});
+        }
       }
 
       queueAutoRefreshSoon();
@@ -2708,8 +2984,13 @@
         await loadPayouts().catch(()=>{});
       }
       if (tab === 'manager') {
-        if (myRole() === 'manager') await loadStats().catch(()=>{});
-        await loadDispatchManager().catch(()=>{});
+        renderManagerSubtab();
+        if (state.managerSubtab === 'stats') {
+          if (myRole() === 'manager') await loadStats().catch(()=>{});
+        }
+        if (state.managerSubtab === 'tasks') {
+          await loadDispatchManager().catch(()=>{});
+        }
       }
     }
 
@@ -3947,13 +4228,7 @@
     }
 
     async function scheduleDialerBooked(){
-      return scheduleAppointmentFrom({
-        dateId: 'dialerBookedDate',
-        timeId: 'dialerBookedStart',
-        notesId: 'dialerBookedNotes',
-        msgId: 'dialerBookedScheduleMsg',
-        after: () => loadDialerBooked(),
-      });
+      openScheduleModal({ after: () => loadDialerBooked() });
     }
 
     async function loadCloserQueue(){
@@ -4047,13 +4322,7 @@
     }
 
     async function scheduleMeeting(){
-      return scheduleAppointmentFrom({
-        dateId: 'meetingDate',
-        timeId: 'meetingStart',
-        notesId: 'meetingNotes',
-        msgId: 'meetingScheduleMsg',
-        after: () => loadAppointmentsInto('meetingsTbody', 'meetingsMsg'),
-      });
+      openScheduleModal({ after: () => loadAppointmentsInto('meetingsTbody', 'meetingsMsg') });
     }
 
     function localTz(){
@@ -5023,6 +5292,36 @@
       return isCoordinatorRole();
     }
 
+    function setTalentStep(next){
+      const step = Number(next || 1);
+      const max = $('talReliabilityBox')?.classList.contains('hide') ? 3 : 4;
+      const safe = Math.max(1, Math.min(step, max));
+      state.talent.step = safe;
+
+      const steps = Array.from(document.querySelectorAll('#viewTalent .talStep'));
+      for (const el of steps) {
+        const n = Number(el.dataset.step || 0);
+        el.classList.toggle('hide', n !== safe);
+      }
+
+      const buttons = [
+        { n: 1, id: 'talStep1' },
+        { n: 2, id: 'talStep2' },
+        { n: 3, id: 'talStep3' },
+        { n: 4, id: 'talStep4' },
+      ];
+      for (const b of buttons) {
+        const btn = $(b.id);
+        if (!btn) continue;
+        btn.classList.toggle('active', b.n === safe);
+      }
+
+      const prev = $('talPrevBtn');
+      const nextBtn = $('talNextBtn');
+      if (prev) prev.disabled = safe <= 1;
+      if (nextBtn) nextBtn.disabled = safe >= max;
+    }
+
     function setTalentEditingLine(){
       const line = $('talentEditingLine');
       if (!line) return;
@@ -5080,11 +5379,15 @@
 
       const relBox = $('talReliabilityBox');
       if (relBox) relBox.classList.toggle('hide', !talentIsCoordinator());
+      const relStepBtn = $('talStep4');
+      if (relStepBtn) relStepBtn.classList.toggle('hide', !talentIsCoordinator());
       if (talentIsCoordinator()) {
         const rel = p.reliability && typeof p.reliability === 'object' ? p.reliability : {};
         if ($('talReliabilityScore')) $('talReliabilityScore').value = (rel.score == null ? '' : String(rel.score));
         if ($('talReliabilityFlags')) $('talReliabilityFlags').value = joinCsvList(rel.flags);
       }
+
+      setTalentStep(Number(state.talent?.step || 1));
     }
 
     async function loadTalentProfilesCache({ force = false } = {}){
@@ -7187,6 +7490,8 @@
       renderDialerSubtab();
       renderCloserSubtab();
       renderMeetingsSubtab();
+      renderManagerSubtab();
+      enhanceAllSelects();
     }
 
     on('loginBtn', 'click', async () => {
@@ -7278,6 +7583,7 @@
 
     on('closerPickLead', 'click', () => { state.pickLeadReturnTab = 'closer'; setTab('leads'); });
     on('pickFromLeads', 'click', () => { state.pickLeadReturnTab = 'calls'; setTab('leads'); });
+    on('openScheduleBtn', 'click', () => openScheduleModal({ after: () => loadAppointmentsInto('meetingsTbody', 'meetingsMsg') }));
     on('logCallBtn', 'click', () => logCall().catch(() => {}));
     on('aiFollowupBtn', 'click', () => aiFollowup().catch(() => {}));
 
@@ -7289,7 +7595,7 @@
     on('dialerSegBooked', 'click', () => setDialerSubtab('booked'));
     on('dialerSegTasks', 'click', () => setDialerSubtab('tasks'));
     on('dialerBookedRefreshBtn', 'click', () => loadDialerBooked().catch(() => {}));
-    on('dialerBookedScheduleBtn', 'click', () => scheduleDialerBooked().catch(() => {}));
+    on('dialerBookedOpenSchedule', 'click', () => scheduleDialerBooked().catch(() => {}));
 
     on('loadEventsBtn', 'click', () => loadEvents().catch(() => {}));
     on('newEventToggle', 'click', () => { $('newEventBox').hidden = !$('newEventBox').hidden; });
@@ -7330,6 +7636,13 @@
       await loadTalentTab().catch(() => {});
     });
     on('talentStopEditingBtn', 'click', () => stopTalentEditing());
+
+    on('talStep1', 'click', () => setTalentStep(1));
+    on('talStep2', 'click', () => setTalentStep(2));
+    on('talStep3', 'click', () => setTalentStep(3));
+    on('talStep4', 'click', () => setTalentStep(4));
+    on('talPrevBtn', 'click', () => setTalentStep(Number(state.talent?.step || 1) - 1));
+    on('talNextBtn', 'click', () => setTalentStep(Number(state.talent?.step || 1) + 1));
     on('talentQ', 'input', () => {
       if (!talentIsCoordinator()) return;
       if (state.talent.qTimer) clearTimeout(state.talent.qTimer);
@@ -7347,10 +7660,28 @@
     on('loadApptsBtn', 'click', () => loadAppointments().catch(() => {}));
     on('scheduleApptBtn', 'click', () => scheduleAppointment().catch(() => {}));
     on('meetingsRefreshBtn', 'click', () => loadAppointmentsInto('meetingsTbody', 'meetingsMsg').catch(() => {}));
-    on('meetingScheduleBtn', 'click', () => scheduleMeeting().catch(() => {}));
+    on('meetingsOpenSchedule', 'click', () => scheduleMeeting().catch(() => {}));
 
     on('meetingsSegList', 'click', () => setMeetingsSubtab('list'));
     on('meetingsSegAvailability', 'click', () => setMeetingsSubtab('availability'));
+
+    on('mgrSegStats', 'click', () => setManagerSubtab('stats'));
+    on('mgrSegTasks', 'click', () => setManagerSubtab('tasks'));
+    on('mgrSegAssign', 'click', () => setManagerSubtab('assign'));
+    on('mgrSegUsers', 'click', () => setManagerSubtab('users'));
+
+    on('scheduleClose', 'click', () => closeScheduleModal());
+    on('scheduleSaveBtn', 'click', () => scheduleFromModal().catch(() => {}));
+    on('scheduleClearLead', 'click', () => {
+      clearSelectedLead();
+      const line = $('scheduleLeadLine');
+      if (line) line.textContent = 'None';
+    });
+    on('schedulePickLead', 'click', () => {
+      state.pickLeadReturnTab = state.activeTab || 'calls';
+      closeScheduleModal();
+      setTab('leads');
+    });
 
     on('availSaveBtn', 'click', () => saveAvailability().catch(() => {}));
     on('availPerson', 'change', () => {
@@ -7435,6 +7766,8 @@
       if (ev.key === 'Escape') {
         const m = $('pipelineModal');
         if (m && m.classList.contains('show')) closePipelineModal();
+        const s = $('scheduleModal');
+        if (s && s.classList.contains('show')) closeScheduleModal();
       }
     });
 
@@ -7442,6 +7775,12 @@
       const m = $('pipelineModal');
       if (!m) return;
       if (ev.target === m) closePipelineModal();
+    });
+
+    on('scheduleModal', 'click', (ev) => {
+      const m = $('scheduleModal');
+      if (!m) return;
+      if (ev.target === m) closeScheduleModal();
     });
 
     on('loadPayoutsBtn', 'click', () => loadPayouts().catch(() => {}));

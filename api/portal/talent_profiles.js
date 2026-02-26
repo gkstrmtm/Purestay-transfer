@@ -78,7 +78,8 @@ module.exports = async (req, res) => {
   const url = new URL(req.url || '/api/portal/talent_profiles', 'http://localhost');
 
   const requesterRole = String(s.profile?.role || '');
-  const isCoordinator = hasRole(s.profile, ['event_coordinator', 'manager']);
+  // Enforce permissions based on the real authenticated role (view-as should not grant access).
+  const isCoordinator = hasRole(s.realProfile, ['event_coordinator', 'manager']);
 
   if (req.method === 'GET') {
     const requestedUserId = cleanStr(url.searchParams.get('userId'), 80);
