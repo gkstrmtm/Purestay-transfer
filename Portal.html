@@ -1340,7 +1340,7 @@
                           <th>Title</th>
                           <th>City</th>
                           <th>Status</th>
-                          <th>Assigned</th>
+                          <th>Role</th>
                           <th></th>
                         </tr>
                       </thead>
@@ -1922,19 +1922,27 @@
 
           <div id="talentDirectoryWrap" class="card hide" style="margin-top:14px; background:#fff;">
             <div class="bd">
-              <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
-                <div>
-                  <div class="muted small">Coordinator tools</div>
-                  <div style="font-weight:900; margin-top:4px;">Talent directory</div>
+              <div class="muted small">Coordinator tools</div>
+              <button class="collapHdr" type="button" data-collapse-target="talentDirBody" aria-expanded="false" style="margin-top:8px;">
+                <div class="collapLeft">
+                  <span>Talent directory</span>
+                  <span class="collapHint">Browse and search talent profiles</span>
                 </div>
-                <div style="max-width:360px; width:100%;">
-                  <input id="talentQ" placeholder="search by name, city/state, specialty" />
-                </div>
-              </div>
+                <span class="collapChev" data-collapse-chev>▼</span>
+              </button>
 
-              <div style="height:10px"></div>
-              <div id="talentDirMsg" class="err"></div>
-              <div id="talentDirList" class="scrollCardList"></div>
+              <div id="talentDirBody" class="collapBody hide">
+                <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap;">
+                  <div class="muted small">Search</div>
+                  <div style="max-width:360px; width:100%;">
+                    <input id="talentQ" placeholder="search by name, city/state, specialty" />
+                  </div>
+                </div>
+
+                <div style="height:10px"></div>
+                <div id="talentDirMsg" class="err"></div>
+                <div id="talentDirList" class="scrollCardList"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -2795,19 +2803,64 @@
     }
 
     function renderEventsSubtabSeg(){
-      const t = String(state.eventsSubtab || 'all');
+      const t0 = String(state.eventsSubtab || 'all');
+      const canAll = canSeeAllEventsForRole();
+      const t = (!canAll && t0 === 'all') ? 'my' : t0;
+      if (t !== t0) state.eventsSubtab = t;
       const btnMy = $('eventsSegMy');
       const btnAll = $('eventsSegAll');
+      if (btnAll) btnAll.classList.toggle('hide', !canAll);
       if (btnMy) btnMy.classList.toggle('active', t === 'my');
       if (btnAll) btnAll.classList.toggle('active', t === 'all');
     }
 
+    function canSeeAllEventsForRole(){
+      const er = effectiveRole();
+      if (!['event_host','media_team'].includes(er)) return true;
+      // Hosts/Media should not see "All" unless a real manager is previewing.
+      return isManagerUser();
+    }
+
     function setEventsSubtab(next){
       const t0 = String(next || 'all');
-      const t = (t0 === 'my' || t0 === 'all' || t0 === 'offers') ? t0 : 'all';
+      const canAll = canSeeAllEventsForRole();
+      const next0 = (!canAll && t0 === 'all') ? 'my' : t0;
+      const t = (next0 === 'my' || next0 === 'all' || next0 === 'offers') ? next0 : (canAll ? 'all' : 'my');
       state.eventsSubtab = t;
       renderEventsSubtabSeg();
       loadEvents().catch(() => {});
+    }
+
+    function getEventAssignments(ev){
+      const e = (ev && typeof ev === 'object') ? ev : {};
+      const meta = (e.meta && typeof e.meta === 'object') ? e.meta : {};
+      return Array.isArray(meta.assignments) ? meta.assignments : [];
+    }
+
+    function myAssignmentForEvent(ev, role, userId){
+      const uid = String(userId || '').trim();
+      if (!uid) return null;
+      const r = String(role || '').trim();
+      const arr = getEventAssignments(ev);
+      const hit = arr.find((a) => String(a?.userId || '').trim() === uid && (!r || String(a?.role || '').trim() === r));
+      return hit && typeof hit === 'object' ? hit : null;
+    }
+
+    function eventIsMineForRole(ev, role, userId){
+      const uid = String(userId || '').trim();
+      if (!uid) return false;
+      const e = (ev && typeof ev === 'object') ? ev : {};
+      if (String(e.assigned_user_id || '') === uid) return true;
+      const a = myAssignmentForEvent(e, role, uid);
+      return String(a?.status || '').trim() === 'accepted';
+    }
+
+    async function respondAssignmentForEvent(eventId, role, decision){
+      const eventIdNum = Number(eventId);
+      if (!Number.isFinite(eventIdNum) || eventIdNum <= 0) throw new Error('invalid_event_id');
+      const r = String(role || '').trim();
+      const d = String(decision || '').trim();
+      await api('/api/portal/event_assignments', { method: 'PATCH', body: { action: 'respond', eventId: eventIdNum, role: r, decision: d } });
     }
 
     function setBadge(kind, text){
@@ -3116,6 +3169,7 @@
       if (safeTab === 'events' || safeTab === 'offers') {
         const seg = $('eventsSegTabs');
         const canSeg = ['event_host','media_team'].includes(er);
+        const canAll = canSeeAllEventsForRole();
         const showSeg = (safeTab === 'events') && canSeg;
         if (seg) seg.classList.toggle('hide', !showSeg);
 
@@ -3123,6 +3177,7 @@
           state.eventsSubtab = 'offers';
         } else {
           if (canSeg && !['my','all'].includes(String(state.eventsSubtab || ''))) state.eventsSubtab = 'my';
+          if (canSeg && !canAll) state.eventsSubtab = 'my';
           if (!canSeg) state.eventsSubtab = 'all';
         }
         renderEventsSubtabSeg();
@@ -4948,8 +5003,8 @@
 
       const rows = [];
       const times = timeSlots();
-          for (const t of types) {
-            const label = String(t?.name || t?.['Event Type'] || t?.event_type || t?.type || '').trim() || JSON.stringify(t).slice(0, 80);
+      for (const t of times) {
+        rows.push(`<div class="availTimeCell">${escapeHtml(timeLabel(t))}</div>`);
         for (const d of week) {
           const dateKey = ymd(d);
           const active = hasAvailSlot(dateKey, t);
@@ -5747,6 +5802,45 @@
 
       $('eventRecapWrap').classList.toggle('hide', !e);
 
+      if (e) {
+        const er = effectiveRole();
+        const effectiveUserId = (isManagerUser() && String(state.viewAsUserId || '').trim())
+          ? String(state.viewAsUserId || '').trim()
+          : String(state.me?.user?.id || '');
+        const myAsg = myAssignmentForEvent(e, er, effectiveUserId);
+        const myStatus = String(myAsg?.status || '').trim();
+
+        const isMedia = er === 'media_team';
+        const recapEditable = isCoordinatorRole()
+          || (er === 'event_host' && eventIsMineForRole(e, 'event_host', effectiveUserId))
+          || (isMedia && myStatus === 'accepted');
+
+        // Media team doesn't fill host recap fields.
+        const hostOnlyIds = ['recapAttendance','recapRating','recapIssues','recapIssuesDetails','recapNotes','recapStandouts','recapGiveawayWinners','recapFeedbackHighlights','recapEventFlowDoc'];
+        for (const id of hostOnlyIds) {
+          const el = $(id);
+          if (!el) continue;
+          const parent = el.closest('div');
+          if (parent) parent.classList.toggle('hide', isMedia);
+        }
+
+        const recapBtn = $('submitRecapBtn');
+        if (recapBtn) {
+          recapBtn.toggleAttribute('disabled', !recapEditable);
+          recapBtn.classList.toggle('hide', !recapEditable);
+        }
+
+        if ($('recapMsg')) {
+          if (!recapEditable && !isCoordinatorRole() && ['pending','declined'].includes(myStatus)) {
+            $('recapMsg').textContent = (myStatus === 'declined') ? 'You declined this offer.' : 'Accept the offer to submit.';
+          } else if (!recapEditable && !isCoordinatorRole() && isMedia) {
+            $('recapMsg').textContent = myStatus ? 'Accept the offer to submit.' : 'No media assignment on this event.';
+          } else {
+            $('recapMsg').textContent = '';
+          }
+        }
+      }
+
       const canUseOps = ['event_coordinator','manager'].includes(effectiveRole());
       if ($('eventOpsWrap')) $('eventOpsWrap').classList.toggle('hide', !(e && canUseOps));
 
@@ -6012,6 +6106,7 @@
       if (talentIsCoordinator()) {
         await ensureUsersCache();
         $('talentDirectoryWrap')?.classList.remove('hide');
+        restoreCollapsedFromState('talentDirBody', true);
         $('talentStopEditingBtn')?.classList.toggle('hide', !String(state.talent.editUserId || '').trim());
       } else {
         $('talentDirectoryWrap')?.classList.add('hide');
@@ -6188,13 +6283,33 @@
         const e = state.selectedEvent;
         if (!e || !e.id) throw new Error('select an event');
 
+        const er = effectiveRole();
+        const effectiveUserId = (isManagerUser() && String(state.viewAsUserId || '').trim())
+          ? String(state.viewAsUserId || '').trim()
+          : String(state.me?.user?.id || '');
+        const myAsg = myAssignmentForEvent(e, er, effectiveUserId);
+        const myStatus = String(myAsg?.status || '').trim();
+        const isMedia = er === 'media_team';
+        const isHost = er === 'event_host';
+
+        const recapEditable = isCoordinatorRole()
+          || (isHost && eventIsMineForRole(e, 'event_host', effectiveUserId))
+          || (isMedia && myStatus === 'accepted');
+        if (!recapEditable) throw new Error('not_allowed');
+        if (!isCoordinatorRole() && (myStatus === 'pending' || myStatus === 'declined')) {
+          throw new Error(myStatus === 'declined' ? 'declined' : 'accept_first');
+        }
+
         const mediaUrls = String($('recapMedia').value || '')
           .split('\n')
           .map((x) => x.trim())
           .filter(Boolean)
           .slice(0, 30);
 
-        const payload = {
+        const payload = isMedia ? {
+          mediaCount: mediaUrls.length,
+          mediaOnly: true,
+        } : {
           attendanceEstimate: $('recapAttendance').value ? Number($('recapAttendance').value) : null,
           rating: $('recapRating').value || null,
           issuesReported: $('recapIssues').value || null,
@@ -6211,7 +6326,7 @@
           method: 'POST',
           body: {
             eventId: e.id,
-            recap: payload.hostNotes || payload.issuesDetails || '',
+            recap: isMedia ? '' : (payload.hostNotes || payload.issuesDetails || ''),
             mediaUrls,
             payload,
           },
@@ -8018,23 +8133,24 @@
         const er = effectiveRole();
         const effectiveUserId = (isManagerUser() && String(state.viewAsUserId || '').trim()) ? String(state.viewAsUserId || '').trim() : String(state.me?.user?.id || '');
 
-        const desired = (state.activeTab === 'offers') ? 'offers' : String(state.eventsSubtab || 'all');
+        let desired = (state.activeTab === 'offers') ? 'offers' : String(state.eventsSubtab || 'all');
 
         // Filtering
         let nextEvents = allEvents;
         const isHostOrMedia = ['event_host','media_team'].includes(er);
         const isMgrOrCoord = (er === 'manager' || er === 'event_coordinator');
 
+        const canAll = canSeeAllEventsForRole();
+        if (isHostOrMedia && desired === 'all' && !canAll) desired = 'my';
+
         if (isHostOrMedia) {
           if (desired === 'my') {
-            nextEvents = allEvents.filter((ev) => String(ev.assigned_user_id || '') === effectiveUserId);
+            nextEvents = allEvents.filter((ev) => eventIsMineForRole(ev, er, effectiveUserId));
           } else if (desired === 'offers') {
             nextEvents = allEvents.filter((ev) => {
-              const asg = String(ev.assigned_role || '').trim();
-              return String(ev.status || 'open') === 'open'
-                && !ev.assigned_user_id
-                && !!asg
-                && asg === er;
+              const a = myAssignmentForEvent(ev, er, effectiveUserId);
+              const s = String(a?.status || '').trim();
+              return s === 'pending' || s === 'declined' || s === 'accepted';
             });
           } else {
             // 'all'
@@ -8069,20 +8185,23 @@
           const asg = ev.assigned_role || '';
           const selectBtn = `<button class="btn secondary small" data-pick-event="${ev.id}">Select</button>`;
 
+          const myAsg = myAssignmentForEvent(ev, er, effectiveUserId);
+          const myStatus = String(myAsg?.status || '').trim();
+          const showOfferActions = (desired === 'offers') && (myStatus === 'pending') && !isManagerViewAsPreviewOnly();
+          const offerActions = showOfferActions
+            ? `<button class="btn small" data-asg-respond="accept" data-asg-event="${ev.id}" data-asg-role="${escapeHtml(er)}">Accept</button> <button class="btn secondary small" data-asg-respond="decline" data-asg-event="${ev.id}" data-asg-role="${escapeHtml(er)}">Decline</button>`
+            : '';
+          const myStatusBadge = (desired === 'offers' && myStatus)
+            ? `<div style="margin-top:6px;"><span class="badge ${myStatus === 'accepted' ? 'ok' : (myStatus === 'declined' ? 'warn' : '')}">${escapeHtml(myStatus)}</span></div>`
+            : '';
+
           const sum = offerSummaryForEvent(ev);
           const isOffersTab = (state.activeTab === 'offers');
           const offerBadge = (isOffersTab && sum.offerText)
             ? `<div style="margin-top:6px;"><span class="badge ${sum.offerKind}">${escapeHtml(sum.offerText)}</span></div>`
             : '';
 
-          const hasAssignments = !!(ev.meta && typeof ev.meta === 'object' && Array.isArray(ev.meta.assignments) && ev.meta.assignments.length);
-          const canAccept = !isManagerViewAsPreviewOnly()
-            && !hasAssignments
-            && !ev.assigned_user_id
-            && asg
-            && (effectiveRole() === asg)
-            && String(ev.status || 'open') === 'open';
-          const acceptBtn = canAccept ? `<button class="btn small" data-accept-event="${ev.id}">Accept</button>` : '';
+          const acceptBtn = '';
 
           return `
             <tr>
@@ -8090,9 +8209,9 @@
               <td class="muted">${date}</td>
               <td>${escapeHtml(ev.title || '')}</td>
               <td class="muted">${escapeHtml(city)}</td>
-              <td><span class="badge">${escapeHtml(ev.status || '')}</span>${offerBadge}</td>
+              <td><span class="badge">${escapeHtml(ev.status || '')}</span>${offerBadge}${myStatusBadge}</td>
               <td class="muted">${asg}</td>
-              <td>${selectBtn} ${acceptBtn}</td>
+              <td>${selectBtn} ${offerActions} ${acceptBtn}</td>
             </tr>
           `;
         }).join('');
@@ -8105,15 +8224,16 @@
           });
         }
 
-        for (const btn of tb.querySelectorAll('button[data-accept-event]')){
+        for (const btn of tb.querySelectorAll('button[data-asg-respond]')){
           btn.addEventListener('click', async () => {
             $('eventsMsg').textContent = '';
             try{
-              const id = Number(btn.dataset.acceptEvent);
-              await api('/api/portal/events', {
-                method: 'PATCH',
-                body: { id, assignedUserId: effectiveUserId, status: 'assigned' },
-              });
+              const action = String(btn.dataset.asgRespond || '');
+              const decision = action === 'accept' ? 'accepted' : (action === 'decline' ? 'declined' : '');
+              const eventId = Number(btn.dataset.asgEvent || 0);
+              const role = String(btn.dataset.asgRole || '').trim();
+              if (!decision || !eventId || !role) throw new Error('invalid_action');
+              await respondAssignmentForEvent(eventId, role, decision);
               await loadEvents();
             } catch(e){
               $('eventsMsg').textContent = String(e.message || e);
