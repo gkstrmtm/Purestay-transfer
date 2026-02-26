@@ -112,12 +112,13 @@ async function seedDemoData(sb, {
   userIdsByRole,
   domain,
   force,
+  append,
 }) {
   const seedKey = `portal:demo_seed:${demoSeedId}`;
   const existing = await getKv(sb, seedKey);
   const already = existing.ok && existing.row && existing.row.value && typeof existing.row.value === 'object';
 
-  if (already && !force) {
+  if (already && !force && !append) {
     return {
       ok: true,
       alreadySeeded: true,
@@ -152,6 +153,17 @@ async function seedDemoData(sb, {
   const today = ymdFromDate(new Date());
   const seedTag = { demoSeed: demoSeedId, demoRun: runId, demoDomain: domain };
 
+  const isAppend = Boolean(append);
+  const leadsCount = isAppend ? 18 : 28;
+  const eventsCount = isAppend ? 10 : 14;
+  const appointmentsCount = isAppend ? 10 : 12;
+  const dispatchCount = isAppend ? 12 : 10;
+  const payoutsCount = isAppend ? 28 : 18;
+
+  let vendorsSeeded = 0;
+  let eventTypesSeeded = 0;
+  let talentProfilesSeeded = 0;
+
   // -----------------------------
   // Leads
   // -----------------------------
@@ -178,12 +190,12 @@ async function seedDemoData(sb, {
   const companies = ['Oakline Property Group', 'BlueSky Living', 'HarborView Realty', 'Ridgeway Communities', 'Pinecrest Partners'];
 
   const leadsToInsert = [];
-  for (let i = 0; i < 28; i++) {
+  for (let i = 0; i < leadsCount; i++) {
     const p = pick(leadPeople, i);
     const first = p?.first || `Lead${i + 1}`;
     const last = p?.last || 'Demo';
     const source = pick(leadSources, i);
-    const status = pick(leadStatuses, i + 1);
+    const st0 = pick(leadStatuses, i + 1);
     const st = pick(states, i);
     const city = pick(cities, i + 2);
     const company = pick(companies, i + 3);
@@ -203,6 +215,17 @@ async function seedDemoData(sb, {
 
     const email = `${String(first).toLowerCase()}.${String(last).toLowerCase()}+${i + 1}@${domain}`;
     const phone = `+1919${String(1000000 + (i * 137) % 8999999).padStart(7, '0')}`;
+
+    // Ensure the closer role actually sees pipeline-ready data.
+    // Queue kind=closer only shows working/booked.
+    let status = st0;
+    if (assignedRole === 'closer') {
+      status = pick(['working', 'booked'], i);
+    } else if (assignedRole === 'dialer') {
+      status = pick(['new', 'working', 'booked'], i + 1);
+    } else if (assignedRole === 'account_manager') {
+      status = pick(['working', 'booked', 'won', 'lost'], i + 2);
+    }
 
     leadsToInsert.push({
       created_at: createdAt.toISOString(),
@@ -299,18 +322,19 @@ async function seedDemoData(sb, {
   // -----------------------------
   // Events + Recaps
   // -----------------------------
-  const eventStatuses = ['open', 'assigned', 'scheduled', 'done', 'cancelled'];
+  // Align with UI filters (completed/canceled) while still supporting scheduled.
+  const eventStatuses = ['open', 'assigned', 'scheduled', 'completed', 'canceled'];
   const areaTags = ['Triangle', 'Charlotte', 'Coastal', 'Triad'];
 
   const eventsToInsert = [];
-  const selectedLeadIds = leadIds.slice(0, 14);
-  for (let i = 0; i < 14; i++) {
+  const selectedLeadIds = leadIds.slice(0, eventsCount);
+  for (let i = 0; i < eventsCount; i++) {
     const leadId = selectedLeadIds[i] || null;
     const status = pick(eventStatuses, i + 1);
     const eventDate = addDaysYmd(today, -10 + i);
 
     const isPast = i < 8;
-    const isCancelled = status === 'cancelled';
+    const isCancelled = status === 'canceled' || status === 'cancelled';
 
     const budget = {
       hostPayCents: [25000, 35000, 45000, 60000][i % 4],
@@ -402,7 +426,7 @@ async function seedDemoData(sb, {
       return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d < today : false;
     })();
     if (!isPast) continue;
-    if (String(e.status || '') === 'cancelled') continue;
+    if (['canceled', 'cancelled'].includes(String(e.status || ''))) continue;
 
     recapsToInsert.push({
       event_id: e.id,
@@ -444,7 +468,7 @@ async function seedDemoData(sb, {
   // Appointments (Booked Meetings)
   // -----------------------------
   const appointmentsToInsert = [];
-  for (let i = 0; i < Math.min(12, leadIds.length); i++) {
+  for (let i = 0; i < Math.min(appointmentsCount, leadIds.length); i++) {
     const leadId = leadIds[i];
     const when = addDaysYmd(today, (i % 8) - 2);
     const createdAt = new Date();
@@ -486,7 +510,7 @@ async function seedDemoData(sb, {
   // Dispatch Tasks (seed a few)
   // -----------------------------
   const dispatchTasks = [];
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < dispatchCount; i++) {
     const leadId = leadIds[(i * 2) % leadIds.length] || null;
     const due = addDaysYmd(today, (i % 10) - 3);
     dispatchTasks.push({
@@ -531,23 +555,27 @@ async function seedDemoData(sb, {
   // -----------------------------
   const payoutsToInsert = [];
   const rolesForPayout = [
-    { role: 'remote_setter', userId: setterId },
-    { role: 'closer', userId: closerId },
-    { role: 'account_manager', userId: amId },
-    { role: 'event_host', userId: hostId },
-    { role: 'media_team', userId: mediaId },
+    { role: 'dialer', userId: userIdsByRole.dialer || dialerId },
+    { role: 'in_person_setter', userId: userIdsByRole.in_person_setter || null },
+    { role: 'remote_setter', userId: userIdsByRole.remote_setter || setterId },
+    { role: 'closer', userId: userIdsByRole.closer || closerId },
+    { role: 'account_manager', userId: userIdsByRole.account_manager || amId },
+    { role: 'event_coordinator', userId: userIdsByRole.event_coordinator || coordId },
+    { role: 'event_host', userId: userIdsByRole.event_host || hostId },
+    { role: 'media_team', userId: userIdsByRole.media_team || mediaId },
+    { role: 'manager', userId: userIdsByRole.manager || mgrId },
   ].filter((r) => r.userId);
 
   const periodStart = addDaysYmd(today, -30);
   const periodEnd = today;
-  for (let i = 0; i < 18; i++) {
+  for (let i = 0; i < payoutsCount; i++) {
     const r = pick(rolesForPayout, i);
     if (!r) continue;
     payoutsToInsert.push({
       created_at: nowIso(),
       user_id: r.userId,
       role: r.role,
-      amount_cents: [3500, 5000, 7500, 12000, 18000][i % 5],
+      amount_cents: [3500, 5000, 7500, 12000, 18000, 22500, 30000][i % 7],
       status: pick(['pending', 'approved', 'paid'], i),
       period_start: periodStart,
       period_end: periodEnd,
@@ -556,6 +584,8 @@ async function seedDemoData(sb, {
         'Commission payout',
         'Event delivery bonus',
         'Monthly account renewal incentive',
+        'Travel stipend',
+        'On-call coverage',
       ], i),
       meta: {
         ...seedTag,
@@ -731,6 +761,186 @@ async function seedDemoData(sb, {
     await upsertKv(sb, key, v);
   }
 
+  // -----------------------------
+  // Vendors + Event Types (KV store)
+  // -----------------------------
+  {
+    const vendorsKey = 'portal:vendors:v1';
+    const existingV = await getKv(sb, vendorsKey);
+    const store = existingV.ok && existingV.row && existingV.row.value && typeof existingV.row.value === 'object'
+      ? existingV.row.value
+      : {};
+    const existingVendors = Array.isArray(store.vendors) ? store.vendors : [];
+    const kept = existingVendors.filter((v) => !(v && typeof v === 'object' && v.demoSeed === demoSeedId));
+    const demoVendors = [
+      { name: 'Triangle Tacos', category: 'Food Truck', city: 'Raleigh', state: 'NC', phone: '+19195550101', email: `vendors+tacos@${domain}`, website: 'https://example.com/tacos', notes: 'Fast setup; popular at resident events.' },
+      { name: 'HarborView Coffee Cart', category: 'Coffee', city: 'Durham', state: 'NC', phone: '+19195550102', email: `vendors+coffee@${domain}`, website: 'https://example.com/coffee', notes: 'Great for morning pop-ups.' },
+      { name: 'BlueSky Balloon Co.', category: 'Decor', city: 'Cary', state: 'NC', phone: '+19195550103', email: `vendors+balloons@${domain}`, website: 'https://example.com/balloons', notes: 'Reliable delivery; confirm colors 7 days out.' },
+      { name: 'Ridgeway Photo Booth', category: 'Photo Booth', city: 'Charlotte', state: 'NC', phone: '+19195550104', email: `vendors+photobooth@${domain}`, website: 'https://example.com/photobooth', notes: 'Needs 8x8 space + power.' },
+      { name: 'Coastal DJ Services', category: 'DJ', city: 'Wilmington', state: 'NC', phone: '+19195550105', email: `vendors+dj@${domain}`, website: 'https://example.com/dj', notes: 'Confirm quiet hours and playlist style.' },
+      { name: 'Triad Kids Corner', category: 'Kids', city: 'Greensboro', state: 'NC', phone: '+19195550106', email: `vendors+kids@${domain}`, website: 'https://example.com/kids', notes: 'Best for weekend afternoon events.' },
+    ].map((v, i) => ({
+      ...v,
+      demoSeed: demoSeedId,
+      demoRun: runId,
+      id: `demo_vendor_${demoSeedId}_${i + 1}`,
+      createdAt: nowIso(),
+    }));
+    vendorsSeeded = demoVendors.length;
+    await upsertKv(sb, vendorsKey, {
+      ...(store && typeof store === 'object' ? store : {}),
+      vendors: kept.concat(demoVendors),
+      updatedAt: nowIso(),
+    });
+  }
+
+  {
+    const typesKey = 'portal:event_types:v1';
+    const existingT = await getKv(sb, typesKey);
+    const store = existingT.ok && existingT.row && existingT.row.value && typeof existingT.row.value === 'object'
+      ? existingT.row.value
+      : {};
+    const existingTypes = Array.isArray(store.types) ? store.types : [];
+    const kept = existingTypes.filter((t) => !(t && typeof t === 'object' && t.demoSeed === demoSeedId));
+    const demoTypes = [
+      { name: 'Open House Pop-up', kind: 'anchor', description: 'High-intent tours + lead capture.' },
+      { name: 'Resident Appreciation', kind: 'momentum', description: 'Retention + referrals.' },
+      { name: 'Vendor Day', kind: 'anchor', description: 'Partner activation + traffic.' },
+      { name: 'Happy Hour Social', kind: 'momentum', description: 'Community building + photo recap.' },
+      { name: 'Move-in Special Push', kind: 'anchor', description: 'Drive near-term occupancy.' },
+      { name: 'Referral Program Kickoff', kind: 'momentum', description: 'Referral awareness + sign-ups.' },
+    ].map((t, i) => ({
+      ...t,
+      demoSeed: demoSeedId,
+      demoRun: runId,
+      id: `demo_event_type_${demoSeedId}_${i + 1}`,
+      createdAt: nowIso(),
+    }));
+    eventTypesSeeded = demoTypes.length;
+    await upsertKv(sb, typesKey, {
+      ...(store && typeof store === 'object' ? store : {}),
+      types: kept.concat(demoTypes),
+      updatedAt: nowIso(),
+    });
+  }
+
+  // -----------------------------
+  // Talent profiles (KV store)
+  // -----------------------------
+  {
+    const key = 'portal:talent_profiles:v1';
+    const existingT = await getKv(sb, key);
+    const store = existingT.ok && existingT.row && existingT.row.value && typeof existingT.row.value === 'object'
+      ? existingT.row.value
+      : {};
+    const existingProfiles = Array.isArray(store.profiles) ? store.profiles : [];
+
+    const demoUserIds = [
+      userIdsByRole.event_host,
+      userIdsByRole.media_team,
+      userIdsByRole.event_coordinator,
+      userIdsByRole.manager,
+      userIdsByRole.account_manager,
+      userIdsByRole.closer,
+    ].filter(Boolean);
+
+    const kept = existingProfiles.filter((p) => {
+      const uid = String(p?.userId || '');
+      if (demoUserIds.includes(uid)) return false;
+      if (p && typeof p === 'object' && p.demoSeed === demoSeedId) return false;
+      return true;
+    });
+
+    const demoProfiles = [];
+    for (let i = 0; i < demoUserIds.length; i++) {
+      const uid = demoUserIds[i];
+      demoProfiles.push({
+        userId: uid,
+        displayName: pick(['Alex Carter', 'Jamie Rivera', 'Sam Brooks', 'Riley Quinn', 'Jordan Hayes', 'Taylor Shaw'], i) || `Demo Talent ${i + 1}`,
+        role: pick(['event_host', 'media_team', 'event_coordinator'], i) || 'event_host',
+        bio: pick([
+          'Friendly, high-energy host focused on smooth check-ins and strong lead capture.',
+          'Detail-oriented media partner with fast turnaround and consistent branding.',
+          'Coordinator who keeps vendors aligned and the run-of-show tight.',
+        ], i),
+        homeBaseCity: pick(cities, i) || 'Raleigh',
+        homeBaseState: pick(states, i) || 'NC',
+        specialties: pick([
+          ['Lead capture', 'Resident engagement', 'Vendor coordination'],
+          ['Photo recap', 'Short-form video', 'Brand consistency'],
+          ['Run of show', 'Timeline management', 'Stakeholder comms'],
+        ], i) || ['Lead capture'],
+        preferredPairings: pick([
+          ['Triangle Tacos', 'HarborView Coffee Cart'],
+          ['Ridgeway Photo Booth', 'BlueSky Balloon Co.'],
+          ['Coastal DJ Services', 'Triad Kids Corner'],
+        ], i) || [],
+        gear: pick([
+          'iPhone 15 Pro, DJI gimbal, lapel mic, portable lights.',
+          'Canon mirrorless, prime lens kit, LED panels, backups.',
+          'Signage kit, QR stands, extension cords, tablecloths.',
+        ], i),
+        tone: pick(['Warm + professional', 'Upbeat + concise', 'Calm + confident'], i),
+        notes: pick([
+          'Arrives 30 minutes early; confirms layout and QR placement.',
+          'Shares same-day highlight reel; full recap within 24h.',
+          'Prefers clear owner contact + parking instructions.',
+        ], i),
+        reliability: {
+          score: [92, 88, 96, 85, 90, 94][i % 6],
+          lastEventAt: addDaysYmd(today, -(7 + i * 3)),
+          flags: (i % 4 === 0) ? ['Needs parking instructions'] : [],
+        },
+        updatedAt: nowIso(),
+        demoSeed: demoSeedId,
+        demoRun: runId,
+      });
+    }
+
+    // Add a few extra directory-only demo profiles for coordinator browsing.
+    for (let i = 0; i < 8; i++) {
+      demoProfiles.push({
+        userId: `demo_talent_${demoSeedId}_${i + 1}`,
+        displayName: pick(['Morgan Reed', 'Casey Parker', 'Drew Ellis', 'Avery James', 'Rowan Blake', 'Cameron Lane'], i + 3),
+        role: pick(['event_host', 'media_team'], i),
+        bio: pick([
+          'Seasoned event host with a focus on friendly, inclusive resident experiences.',
+          'Media pro who delivers consistent, on-brand recaps with fast turnaround.',
+        ], i),
+        homeBaseCity: pick(cities, i + 2),
+        homeBaseState: pick(states, i + 1),
+        specialties: pick([
+          ['Check-in flow', 'Lead capture', 'Vendor coordination'],
+          ['Photo recap', 'Video snippets', 'Editing'],
+        ], i) || ['Lead capture'],
+        preferredPairings: [],
+        gear: pick([
+          'QR signage kit, extension cords, tablecloths, clipboards.',
+          'Mirrorless camera, gimbal, wireless mic, portable lights.',
+        ], i),
+        tone: pick(['Friendly', 'Professional', 'High-energy'], i),
+        notes: pick([
+          'Best for evening events; confirm lighting conditions.',
+          'Comfortable with vendor-heavy activations and tight timelines.',
+        ], i),
+        reliability: {
+          score: [84, 89, 91, 86, 93, 88][i % 6],
+          lastEventAt: addDaysYmd(today, -(14 + i * 5)),
+          flags: (i % 5 === 0) ? ['Follow up on media upload'] : [],
+        },
+        updatedAt: nowIso(),
+        demoSeed: demoSeedId,
+        demoRun: runId,
+      });
+    }
+
+    talentProfilesSeeded = demoProfiles.length;
+
+    await upsertKv(sb, key, {
+      profiles: kept.concat(demoProfiles),
+    });
+  }
+
   // Demo logs/sets
   await sb.from('purestay_logs').insert([
     {
@@ -753,10 +963,20 @@ async function seedDemoData(sb, {
     { set_key: `portal:demo:${demoSeedId}:regions`, member: 'Charlotte', created_at: nowIso() },
   ], { onConflict: 'set_key,member' });
 
-  const seedState = {
-    demoSeedId,
+  const prev = already && existing.row && existing.row.value && typeof existing.row.value === 'object'
+    ? existing.row.value
+    : null;
+
+  const prevRuns = Array.isArray(prev?.runs)
+    ? prev.runs
+    : (prev && prev.counts)
+      ? [{ runId: String(prev.runId || 'unknown'), seededAt: String(prev.seededAt || ''), counts: prev.counts }]
+      : [];
+
+  const thisRun = {
     runId,
     seededAt: nowIso(),
+    mode: force ? 'force' : (isAppend ? 'append' : 'seed'),
     counts: {
       leads: leads.length,
       leadActivities: activities.length,
@@ -768,7 +988,18 @@ async function seedDemoData(sb, {
       docs: docsToInsert.length,
       accounts: demoAccounts.length,
       availabilityUsers: usersForAvail.length,
+      vendors: vendorsSeeded,
+      eventTypes: eventTypesSeeded,
+      talentProfiles: talentProfilesSeeded,
     },
+  };
+
+  const seedState = {
+    demoSeedId,
+    seededAt: thisRun.seededAt,
+    lastRunId: runId,
+    counts: thisRun.counts,
+    runs: prevRuns.concat([thisRun]).slice(-20),
   };
 
   await upsertKv(sb, seedKey, seedState);
@@ -776,6 +1007,7 @@ async function seedDemoData(sb, {
   return {
     ok: true,
     alreadySeeded: false,
+    appended: Boolean(isAppend && already && !force),
     seedKey,
     seedState,
   };
@@ -846,6 +1078,7 @@ module.exports = async (req, res) => {
   const roles = Array.isArray(body?.roles) ? body.roles : DEFAULT_ROLES;
   const seedData = Boolean(body?.seedData || body?.demoData || body?.demo || body?.seed);
   const force = Boolean(body?.force);
+  const append = Boolean(body?.append || body?.more || body?.seedMore || body?.seed_more);
   const demoSeedId = String(body?.demoSeedId || 'v2').trim() || 'v2';
   const runId = mkUuid();
 
@@ -906,6 +1139,7 @@ module.exports = async (req, res) => {
       userIdsByRole,
       domain,
       force,
+      append,
     });
   }
 

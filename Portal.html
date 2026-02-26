@@ -1153,7 +1153,6 @@
           <div class="row" style="justify-content:space-between; gap:12px; margin-bottom:12px;">
             <div class="segTabs" style="gap:8px;">
               <button id="closerSegDisposition" class="segBtn" type="button">Disposition</button>
-              <button id="closerSegPipeline" class="segBtn" type="button">Pipeline</button>
             </div>
           </div>
 
@@ -1272,40 +1271,6 @@
               </div>
 
           </div>
-          <div id="closerPanePipeline" class="hide">
-            <div class="card" id="closerPipelineCard" style="background:#fff; margin-bottom:14px;">
-              <div class="bd">
-                <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
-                  <div>
-                    <div style="font-weight:900;">Pipeline</div>
-                    <div class="muted small">Working and booked leads for closing</div>
-                  </div>
-                  <button id="loadCloserQueueBtn" class="btn secondary" type="button">Load</button>
-                </div>
-                <div style="height:10px"></div>
-                <div class="pipe" id="closerPipeline"></div>
-                <div style="height:10px"></div>
-                <div id="closerQueueMsg" class="err"></div>
-                <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Property</th>
-                        <th>Status</th>
-                        <th>Priority</th>
-                        <th>Follow up</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody id="closerQueueTbody"></tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-
             </div>
           </div>
         </div>
@@ -2804,10 +2769,11 @@
     }
 
     function renderCloserSubtab(){
-      const t = String(state.closerSubtab || 'disposition');
+      const t0 = String(state.closerSubtab || 'disposition');
+      const t = (t0 === 'disposition') ? t0 : 'disposition';
+      if (t !== t0) state.closerSubtab = t;
       const map = {
         disposition: { btn: 'closerSegDisposition', pane: 'closerPaneDisposition' },
-        pipeline: { btn: 'closerSegPipeline', pane: 'closerPanePipeline' },
       };
       const keys = Object.keys(map);
       for (const k of keys) {
@@ -2820,7 +2786,7 @@
 
     function hideManualLoadButtons(){
       const ids = [
-        'loadLeadsBtn','loadQueueBtn','loadCloserQueueBtn','loadEventsBtn','loadPayoutsBtn',
+        'loadLeadsBtn','loadQueueBtn','loadEventsBtn','loadPayoutsBtn',
         'loadStatsBtn','loadDispatchBtn','loadDialerTasksBtn','loadCloserTasksBtn','loadApptsBtn',
         'refreshBtn','loadDialerTimelineBtn','meetingsRefreshBtn','dialerBookedRefreshBtn',
       ];
@@ -2910,7 +2876,6 @@
       }
       if (tab === 'closer') {
         renderCloserSubtab();
-        if (state.closerSubtab === 'pipeline') loadCloserQueue().catch(()=>{});
         // Closer Dispatch removed from Sales.
       }
       if (tab === 'calls') {
@@ -2964,7 +2929,6 @@
       }
       if (tab === 'closer') {
         renderCloserSubtab();
-        if (state.closerSubtab === 'pipeline') await loadCloserQueue().catch(()=>{});
         // Closer Dispatch removed from Sales.
       }
       if (tab === 'meetings') {
@@ -3293,6 +3257,7 @@
               <div class="muted small" style="margin-top:4px;">Seeds realistic leads, events, recaps, payouts, docs, accounts, and availability.</div>
               <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
                 <button id="seedDemoBtn" class="btn secondary" type="button">Seed demo data</button>
+                <button id="seedDemoMoreBtn" class="btn secondary" type="button">Seed more (additive)</button>
                 <button id="seedDemoForceBtn" class="btn" type="button">Reseed (overwrite demo)</button>
               </div>
               <div id="seedDemoMsg" class="muted small" style="margin-top:8px;"></div>
@@ -3304,9 +3269,9 @@
 
       // Demo seeding controls (manager only)
       try {
-        const seedDemo = async (force) => {
+        const seedDemo = async ({ force = false, append = false } = {}) => {
           const msg = $('seedDemoMsg');
-          if (msg) msg.textContent = force ? 'Reseeding demo data…' : 'Seeding demo data…';
+          if (msg) msg.textContent = force ? 'Reseeding demo data…' : (append ? 'Seeding more demo data…' : 'Seeding demo data…');
           try {
             const j = await api('/api/portal/seed', {
               method: 'POST',
@@ -3314,13 +3279,18 @@
                 demoData: true,
                 seedData: true,
                 force: !!force,
+                append: !!append,
               },
             });
             const demo = j && j.demo ? j.demo : null;
             const state = demo && demo.seedState ? demo.seedState : null;
             if (msg) {
-              if (demo && demo.alreadySeeded) msg.textContent = 'Demo data already seeded. Use Reseed if you want to overwrite demo records.';
-              else if (state && state.counts) msg.textContent = `Seeded: ${state.counts.leads} leads, ${state.counts.events} events, ${state.counts.accounts} accounts.`;
+              if (demo && demo.alreadySeeded) msg.textContent = 'Demo data already seeded. Use Seed more (additive) to add on top, or Reseed to overwrite demo records.';
+              else if (state && state.counts) {
+                const verb = append ? 'Added' : 'Seeded';
+                const runs = Array.isArray(state.runs) ? state.runs.length : null;
+                msg.textContent = `${verb}: ${state.counts.leads} leads, ${state.counts.events} events, ${state.counts.appointments} meetings, ${state.counts.payouts} payments, ${state.counts.accounts} accounts.${runs ? ` Runs: ${runs}.` : ''}`;
+              }
               else msg.textContent = 'Seed complete.';
             }
             // Refresh whatever the user is looking at.
@@ -3331,9 +3301,11 @@
         };
 
         const b1 = $('seedDemoBtn');
-        if (b1) b1.addEventListener('click', () => seedDemo(false));
+        if (b1) b1.addEventListener('click', () => seedDemo({ force: false, append: false }));
+        const bMore = $('seedDemoMoreBtn');
+        if (bMore) bMore.addEventListener('click', () => seedDemo({ force: false, append: true }));
         const b2 = $('seedDemoForceBtn');
-        if (b2) b2.addEventListener('click', () => seedDemo(true));
+        if (b2) b2.addEventListener('click', () => seedDemo({ force: true, append: false }));
       } catch(_e) {}
 
       hideManualLoadButtons();
@@ -7730,11 +7702,7 @@
     on('acctEditReminderDays', 'input', () => syncEditAccountDerived());
 
     on('closerSegDisposition', 'click', () => setCloserSubtab('disposition'));
-    on('closerSegPipeline', 'click', () => setCloserSubtab('pipeline'));
 
-
-
-    on('loadCloserQueueBtn', 'click', () => loadCloserQueue().catch(() => {}));
 
     on('submitRecapBtn', 'click', () => submitRecap().catch(() => {}));
 
