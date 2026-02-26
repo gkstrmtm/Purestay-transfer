@@ -27,9 +27,6 @@ module.exports = async (req, res) => {
   if (isManager(s.profile)) {
     if (requestedUserId) query = query.eq('user_id', requestedUserId);
   } else {
-    if (s.viewAsRole && !s.effectiveUserId) {
-      return sendJson(res, 200, { ok: true, payouts: [] });
-    }
     const uid = String(s.effectiveUserId || s.user.id || '').trim();
     query = query.eq('user_id', uid);
   }

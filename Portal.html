@@ -3070,13 +3070,9 @@
       if (isManagerUser()) await ensureUsersCache();
 
       const vRole = isManagerUser() ? String(state.viewAsRole || '').trim() : '';
-      const vUser = isManagerUser() ? String(state.viewAsUserId || '').trim() : '';
-      const inViewAs = isManagerUser() && (!!vRole || !!vUser);
-      const previewOnly = isManagerUser() && !!vRole && !vUser;
+      const inViewAs = isManagerUser() && !!vRole;
       $('roleLine').textContent = inViewAs
-        ? (previewOnly
-          ? `Previewing ${roleViewLabel(er)} (role-wide)`
-          : `As ${(viewAsUserLabel(vUser) || vUser || '').trim()} — ${roleViewLabel(er)}`.trim())
+        ? `As ${roleViewLabel(er)}`
         : roleViewLabel(realRole);
       $('appUser').textContent = me.user.email;
 
@@ -3110,7 +3106,6 @@
       navItems.push({ id:'payments', label:'Payments' });
 
       const viewAsHtml = isManagerUser() ? (() => {
-        const inViewAs = !!String(state.viewAsRole || '').trim() || !!String(state.viewAsUserId || '').trim();
         const currentRole = String(state.viewAsRole || '').trim() || 'manager';
 
         const activeOpt = MANAGER_VIEW_OPTIONS.find((o) => String(o.role) === String(currentRole)) || MANAGER_VIEW_OPTIONS[0];
@@ -3130,22 +3125,7 @@
           </div>
         `;
 
-        const selectedRole = String(state.viewAsRole || '').trim();
-        const people = selectedRole ? usersForViewAsRole(selectedRole) : [];
-        const peopleBtns = selectedRole ? `
-          <div class="navTitle" style="margin-top:8px;">Person (to edit)</div>
-          <div class="muted small" style="margin-top:6px;">Role-wide preview is read-only.</div>
-          <div style="max-height:240px; overflow:auto; padding-right:4px; margin-top:6px;">
-            <button class="navBtn ${!String(state.viewAsUserId || '').trim() ? 'active' : ''}" type="button" data-viewas-user="">All (preview only)</button>
-            ${people.map((u) => {
-              const label = String(u.fullName || u.email || u.userId || '').trim() || u.userId;
-              const active = String(u.userId) === String(state.viewAsUserId || '');
-              return `<button class="navBtn ${active ? 'active' : ''}" type="button" data-viewas-user="${escapeHtml(u.userId)}">${escapeHtml(label)}</button>`;
-            }).join('')}
-          </div>
-        ` : '';
-
-        return `${viewSelect}${peopleBtns}<div style="height:10px"></div><div class="navTitle">Menu</div>`;
+        return `${viewSelect}<div style="height:10px"></div><div class="navTitle">Menu</div>`;
       })() : '<div class="navTitle">Menu</div>';
 
       const ico = {
@@ -3229,13 +3209,6 @@
           document.addEventListener('click', window.__portalViewDdCloser, true);
         }
       } catch(_e) {}
-
-      for (const item of document.querySelectorAll('button[data-viewas-user]')) {
-        item.addEventListener('click', () => {
-          const uid = String(item.dataset.viewasUser || '').trim();
-          setViewAsUserId(uid);
-        });
-      }
 
       // No explicit exit button: managers can switch back to Manager in the Views dropdown.
 
@@ -4375,9 +4348,7 @@
 
     function availabilityEditable(){
       const er = effectiveRole();
-      if (!['closer','account_manager','manager'].includes(er)) return false;
-      // Role-only preview is read-only; impersonating a specific person is editable.
-      if (isManagerUser() && String(state.viewAsRole || '').trim() && !String(state.viewAsUserId || '').trim()) return false;
+      if (!['dialer','remote_setter','in_person_setter','closer','account_manager','manager','event_coordinator'].includes(er)) return false;
       return true;
     }
 
@@ -4436,8 +4407,7 @@
 
       const editable = availabilityEditable();
       const ro = $('availReadOnlyNote');
-      const previewOnly = isManagerUser() && String(state.viewAsRole || '').trim() && !String(state.viewAsUserId || '').trim();
-      if (ro) ro.style.display = (!editable && previewOnly) ? 'block' : 'none';
+      if (ro) ro.style.display = (!editable) ? 'block' : 'none';
       const saveBtn = $('availSaveBtn');
       if (saveBtn) saveBtn.disabled = !editable;
       const clearBtn = $('availClearWeek');
@@ -4613,8 +4583,6 @@
     function accountsEditable(){
       const er = effectiveRole();
       if (!['account_manager','manager'].includes(er)) return false;
-      // Role-only preview is read-only; impersonating a specific person is editable.
-      if (isManagerUser() && String(state.viewAsRole || '').trim() && !String(state.viewAsUserId || '').trim()) return false;
       return true;
     }
 

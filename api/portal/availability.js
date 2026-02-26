@@ -82,7 +82,7 @@ module.exports = async (req, res) => {
   const s = await requirePortalSession(req);
   if (!s.ok) return sendJson(res, s.status || 401, { ok: false, error: s.error });
 
-  if (!hasRole(s.profile, ['closer', 'account_manager', 'manager'])) {
+  if (!hasRole(s.profile, ['dialer', 'remote_setter', 'in_person_setter', 'closer', 'account_manager', 'event_coordinator', 'manager'])) {
     return sendJson(res, 403, { ok: false, error: 'forbidden' });
   }
 
@@ -121,7 +121,8 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === 'PUT') {
-    if (!s.realIsManager && userId !== s.user.id) {
+    const actingUserId = String(s.effectiveUserId || s.user.id || '');
+    if (!s.realIsManager && userId !== actingUserId) {
       return sendJson(res, 403, { ok: false, error: 'forbidden' });
     }
 
