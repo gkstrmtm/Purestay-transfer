@@ -4,6 +4,9 @@
   "version": "0.1.0",
   "description": "PureStay static pages + minimal backend",
   "main": "server/server.js",
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",
     "@vercel/kv": "^3.0.0"

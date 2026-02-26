@@ -108,12 +108,24 @@ function readResourceText(relPath) {
   }
 }
 
+function builtinEventTypes() {
+  // Used when resources/*.csv isn't bundled on Vercel.
+  return [
+    { name: 'Influencer Meetup', kind: 'momentum', duration_hours: '3' },
+    { name: 'Brand Launch Party', kind: 'anchor', duration_hours: '4' },
+    { name: 'VIP Dinner', kind: 'anchor', duration_hours: '2.5' },
+    { name: 'Creator House Tour', kind: 'momentum', duration_hours: '1.5' },
+    { name: 'Press Day', kind: 'anchor', duration_hours: '6' },
+    { name: 'Community Pop-Up', kind: 'momentum', duration_hours: '4' }
+  ];
+}
+
 function eventTypesFromResources() {
   const text = readResourceText('resources/event_types.csv');
-  if (!text) return { ok: false, error: 'resources_missing' };
+  if (!text) return { ok: true, types: builtinEventTypes(), source: 'builtin' };
   const rows = parseCsv(text);
   const objs = toObjects(rows);
-  return { ok: true, types: objs.slice(0, 2000) };
+  return { ok: true, types: objs.slice(0, 2000), source: 'resources' };
 }
 
 module.exports = async (req, res) => {
@@ -136,13 +148,15 @@ module.exports = async (req, res) => {
     let types = Array.isArray(value.types) ? value.types : [];
 
     let seeded = false;
+    let seedSource = 'none';
     if (!types.length) {
       const rr = eventTypesFromResources();
       if (rr.ok && rr.types.length) {
-        const w = await upsertKv(s.sbAdmin, key, { types: rr.types, updatedAt: new Date().toISOString(), source: 'resources' });
+        const w = await upsertKv(s.sbAdmin, key, { types: rr.types, updatedAt: new Date().toISOString(), source: rr.source || 'unknown' });
         if (w.ok) {
           types = rr.types;
           seeded = true;
+          seedSource = rr.source || 'unknown';
         }
       }
     }
@@ -154,7 +168,7 @@ module.exports = async (req, res) => {
       types = types.filter((t) => JSON.stringify(t).toLowerCase().includes(q));
     }
 
-    return sendJson(res, 200, { ok: true, types, seeded });
+    return sendJson(res, 200, { ok: true, types, seeded, seedSource });
   }
 
   if (req.method === 'POST') {
@@ -170,9 +184,9 @@ module.exports = async (req, res) => {
     if (reloadFromResources) {
       const rr = eventTypesFromResources();
       if (!rr.ok) return sendJson(res, 500, { ok: false, error: rr.error });
-      const w = await upsertKv(s.sbAdmin, key, { types: rr.types, updatedAt: new Date().toISOString(), source: 'resources' });
+      const w = await upsertKv(s.sbAdmin, key, { types: rr.types, updatedAt: new Date().toISOString(), source: rr.source || 'unknown' });
       if (!w.ok) return sendJson(res, 500, { ok: false, error: w.error });
-      return sendJson(res, 200, { ok: true, types: rr.types, count: rr.types.length, reloaded: true });
+      return sendJson(res, 200, { ok: true, types: rr.types, count: rr.types.length, reloaded: true, source: rr.source || 'unknown' });
     }
 
     const csvText = body.csvText != null ? String(body.csvText || '') : '';

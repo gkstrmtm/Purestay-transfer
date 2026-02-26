@@ -110,12 +110,24 @@ function readResourceText(relPath) {
   }
 }
 
+function builtinVendors() {
+  // Keep this small and demo-friendly; it's used when resources/*.csv isn't bundled on Vercel.
+  return [
+    { name: 'PureStay Catering Co', category: 'catering', state: 'FL', city: 'Orlando' },
+    { name: 'Sunset AV & Lighting', category: 'av', state: 'FL', city: 'Miami' },
+    { name: 'Blue Ribbon Security', category: 'security', state: 'FL', city: 'Tampa' },
+    { name: 'Skyline Photo Booth', category: 'photo', state: 'FL', city: 'Orlando' },
+    { name: 'Palm Coast Florals', category: 'decor', state: 'FL', city: 'Jacksonville' },
+    { name: 'Coastal Shuttle Service', category: 'transport', state: 'FL', city: 'Fort Lauderdale' }
+  ];
+}
+
 function vendorsFromResources() {
   const text = readResourceText('resources/vendors.csv');
-  if (!text) return { ok: false, error: 'resources_missing' };
+  if (!text) return { ok: true, vendors: builtinVendors(), source: 'builtin' };
   const rows = parseCsv(text);
   const objs = toObjects(rows);
-  return { ok: true, vendors: objs.slice(0, 2000) };
+  return { ok: true, vendors: objs.slice(0, 2000), source: 'resources' };
 }
 
 module.exports = async (req, res) => {
@@ -138,13 +150,15 @@ module.exports = async (req, res) => {
     let vendors = Array.isArray(value.vendors) ? value.vendors : [];
 
     let seeded = false;
+    let seedSource = 'none';
     if (!vendors.length) {
       const rr = vendorsFromResources();
       if (rr.ok && rr.vendors.length) {
-        const w = await upsertKv(s.sbAdmin, key, { vendors: rr.vendors, updatedAt: new Date().toISOString(), source: 'resources' });
+        const w = await upsertKv(s.sbAdmin, key, { vendors: rr.vendors, updatedAt: new Date().toISOString(), source: rr.source || 'unknown' });
         if (w.ok) {
           vendors = rr.vendors;
           seeded = true;
+          seedSource = rr.source || 'unknown';
         }
       }
     }
@@ -156,7 +170,7 @@ module.exports = async (req, res) => {
       vendors = vendors.filter((v) => JSON.stringify(v).toLowerCase().includes(q));
     }
 
-    return sendJson(res, 200, { ok: true, vendors, seeded });
+    return sendJson(res, 200, { ok: true, vendors, seeded, seedSource });
   }
 
   if (req.method === 'POST') {
@@ -172,9 +186,9 @@ module.exports = async (req, res) => {
     if (reloadFromResources) {
       const rr = vendorsFromResources();
       if (!rr.ok) return sendJson(res, 500, { ok: false, error: rr.error });
-      const w = await upsertKv(s.sbAdmin, key, { vendors: rr.vendors, updatedAt: new Date().toISOString(), source: 'resources' });
+      const w = await upsertKv(s.sbAdmin, key, { vendors: rr.vendors, updatedAt: new Date().toISOString(), source: rr.source || 'unknown' });
       if (!w.ok) return sendJson(res, 500, { ok: false, error: w.error });
-      return sendJson(res, 200, { ok: true, vendors: rr.vendors, count: rr.vendors.length, reloaded: true });
+      return sendJson(res, 200, { ok: true, vendors: rr.vendors, count: rr.vendors.length, reloaded: true, source: rr.source || 'unknown' });
     }
 
     const csvText = body.csvText != null ? String(body.csvText || '') : '';

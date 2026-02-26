@@ -1,12 +1,4 @@
 {
-  "functions": {
-    "api/portal/vendors.js": {
-      "includeFiles": ["resources/vendors.csv"]
-    },
-    "api/portal/event_types.js": {
-      "includeFiles": ["resources/event_types.csv"]
-    }
-  },
   "redirects": [
     { "source": "/Home.html", "destination": "/", "permanent": true },
     { "source": "/Discovery.html", "destination": "/discovery", "permanent": true },
@@ -21,10 +13,10 @@
     { "source": "/Certificate.html", "destination": "/certificate", "permanent": true },
     { "source": "/ECtoolkit.html", "destination": "/ec-toolkit", "permanent": true },
     { "source": "/eventcc.html", "destination": "/eventcc", "permanent": true },
-    { "source": "/budgetcal.html", "destination": "/budget-calculator", "permanent": true }
-    ,{ "source": "/OurPackages.html", "destination": "/our-packages", "permanent": true }
-    ,{ "source": "/Portal.html", "destination": "/portal", "permanent": true }
-    ,{ "source": "/Feedback.html", "destination": "/feedback", "permanent": true }
+    { "source": "/budgetcal.html", "destination": "/budget-calculator", "permanent": true },
+    { "source": "/OurPackages.html", "destination": "/our-packages", "permanent": true },
+    { "source": "/Portal.html", "destination": "/portal", "permanent": true },
+    { "source": "/Feedback.html", "destination": "/feedback", "permanent": true }
   ],
   "rewrites": [
     { "source": "/", "destination": "/Home.html" },
@@ -45,9 +37,9 @@
 
     { "source": "/feedback", "destination": "/Feedback.html" },
 
-  { "source": "/blogs", "destination": "/api/blogs/page" },
-  { "source": "/blogs/:slug", "destination": "/api/blogs/page?slug=:slug" },
-  { "source": "/sitemap.xml", "destination": "/api/sitemap.xml" },
+    { "source": "/blogs", "destination": "/api/blogs/page" },
+    { "source": "/blogs/:slug", "destination": "/api/blogs/page?slug=:slug" },
+    { "source": "/sitemap.xml", "destination": "/api/sitemap.xml" },
 
     { "source": "/ec-toolkit", "destination": "/ECtoolkit.html" },
     { "source": "/eventcc", "destination": "/eventcc.html" },
