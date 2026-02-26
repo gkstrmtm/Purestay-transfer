@@ -1586,7 +1586,10 @@
                           <div style="font-weight:900; margin-top:4px;">Recommendations</div>
                           <div class="muted small" style="margin-top:4px;">Suggest host + media based on location, specialties, and reliability.</div>
                         </div>
-                        <button id="aiRecommendTalentBtn" class="btn secondary" type="button">AI recommend</button>
+                        <div class="row" style="gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                          <button id="aiRecommendTalentBtn" class="btn secondary" type="button">AI recommend</button>
+                          <button id="aiAssignTopTalentBtn" class="btn secondary" type="button">Assign top picks</button>
+                        </div>
                       </div>
                       <div style="height:10px"></div>
                       <div id="talentAiMsg" class="err"></div>
@@ -5602,6 +5605,7 @@
       $('addHostBtn')?.toggleAttribute('disabled', !canManage);
       $('addMediaBtn')?.toggleAttribute('disabled', !canManage);
       $('aiRecommendTalentBtn')?.toggleAttribute('disabled', !isCoordinatorRole());
+      $('aiAssignTopTalentBtn')?.toggleAttribute('disabled', !canManage);
 
       const checklist = meta?.checklist && typeof meta.checklist === 'object' ? meta.checklist : {};
       if ($('chkRecapReceived')) $('chkRecapReceived').checked = String(checklist.recapReceived || '') === 'yes';
@@ -5914,6 +5918,34 @@
         const missingInfo = Array.isArray(j.missingInfo) ? j.missingInfo : [];
         const searchQuery = String(j.searchQuery || '').trim();
 
+        // Audit log (only when mutations are allowed).
+        if (coordinatorOpsEditable()) {
+          try {
+            const audit = {
+              suggestedAt: new Date().toISOString(),
+              searchQuery,
+              missingInfo: missingInfo.slice(0, 8),
+              picked: picked.slice(0, 10).map((p0) => {
+                const v = (p0 && typeof p0 === 'object') ? p0.vendor : null;
+                return {
+                  vendor: v && typeof v === 'object' ? {
+                    name: String(v.name || '').trim(),
+                    city: String(v.city || '').trim(),
+                    state: String(v.state || '').trim(),
+                    type: String(v.type || '').trim(),
+                    email: String(v.email || '').trim(),
+                    phone: String(v.phone || '').trim(),
+                  } : null,
+                  reason: String(p0?.reason || '').trim().slice(0, 300),
+                };
+              }),
+            };
+            await patchSelectedEventMeta({ aiVendorSuggest: audit });
+          } catch {
+            // ignore audit failures
+          }
+        }
+
         if (!picked.length) {
           $('vendorsMsg').textContent = 'No AI suggestions returned.';
           $('vendorsList').innerHTML = '<div class="muted small">No suggestions.</div>';
@@ -6078,8 +6110,64 @@
           missingInfo: Array.isArray(j.missingInfo) ? j.missingInfo : [],
         };
 
+        // Audit log (only when mutations are allowed).
+        if (coordinatorOpsEditable()) {
+          try {
+            const audit = {
+              recommendedAt: new Date().toISOString(),
+              missingInfo: Array.isArray(j.missingInfo) ? j.missingInfo.slice(0, 8) : [],
+              hosts: Array.isArray(j.hosts) ? j.hosts.slice(0, 5).map((x) => ({
+                userId: String(x?.userId || '').trim(),
+                reason: String(x?.reason || '').trim().slice(0, 300),
+              })) : [],
+              media: Array.isArray(j.media) ? j.media.slice(0, 5).map((x) => ({
+                userId: String(x?.userId || '').trim(),
+                reason: String(x?.reason || '').trim().slice(0, 300),
+              })) : [],
+            };
+            await patchSelectedEventMeta({ aiTalentRecommend: audit });
+          } catch {
+            // ignore audit failures
+          }
+        }
+
         if (msg) msg.textContent = '';
         renderTalentAiFromCache();
+      } catch (err) {
+        if (msg) msg.textContent = String(err.message || err);
+      }
+    }
+
+    async function aiAssignTopTalentForSelected(){
+      const msg = $('talentAiMsg');
+      if (msg) msg.textContent = '';
+      try{
+        if (!coordinatorOpsEditable()) throw new Error('read_only');
+        const e = state.selectedEvent;
+        if (!e || !e.id) throw new Error('select an event');
+
+        const map = (state._talentAiByEventId && typeof state._talentAiByEventId === 'object') ? state._talentAiByEventId : {};
+        const payload = map[String(e.id)] || null;
+        const hosts = Array.isArray(payload?.hosts) ? payload.hosts : [];
+        const media = Array.isArray(payload?.media) ? payload.media : [];
+
+        const hostId = String(hosts?.[0]?.userId || '').trim();
+        const mediaId = String(media?.[0]?.userId || '').trim();
+        if (!hostId && !mediaId) throw new Error('no_recommendations');
+
+        if (msg) msg.textContent = 'Assigning…';
+
+        const errs = [];
+        if (hostId) {
+          try { await addAssignment('event_host', hostId); }
+          catch (e0) { errs.push(String(e0?.message || e0)); }
+        }
+        if (mediaId) {
+          try { await addAssignment('media_team', mediaId); }
+          catch (e0) { errs.push(String(e0?.message || e0)); }
+        }
+
+        if (msg) msg.textContent = errs.length ? ('Assigned with warnings: ' + errs.slice(0, 2).join(' • ')) : 'Assigned top picks.';
       } catch (err) {
         if (msg) msg.textContent = String(err.message || err);
       }
@@ -6903,6 +6991,7 @@
     on('feedbackLoadSummaryBtn', 'click', () => loadFeedbackSummary().catch(() => {}));
 
     on('aiRecommendTalentBtn', 'click', () => aiRecommendTalentForSelected().catch(() => {}));
+    on('aiAssignTopTalentBtn', 'click', () => aiAssignTopTalentForSelected().catch(() => {}));
 
     on('talentSaveBtn', 'click', () => saveTalentProfile().catch(() => {}));
     on('talentRefreshBtn', 'click', async () => {
