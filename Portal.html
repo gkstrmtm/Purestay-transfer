@@ -6627,15 +6627,22 @@
       const qs = new URLSearchParams();
       if (q) qs.set('q', q);
       // Always fetch without status so the stage bar can show counts.
-        renderPipelineTimeline('closerPipeline', leads, { context: 'closer' });
+      qs.set('limit', '120');
 
-        if (!leads.length) {
+      try{
+        const j = await api('/api/portal/leads?' + qs.toString());
+        state.leads = j.leads || [];
+        renderLeadsTable();
+        setBadge('ok', 'loaded');
+      } catch(e){
+        $('leadsMsg').textContent = String(e.message || e);
+        setBadge('warn', 'error');
       }
     }
 
     async function pullLeads(){
       const msg = $('pullLeadsMsg');
-        tb.innerHTML = leads.map((l) => {
+      if (msg) msg.textContent = '';
 
       const cityState = String($('plCityState')?.value || '').trim();
       if (!cityState) {
