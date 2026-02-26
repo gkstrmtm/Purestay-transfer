@@ -105,15 +105,15 @@
       border-bottom: 1px solid rgba(0,0,0,.06);
     }
 
-    .appbarInner{display:flex; align-items:center; justify-content:space-between; gap:14px; padding: 10px 18px; max-width:1180px; margin:0 auto;}
+    .appbarInner{display:flex; align-items:center; justify-content:space-between; gap:14px; padding: 10px 18px; max-width:none; margin:0;}
     .appbrand{display:flex; align-items:center; gap:12px;}
     .appbrand img{height:46px; width:auto; display:block;}
     .appbrand .t{font-weight: 900; letter-spacing:.2px;}
 
-    .layout{max-width:1180px; margin:0 auto; display:grid; grid-template-columns: 260px 1fr; gap: 0; padding: 0 18px 28px;}
+    .layout{max-width:none; margin:0; display:grid; grid-template-columns: 260px 1fr; gap: 0; padding: 0; width:100%;}
     @media (max-width: 900px){ .layout{grid-template-columns: 1fr;} }
 
-    main{min-width:0;}
+    main{min-width:0; padding: 16px 18px 28px;}
 
     .sidebar{
       background:#fff;
@@ -151,8 +151,7 @@
 
     .navIco{width:22px; height:22px; border:1px solid var(--border); border-radius:8px; display:grid; place-items:center; font-size:12px; color:var(--muted); flex:0 0 auto; background:#fff;}
     .navLbl{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-    main{padding-left:16px;}
-    @media (max-width: 900px){ main{padding-left:0;} }
+    @media (max-width: 900px){ main{padding: 16px 18px 28px;} }
 
     .iconBtn{appearance:none; border:1px solid var(--border); background:#fff; color: var(--maroon); border-radius: 12px; padding: 10px 12px; cursor:pointer; font-weight:900;}
     .iconBtn:hover{border-color: rgba(199,154,59,.55)}
