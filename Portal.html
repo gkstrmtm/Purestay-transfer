@@ -3180,9 +3180,7 @@
       }
 
       if (['event_host','media_team','event_coordinator'].includes(er)) {
-        if (['event_host','media_team'].includes(er)) {
-          navItems.push({ id:'offers', label:'Offers' });
-        }
+        if (['event_host','media_team','event_coordinator'].includes(er)) navItems.push({ id:'offers', label:'Offers' });
 
         const label = (er === 'media_team') ? 'Content' : 'Events';
         navItems.push({ id:'events', label });
@@ -3194,6 +3192,17 @@
         navItems.push({ id:'manager', label:'Operations' });
       }
       navItems.push({ id:'payments', label:'Payments' });
+
+      // Managers should also be able to view offers.
+      if (er === 'manager') {
+        // Insert Offers near Events if present; otherwise append.
+        const hasOffers = navItems.some((x) => x.id === 'offers');
+        if (!hasOffers) {
+          const idx = navItems.findIndex((x) => x.id === 'events');
+          if (idx >= 0) navItems.splice(idx, 0, { id:'offers', label:'Offers' });
+          else navItems.push({ id:'offers', label:'Offers' });
+        }
+      }
 
       const viewAsHtml = isManagerUser() ? (() => {
         const currentRole = String(state.viewAsRole || '').trim() || 'manager';
@@ -7276,7 +7285,10 @@
 
         // Filtering
         let nextEvents = allEvents;
-        if (['event_host','media_team'].includes(er)) {
+        const isHostOrMedia = ['event_host','media_team'].includes(er);
+        const isMgrOrCoord = (er === 'manager' || er === 'event_coordinator');
+
+        if (isHostOrMedia) {
           if (desired === 'my') {
             nextEvents = allEvents.filter((ev) => String(ev.assigned_user_id || '') === effectiveUserId);
           } else if (desired === 'offers') {
@@ -7293,6 +7305,17 @@
             // 'all'
             nextEvents = allEvents;
           }
+        }
+
+        // Offers oversight for managers/coordinators: show open offers + offers already sent.
+        if (isMgrOrCoord && desired === 'offers') {
+          nextEvents = allEvents.filter((ev) => {
+            const asg = String(ev.assigned_role || '').trim();
+            if (!['event_host','media_team'].includes(asg)) return false;
+            const hasAssignments = !!(ev.meta && typeof ev.meta === 'object' && Array.isArray(ev.meta.assignments) && ev.meta.assignments.length);
+            const isOpenUnassigned = String(ev.status || 'open') === 'open' && !ev.assigned_user_id;
+            return hasAssignments || isOpenUnassigned;
+          });
         }
 
         state.events = nextEvents;
