@@ -27,6 +27,12 @@ create table if not exists public.purestay_sets (
 
 create index if not exists purestay_sets_set_key_idx on public.purestay_sets (set_key);
 
+-- Lock down shared storage tables too.
+-- Server-side API should use SUPABASE_SERVICE_ROLE_KEY (service role bypasses RLS).
+alter table public.purestay_kv enable row level security;
+alter table public.purestay_logs enable row level security;
+alter table public.purestay_sets enable row level security;
+
 -- ------------------------------------------------------------
 -- Portal (internal) schema
 -- Notes:

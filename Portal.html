@@ -2257,6 +2257,55 @@
       availability: { weekOffset: 0, byDate: {}, tz: '', drag: { active: false, mode: '' } },
     };
 
+    function setSessionTokens(session){
+      const s = (session && typeof session === 'object') ? session : {};
+      const access = String(s.access_token || '').trim();
+      const refresh = String(s.refresh_token || '').trim();
+      const expiresAt = s.expires_at != null ? String(s.expires_at).trim() : '';
+      if (access) {
+        state.token = access;
+        localStorage.setItem('portal_access_token', access);
+      }
+      if (refresh) {
+        state.refreshToken = refresh;
+        localStorage.setItem('portal_refresh_token', refresh);
+      }
+      if (expiresAt) {
+        state.expiresAt = expiresAt;
+        localStorage.setItem('portal_expires_at', expiresAt);
+      }
+    }
+
+    function clearSession(){
+      state.token = '';
+      state.refreshToken = '';
+      state.expiresAt = '';
+      localStorage.removeItem('portal_access_token');
+      localStorage.removeItem('portal_refresh_token');
+      localStorage.removeItem('portal_expires_at');
+    }
+
+    async function refreshSessionToken(){
+      const refresh = String(state.refreshToken || '').trim() || String(localStorage.getItem('portal_refresh_token') || '').trim();
+      if (!refresh) throw new Error('missing_refresh_token');
+
+      const r = await withTimeout(fetch('/api/portal/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refresh }),
+      }), 15000, 'refresh_timeout');
+
+      const j = await r.json().catch(() => null);
+      if (!j || !j.ok) {
+        const msg = String(j?.error || ('http_' + r.status));
+        const det = String(j?.detail || '').trim();
+        throw new Error(det ? (msg + ': ' + det) : msg);
+      }
+
+      setSessionTokens(j.session || {});
+      return true;
+    }
+
     function setSidebarCollapsed(next){
       const v = !!next;
       state.ui.sidebarCollapsed = v;
@@ -2698,17 +2747,34 @@
         if (viewAsUserId) headers['X-Portal-View-As-User'] = viewAsUserId;
       }
 
-      const r = await fetch(path, {
-        method,
-        headers,
-        body: body ? JSON.stringify(body) : undefined,
-      });
-      const j = await r.json().catch(() => null);
+      async function doReq(){
+        const rr = await fetch(path, {
+          method,
+          headers,
+          body: body ? JSON.stringify(body) : undefined,
+        });
+        const jj = await rr.json().catch(() => null);
+        return { rr, jj };
+      }
+
+      let { rr: r, jj: j } = await doReq();
+
+      // If the access token expired, try one refresh + retry.
+      if ((!j || !j.ok) && (r.status === 401 || String(j?.error || '') === 'invalid_token')) {
+        try{
+          await refreshSessionToken();
+          headers.Authorization = 'Bearer ' + String(state.token || '').trim();
+          const retry = await doReq();
+          r = retry.rr;
+          j = retry.jj;
+        } catch(_e){
+          // fall through to normal error handling
+        }
+      }
+
       if (!j || !j.ok) {
         const err = String(j?.error || ('http_' + r.status));
-        if (err === 'view_as_read_only') {
-          throw new Error('View-as is read-only');
-        }
+        if (err === 'view_as_read_only') throw new Error('View-as is read-only');
         throw new Error(err);
       }
       if (String(method || 'GET').toUpperCase() !== 'GET') {
@@ -2731,12 +2797,17 @@
         me = await api('/api/portal/me');
         state.me = me;
       } catch (e) {
-        // Token likely expired or invalid
-        state.token = '';
-        localStorage.removeItem('portal_access_token');
-        state.me = null;
-        showAuthView('Session expired. Please sign in again.');
-        return;
+        // Try refresh once before forcing re-auth.
+        try{
+          await refreshSessionToken();
+          me = await api('/api/portal/me');
+          state.me = me;
+        } catch(_e){
+          clearSession();
+          state.me = null;
+          showAuthView('Session expired. Please sign in again.');
+          return;
+        }
       }
 
       showAppView();
@@ -6960,6 +7031,8 @@
 
       // Restore prior session token if present.
       state.token = localStorage.getItem('portal_access_token') || '';
+      state.refreshToken = localStorage.getItem('portal_refresh_token') || '';
+      state.expiresAt = localStorage.getItem('portal_expires_at') || '';
       await refreshMe();
       renderDialerSubtab();
       renderCloserSubtab();
@@ -6990,8 +7063,7 @@
         const token = String(j?.session?.access_token || '').trim();
         if (!token) throw new Error('login_failed');
 
-        state.token = token;
-        localStorage.setItem('portal_access_token', token);
+        setSessionTokens(j.session || {});
 
         setAuthLoading(false);
         $('authOk').textContent = 'Signed in.';
@@ -7027,8 +7099,7 @@
         const token = String(j?.session?.access_token || '').trim();
         if (!token) throw new Error('signup_failed');
 
-        state.token = token;
-        localStorage.setItem('portal_access_token', token);
+        setSessionTokens(j.session || {});
 
         setAuthLoading(false);
         $('authOk').textContent = 'Account created.';
@@ -7042,8 +7113,7 @@
 
 
     on('logoutBtn', 'click', async () => {
-      state.token = '';
-      localStorage.removeItem('portal_access_token');
+      clearSession();
       await refreshMe();
     });
 

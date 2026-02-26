@@ -1,5 +1,5 @@
 const { sendJson, handleCors, readJson } = require('../../lib/vercelApi');
-const { requirePortalSession, hasRole, isManager } = require('../../lib/portalAuth');
+const { requirePortalSession, hasRole, isManager, roleAliases } = require('../../lib/portalAuth');
 const { getLogTail } = require('../../lib/storage');
 const { notifyEmail, splitList } = require('../../lib/notify');
 
@@ -216,8 +216,79 @@ async function loadUsersById(sbAdmin, userIds) {
   return byId;
 }
 
+function normKey(s) {
+  return String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+async function loadAccountsStore(sbAdmin) {
+  const { data, error } = await sbAdmin
+    .from('purestay_kv')
+    .select('value')
+    .eq('key', 'portal:accounts:v1')
+    .limit(1);
+  if (error) return [];
+  const row = Array.isArray(data) ? data[0] : null;
+  const store = row?.value && typeof row.value === 'object' ? row.value : {};
+  const list = Array.isArray(store.accounts) ? store.accounts : [];
+  return list.filter((a) => a && typeof a === 'object');
+}
+
+function findAccountForEvent(accounts, ev) {
+  const meta = ev?.meta && typeof ev.meta === 'object' ? ev.meta : {};
+  const wantedId = cleanStr(meta.accountId, 80);
+  if (wantedId) {
+    const byId = accounts.find((a) => cleanStr(a?.id, 80) === wantedId);
+    if (byId) return byId;
+  }
+
+  const propertyName = cleanStr(meta.propertyName || ev?.title || '', 200);
+  const ek = normKey(propertyName);
+  if (!ek) return null;
+
+  const candidates = [];
+  for (const a of accounts) {
+    const ak = normKey(cleanStr(a?.propertyName || a?.name || '', 200));
+    if (!ak) continue;
+    if (ak === ek) return a;
+    if (ak.includes(ek) || ek.includes(ak)) candidates.push(a);
+  }
+
+  // Only accept a fuzzy match if it's unambiguous.
+  if (candidates.length === 1) return candidates[0];
+  return null;
+}
+
+async function loadLeadAssignedUserId(sbAdmin, leadIdRaw) {
+  const leadId = clampInt(leadIdRaw, 1, 1e12, null);
+  if (!leadId) return null;
+  const { data, error } = await sbAdmin
+    .from('portal_leads')
+    .select('id, assigned_user_id')
+    .eq('id', leadId)
+    .limit(1);
+  if (error) return null;
+  const row = Array.isArray(data) ? data[0] : null;
+  const uid = cleanStr(row?.assigned_user_id, 80);
+  return uid || null;
+}
+
+async function deriveAccountOwnerEmails(sbAdmin, ev) {
+  const accounts = await loadAccountsStore(sbAdmin);
+  const acct = findAccountForEvent(accounts, ev);
+  if (!acct) return { account: null, ownerEmails: [] };
+
+  const leadId = cleanStr(acct?.leadId, 80);
+  const ownerUserId = await loadLeadAssignedUserId(sbAdmin, leadId);
+  if (!ownerUserId) return { account: acct, ownerEmails: [] };
+
+  const byId = await loadUsersById(sbAdmin, [ownerUserId]);
+  const email = cleanStr(byId.get(String(ownerUserId))?.email, 200);
+  return { account: acct, ownerEmails: email ? [email.toLowerCase()] : [] };
+}
+
 async function deriveReportRecipients(sbAdmin) {
-  const roles = splitList(process.env.REPORT_TO_ROLES || 'account_manager,manager');
+  const rolesIn = splitList(process.env.REPORT_TO_ROLES || 'account_manager,manager');
+  const roles = Array.from(new Set(rolesIn.flatMap((r) => roleAliases(r))));
   const { data, error } = await sbAdmin
     .from('portal_profiles')
     .select('user_id, role')
@@ -238,6 +309,32 @@ async function deriveReportRecipients(sbAdmin) {
   emails.push(...splitList(process.env.REPORT_TO_EMAILS || ''));
 
   // Dedup
+  return Array.from(new Set(emails.map((e) => e.toLowerCase())));
+}
+
+async function deriveReportCcs(sbAdmin) {
+  const rolesIn = splitList(process.env.REPORT_CC_ROLES || 'manager');
+  const roles = Array.from(new Set(rolesIn.flatMap((r) => roleAliases(r))));
+  if (!roles.length) return splitList(process.env.REPORT_CC_EMAILS || '').map((e) => e.toLowerCase());
+
+  const { data, error } = await sbAdmin
+    .from('portal_profiles')
+    .select('user_id, role')
+    .in('role', roles)
+    .limit(500);
+
+  const emails = [];
+  if (!error && Array.isArray(data)) {
+    const ids = data.map((r) => String(r.user_id || '')).filter(Boolean);
+    const byId = await loadUsersById(sbAdmin, ids);
+    for (const id of ids) {
+      const u = byId.get(String(id));
+      const email = cleanStr(u?.email, 200);
+      if (email) emails.push(email);
+    }
+  }
+
+  emails.push(...splitList(process.env.REPORT_CC_EMAILS || ''));
   return Array.from(new Set(emails.map((e) => e.toLowerCase())));
 }
 
@@ -265,6 +362,15 @@ module.exports = async (req, res) => {
     if (e1) return sendJson(res, 500, { ok: false, error: 'event_lookup_failed' });
     const ev = Array.isArray(events) ? events[0] : null;
     if (!ev) return sendJson(res, 404, { ok: false, error: 'event_not_found' });
+
+    // Best-effort account linkage for future recipient targeting.
+    let linkedAccount = null;
+    try {
+      const { account } = await deriveAccountOwnerEmails(s.sbAdmin, ev);
+      linkedAccount = account;
+    } catch {
+      linkedAccount = null;
+    }
 
     const { data: recaps, error: e2 } = await s.sbAdmin
       .from('portal_event_recaps')
@@ -311,6 +417,7 @@ module.exports = async (req, res) => {
     const canPersist = hasRole(s.profile, ['event_coordinator', 'manager']) && !s.viewAsRole && !s.viewAsUserId && !s.effectiveUserId;
     if (canPersist) {
       const nextMeta = Object.assign({}, meta, {
+        accountId: cleanStr(meta.accountId, 80) || cleanStr(linkedAccount?.id, 80) || undefined,
         reportDraft: {
           generatedAt: new Date().toISOString(),
           markdown,
@@ -319,6 +426,7 @@ module.exports = async (req, res) => {
           feedback: fb,
         },
       });
+      if (nextMeta.accountId === undefined) delete nextMeta.accountId;
       await s.sbAdmin.from('portal_events').update({ meta: nextMeta }).eq('id', eventId);
     }
 
@@ -328,6 +436,7 @@ module.exports = async (req, res) => {
   if (req.method === 'POST') {
     const canSend = hasRole(s.profile, ['event_coordinator', 'manager']);
     if (!canSend) return sendJson(res, 403, { ok: false, error: 'forbidden' });
+    if (s.viewAsRole || s.viewAsUserId || s.effectiveUserId) return sendJson(res, 403, { ok: false, error: 'read_only_view_as' });
 
     const body = await readJson(req);
     if (!body) return sendJson(res, 400, { ok: false, error: 'invalid_body' });
@@ -361,12 +470,18 @@ module.exports = async (req, res) => {
     const toEmails = Array.isArray(body.toEmails) ? body.toEmails : splitList(body.toEmails);
     const ccEmails = Array.isArray(body.ccEmails) ? body.ccEmails : splitList(body.ccEmails);
 
-    const recipients = toEmails.length ? toEmails : await deriveReportRecipients(s.sbAdmin);
+    const owner = await deriveAccountOwnerEmails(s.sbAdmin, ev);
+    const recipients = toEmails.length
+      ? toEmails
+      : (owner.ownerEmails.length ? owner.ownerEmails : await deriveReportRecipients(s.sbAdmin));
     if (!recipients.length) return sendJson(res, 422, { ok: false, error: 'no_recipients' });
+
+    const autoCcs = await deriveReportCcs(s.sbAdmin);
+    const nextCcs = ccEmails.length ? ccEmails : autoCcs;
 
     const result = await notifyEmail({
       to: recipients,
-      cc: ccEmails.length ? ccEmails : undefined,
+      cc: nextCcs.length ? nextCcs : undefined,
       subject,
       text: plainText || stripMarkdown(markdown),
       html: null,
@@ -384,10 +499,12 @@ module.exports = async (req, res) => {
 
     const nextMeta = Object.assign({}, meta, {
       checklist: nextChecklist,
+      accountId: cleanStr(meta.accountId, 80) || cleanStr(owner.account?.id, 80) || undefined,
       reportSentAt: new Date().toISOString(),
       reportSentTo: recipients,
       reportSentSubject: subject,
     });
+    if (nextMeta.accountId === undefined) delete nextMeta.accountId;
 
     const { data: updatedRows } = await s.sbAdmin
       .from('portal_events')

@@ -14,7 +14,7 @@ async function isAuthorized(req) {
   if (cronHeader) return true;
 
   const adminToken = process.env.ADMIN_TOKEN || '';
-  if (!adminToken) return true;
+  if (!adminToken) return false;
 
   const token = bearerToken(req) || (req.url ? new URL(req.url, 'http://localhost').searchParams.get('token') : '') || '';
   return token === adminToken;

@@ -41,30 +41,26 @@ async function isAuthorized(req) {
   if (cronHeader) return true;
 
   const adminToken = process.env.ADMIN_TOKEN || '';
-  if (!adminToken) return true;
+  if (!adminToken) return false;
 
   const token = bearerToken(req) || (req.url ? new URL(req.url, 'http://localhost').searchParams.get('token') : '') || '';
   return token === adminToken;
 }
 
-async function loadUsersByRole(sbAdmin, roles) {
+async function loadUserEmailsByRoleFromMap(sbAdmin, authById, roles) {
+  const rs = Array.isArray(roles) ? roles.filter(Boolean) : [];
+  if (!rs.length) return [];
   const { data, error } = await sbAdmin
     .from('portal_profiles')
     .select('user_id, role')
-    .in('role', roles)
+    .in('role', rs)
     .limit(500);
 
   if (error || !Array.isArray(data)) return [];
   const ids = data.map((r) => String(r.user_id || '')).filter(Boolean);
-  if (!ids.length) return [];
-
-  const listed = await sbAdmin.auth.admin.listUsers({ page: 1, perPage: 200 });
-  const byId = new Map((listed?.data?.users || []).map((u) => [String(u.id), u]));
-
   const emails = [];
   for (const id of ids) {
-    const u = byId.get(String(id));
-    const email = cleanStr(u?.email, 200);
+    const email = cleanStr(authById.get(String(id))?.email, 200);
     if (email) emails.push(email);
   }
   return emails;
@@ -78,17 +74,26 @@ function recipientsFromAssignments(assignments, role) {
     .filter(Boolean);
 }
 
-async function mapUserIdsToEmails(sbAdmin, userIds) {
+function mapUserIdsToEmailsFromMap(authById, userIds) {
   const ids = Array.isArray(userIds) ? userIds.map((x) => String(x || '').trim()).filter(Boolean) : [];
   if (!ids.length) return [];
-  const listed = await sbAdmin.auth.admin.listUsers({ page: 1, perPage: 200 });
-  const byId = new Map((listed?.data?.users || []).map((u) => [String(u.id), u]));
   const emails = [];
   for (const id of ids) {
-    const email = cleanStr(byId.get(id)?.email, 200);
+    const email = cleanStr(authById.get(id)?.email, 200);
     if (email) emails.push(email);
   }
   return emails;
+}
+
+async function loadAuthUsersById(sbAdmin) {
+  const listed = await sbAdmin.auth.admin.listUsers({ page: 1, perPage: 200 });
+  return new Map((listed?.data?.users || []).map((u) => [String(u.id), u]));
+}
+
+function uniqLower(emails) {
+  return Array.from(new Set((Array.isArray(emails) ? emails : [])
+    .map((e) => cleanStr(e, 200).toLowerCase())
+    .filter(Boolean)));
 }
 
 module.exports = async (req, res) => {
@@ -140,14 +145,18 @@ module.exports = async (req, res) => {
     }
   }
 
-  const ccRoles = splitList(process.env.REMINDER_CC_ROLES || 'event_coordinator,manager');
-  const ccEmails = (ccRoles.length ? await loadUsersByRole(sbAdmin, ccRoles) : [])
-    .concat(splitList(process.env.REMINDER_CC_EMAILS || ''));
+  const authById = await loadAuthUsersById(sbAdmin);
+
+  // Oversight CC list (defaults to managers only). Event coordinators are added per-event from assignments.
+  const managerRoles = splitList(process.env.REMINDER_CC_ROLES || 'manager');
+  const managerEmails = uniqLower((managerRoles.length ? await loadUserEmailsByRoleFromMap(sbAdmin, authById, managerRoles) : [])
+    .concat(splitList(process.env.REMINDER_CC_EMAILS || '')));
 
   let scanned = 0;
   let attempted = 0;
   let sent = 0;
   let skipped = 0;
+  let failed = 0;
 
   for (const ev of events) {
     scanned += 1;
@@ -158,6 +167,10 @@ module.exports = async (req, res) => {
     const meta = ev.meta && typeof ev.meta === 'object' ? ev.meta : {};
     const checklist = meta.checklist && typeof meta.checklist === 'object' ? meta.checklist : {};
     const assignments = Array.isArray(meta.assignments) ? meta.assignments : [];
+
+    const coordIds = recipientsFromAssignments(assignments, 'event_coordinator');
+    const coordEmails = uniqLower(mapUserIdsToEmailsFromMap(authById, coordIds));
+    const ccEmails = uniqLower(coordEmails.concat(managerEmails));
 
     const propertyName = cleanStr(meta.propertyName || ev.title, 200) || `Event #${eventId}`;
 
@@ -172,7 +185,7 @@ module.exports = async (req, res) => {
     // Upcoming reminder: send to all assigned staff.
     if (isSoon) {
       const ids = assignments.map((a) => String(a?.userId || '')).filter(Boolean);
-      const to = await mapUserIdsToEmails(sbAdmin, ids);
+      const to = uniqLower(mapUserIdsToEmailsFromMap(authById, ids));
       if (to.length) {
         attempted += 1;
         const r = await notifyEmail({
@@ -191,6 +204,7 @@ module.exports = async (req, res) => {
         });
         if (r.ok && !r.skipped) sent += 1;
         else if (r.ok && r.skipped) skipped += 1;
+        else failed += 1;
       }
     }
 
@@ -216,7 +230,7 @@ module.exports = async (req, res) => {
 
     if (needsRecap) {
       const hostIds = recipientsFromAssignments(assignments, 'event_host');
-      const to = await mapUserIdsToEmails(sbAdmin, hostIds);
+      const to = uniqLower(mapUserIdsToEmailsFromMap(authById, hostIds));
       if (to.length) {
         attempted += 1;
         const r = await notifyEmail({
@@ -235,12 +249,13 @@ module.exports = async (req, res) => {
         });
         if (r.ok && !r.skipped) sent += 1;
         else if (r.ok && r.skipped) skipped += 1;
+        else failed += 1;
       }
     }
 
     if (needsMedia) {
       const mediaIds = recipientsFromAssignments(assignments, 'media_team');
-      const to = await mapUserIdsToEmails(sbAdmin, mediaIds);
+      const to = uniqLower(mapUserIdsToEmailsFromMap(authById, mediaIds));
       if (to.length) {
         attempted += 1;
         const r = await notifyEmail({
@@ -259,12 +274,13 @@ module.exports = async (req, res) => {
         });
         if (r.ok && !r.skipped) sent += 1;
         else if (r.ok && r.skipped) skipped += 1;
+        else failed += 1;
       }
     }
 
     if (needsFeedback) {
       const hostIds = recipientsFromAssignments(assignments, 'event_host');
-      const to = await mapUserIdsToEmails(sbAdmin, hostIds);
+      const to = uniqLower(mapUserIdsToEmailsFromMap(authById, hostIds));
       if (to.length) {
         attempted += 1;
         const r = await notifyEmail({
@@ -283,12 +299,13 @@ module.exports = async (req, res) => {
         });
         if (r.ok && !r.skipped) sent += 1;
         else if (r.ok && r.skipped) skipped += 1;
+        else failed += 1;
       }
     }
 
     // Coordinator/management reminder to send report.
     if (needsReport && recap) {
-      const to = ccEmails.length ? Array.from(new Set(ccEmails)) : [];
+      const to = coordEmails.length ? coordEmails : managerEmails;
       if (to.length) {
         attempted += 1;
         const r = await notifyEmail({
@@ -306,6 +323,7 @@ module.exports = async (req, res) => {
         });
         if (r.ok && !r.skipped) sent += 1;
         else if (r.ok && r.skipped) skipped += 1;
+        else failed += 1;
       }
     }
   }
@@ -316,6 +334,7 @@ module.exports = async (req, res) => {
     attempted,
     sent,
     skipped,
+    failed,
     window: { start, end, today },
     note: 'Email/SMS sending is env-var gated (RESEND_API_KEY / TWILIO_*).',
   });
