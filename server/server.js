@@ -225,6 +225,8 @@ const server = http.createServer(async (req, res) => {
     '/admin': '/Backend.html',
 
     '/portal': '/Portal.html',
+
+    '/feedback': '/Feedback.html',
   };
 
   if (REWRITE_MAP[pathname]) pathname = REWRITE_MAP[pathname];
@@ -242,6 +244,16 @@ const server = http.createServer(async (req, res) => {
     try {
       // eslint-disable-next-line global-require
       const handler = require(modPath);
+      return handler(req, res);
+    } catch {
+      return json(res, 404, { ok: false, error: 'not_found' });
+    }
+  }
+
+  if (pathname === '/api/feedback') {
+    try {
+      // eslint-disable-next-line global-require
+      const handler = require('../api/feedback');
       return handler(req, res);
     } catch {
       return json(res, 404, { ok: false, error: 'not_found' });

@@ -1516,6 +1516,58 @@
                     <button id="addHostBtn" class="btn secondary" type="button">Add host</button>
                   </div>
                   <div style="height:8px"></div>
+
+                  <div class="card" style="background:#fff; border-color: rgba(199,154,59,.25);">
+                    <div class="bd">
+                      <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
+                        <div>
+                          <div class="muted small">Resident feedback</div>
+                          <div style="font-weight:900; margin-top:4px;">Feedback form & submissions</div>
+                          <div class="muted small" style="margin-top:4px;">Generate a share link (or QR), then review submissions here.</div>
+                        </div>
+                        <div class="row" style="gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                          <button id="feedbackEnableBtn" class="btn secondary" type="button">Enable / Regenerate link</button>
+                          <button id="feedbackLoadSummaryBtn" class="btn secondary" type="button">Load submissions</button>
+                        </div>
+                      </div>
+
+                      <div style="height:10px"></div>
+                      <div id="feedbackFormMsg" class="err"></div>
+
+                      <label>Shareable link</label>
+                      <div class="row" style="gap:8px; flex-wrap:wrap;">
+                        <input id="feedbackLink" readonly placeholder="Enable feedback to generate a link" style="min-width:320px; flex:1;" />
+                        <button id="feedbackCopyBtn" class="btn secondary" type="button">Copy</button>
+                        <button id="feedbackOpenBtn" class="btn secondary" type="button">Open</button>
+                      </div>
+
+                      <div class="two" style="margin-top:10px;">
+                        <div>
+                          <label>Subtitle (optional)</label>
+                          <input id="feedbackSubtitle" placeholder="Thanks for joining us..." />
+                        </div>
+                        <div>
+                          <label>Thank-you message (optional)</label>
+                          <input id="feedbackThanks" placeholder="Your feedback was received." />
+                        </div>
+                      </div>
+
+                      <div style="margin-top:10px;">
+                        <div style="font-weight:900;">Questions</div>
+                        <div class="muted small" style="margin-top:4px;">Overall rating is always included.</div>
+                        <div style="height:8px"></div>
+                        <div id="feedbackQuestionsList"></div>
+                        <div class="row" style="margin-top:8px; gap:8px; flex-wrap:wrap;">
+                          <button id="feedbackAddQBtn" class="btn secondary" type="button">Add question</button>
+                          <button id="feedbackSaveBtn" class="btn secondary" type="button">Save feedback form</button>
+                        </div>
+                      </div>
+
+                      <div style="height:12px"></div>
+                      <div id="feedbackSummaryLine" class="muted small"></div>
+                      <div id="feedbackCommentsList" style="margin-top:10px;"></div>
+                    </div>
+                  </div>
                   <div class="row" style="gap:8px; flex-wrap:wrap;">
                     <select id="assignMediaUser" style="min-width:260px;">
                       <option value="">Assign media…</option>
@@ -5075,6 +5127,17 @@
       return r === 'event_coordinator' || r === 'manager';
     }
 
+    function isManagerViewAsActive(){
+      const vRole = String(state.viewAsRole || '').trim();
+      const vUser = String(state.viewAsUserId || '').trim();
+      return isManagerUser() && (!!vRole || !!vUser);
+    }
+
+    function coordinatorOpsEditable(){
+      // Manager view-as must remain read-only (server enforced too).
+      return isCoordinatorRole() && !isManagerViewAsActive();
+    }
+
     function dollarsToCents(v){
       const n = Number(String(v || '').trim());
       if (!Number.isFinite(n) || n < 0) return 0;
@@ -5091,6 +5154,261 @@
       const a = (base && typeof base === 'object') ? base : {};
       const b = (patch && typeof patch === 'object') ? patch : {};
       return Object.assign({}, a, b);
+    }
+
+    function feedbackDefaultForm(){
+      return {
+        enabled: 'no',
+        token: '',
+        subtitle: 'Thanks for joining us. Your feedback helps us improve future events.',
+        thanksMessage: 'Your feedback was received.',
+        questions: [
+          { type: 'long_text', label: 'What was your favorite part?' },
+          { type: 'long_text', label: 'What should we do differently next time?' },
+        ],
+      };
+    }
+
+    function cleanFeedbackQuestion(q){
+      const obj = (q && typeof q === 'object') ? q : {};
+      const type = String(obj.type || 'long_text').trim();
+      const label = String(obj.label || '').trim();
+      const allowed = new Set(['short_text','long_text','yes_no']);
+      return {
+        type: allowed.has(type) ? type : 'long_text',
+        label: label.slice(0, 140) || 'Question',
+      };
+    }
+
+    function feedbackFormFromMeta(meta){
+      const m = (meta && typeof meta === 'object') ? meta : {};
+      const base = feedbackDefaultForm();
+      const f = (m.feedbackForm && typeof m.feedbackForm === 'object') ? m.feedbackForm : {};
+      const out = Object.assign({}, base, f);
+      out.enabled = String(out.enabled || '') === 'yes' ? 'yes' : 'no';
+      out.token = String(out.token || '').trim().slice(0, 220);
+      out.subtitle = String(out.subtitle || base.subtitle).trim().slice(0, 200);
+      out.thanksMessage = String(out.thanksMessage || base.thanksMessage).trim().slice(0, 200);
+      out.questions = (Array.isArray(out.questions) ? out.questions : base.questions).slice(0, 10).map(cleanFeedbackQuestion);
+      return out;
+    }
+
+    function feedbackLinkFor(eventId, token){
+      const id = String(eventId || '').trim();
+      const t = String(token || '').trim();
+      if (!id || !t) return '';
+      try {
+        return `${location.origin}/feedback?eventId=${encodeURIComponent(id)}&t=${encodeURIComponent(t)}`;
+      } catch {
+        return `/feedback?eventId=${encodeURIComponent(id)}&t=${encodeURIComponent(t)}`;
+      }
+    }
+
+    function genFeedbackToken(){
+      try {
+        if (crypto?.randomUUID) return crypto.randomUUID().replace(/-/g, '');
+      } catch {
+        // ignore
+      }
+      return 'fb_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    }
+
+    function renderFeedbackEditor(meta){
+      const e = state.selectedEvent;
+      const msg = $('feedbackFormMsg');
+      if (msg) msg.textContent = '';
+
+      const editable = coordinatorOpsEditable();
+      $('feedbackEnableBtn')?.toggleAttribute('disabled', !editable);
+      $('feedbackAddQBtn')?.toggleAttribute('disabled', !editable);
+      $('feedbackSaveBtn')?.toggleAttribute('disabled', !editable);
+
+      const f = feedbackFormFromMeta(meta);
+      const link = (f.enabled === 'yes' && f.token) ? feedbackLinkFor(e?.id, f.token) : '';
+      if ($('feedbackLink')) $('feedbackLink').value = link;
+      if ($('feedbackSubtitle')) $('feedbackSubtitle').value = String(f.subtitle || '');
+      if ($('feedbackThanks')) $('feedbackThanks').value = String(f.thanksMessage || '');
+
+      const list = $('feedbackQuestionsList');
+      if (list) {
+        list.innerHTML = '';
+        if (!f.questions.length) {
+          list.innerHTML = '<div class="muted small">No questions yet.</div>';
+        } else {
+          for (const q of f.questions) addFeedbackQuestionRow(list, q, { editable });
+        }
+      }
+
+      // Clear summary display if event changed.
+      const sum = state._feedbackSummaryByEventId && e?.id ? state._feedbackSummaryByEventId[String(e.id)] : null;
+      renderFeedbackSummary(sum);
+    }
+
+    function addFeedbackQuestionRow(listEl, q, { editable } = {}){
+      const list = listEl || $('feedbackQuestionsList');
+      if (!list) return;
+
+      const question = cleanFeedbackQuestion(q);
+      // Remove the empty placeholder.
+      if (list.children.length === 1 && list.children[0].classList?.contains('muted')) list.innerHTML = '';
+
+      const row = document.createElement('div');
+      row.className = 'row';
+      row.dataset.fbqRow = '1';
+      row.style.gap = '8px';
+      row.style.flexWrap = 'wrap';
+      row.style.marginBottom = '8px';
+
+      row.innerHTML = `
+        <select data-fbq-type="1" ${editable ? '' : 'disabled'}>
+          <option value="long_text" ${question.type === 'long_text' ? 'selected' : ''}>Long text</option>
+          <option value="short_text" ${question.type === 'short_text' ? 'selected' : ''}>Short text</option>
+          <option value="yes_no" ${question.type === 'yes_no' ? 'selected' : ''}>Yes / No</option>
+        </select>
+        <input data-fbq-label="1" value="${escapeHtml(question.label)}" placeholder="Question label" style="min-width:280px; flex:1;" ${editable ? '' : 'disabled'} />
+        <button class="btn secondary small" type="button" data-fbq-remove="1" ${editable ? '' : 'disabled'}>Remove</button>
+      `;
+
+      const rm = row.querySelector('button[data-fbq-remove]');
+      if (rm) {
+        rm.addEventListener('click', () => {
+          if (!editable) return;
+          row.remove();
+          if (!list.children.length) list.innerHTML = '<div class="muted small">No questions yet.</div>';
+        });
+      }
+
+      list.appendChild(row);
+    }
+
+    function readFeedbackEditor(){
+      const subtitle = String($('feedbackSubtitle')?.value || '').trim().slice(0, 200);
+      const thanksMessage = String($('feedbackThanks')?.value || '').trim().slice(0, 200);
+      const list = $('feedbackQuestionsList');
+      const rows = list ? Array.from(list.querySelectorAll('[data-fbq-row]')) : [];
+      const questions = rows.map((row) => {
+        const type = String(row.querySelector('[data-fbq-type]')?.value || 'long_text').trim();
+        const label = String(row.querySelector('[data-fbq-label]')?.value || '').trim();
+        return cleanFeedbackQuestion({ type, label });
+      }).filter(Boolean).slice(0, 10);
+      return { subtitle, thanksMessage, questions };
+    }
+
+    async function enableOrRegenerateFeedbackLink(){
+      $('feedbackFormMsg').textContent = '';
+      try {
+        if (!coordinatorOpsEditable()) throw new Error('read_only');
+        const e = state.selectedEvent;
+        if (!e || !e.id) throw new Error('select an event');
+        const meta = e.meta && typeof e.meta === 'object' ? e.meta : {};
+        const current = feedbackFormFromMeta(meta);
+        const ed = readFeedbackEditor();
+        const next = Object.assign({}, current, ed, {
+          enabled: 'yes',
+          token: genFeedbackToken(),
+          updatedAt: new Date().toISOString(),
+        });
+        await patchSelectedEventMeta({ feedbackForm: next });
+        const updated = state.selectedEvent;
+        renderFeedbackEditor(updated?.meta);
+        $('feedbackFormMsg').textContent = 'Link generated.';
+      } catch(e){
+        $('feedbackFormMsg').textContent = String(e.message || e);
+      }
+    }
+
+    async function saveFeedbackForm(){
+      $('feedbackFormMsg').textContent = '';
+      try {
+        if (!coordinatorOpsEditable()) throw new Error('read_only');
+        const e = state.selectedEvent;
+        if (!e || !e.id) throw new Error('select an event');
+        const meta = e.meta && typeof e.meta === 'object' ? e.meta : {};
+        const current = feedbackFormFromMeta(meta);
+        const ed = readFeedbackEditor();
+        const next = Object.assign({}, current, ed, {
+          updatedAt: new Date().toISOString(),
+        });
+        await patchSelectedEventMeta({ feedbackForm: next });
+        const updated = state.selectedEvent;
+        renderFeedbackEditor(updated?.meta);
+        $('feedbackFormMsg').textContent = 'Saved.';
+      } catch(e){
+        $('feedbackFormMsg').textContent = String(e.message || e);
+      }
+    }
+
+    async function copyFeedbackLink(){
+      const v = String($('feedbackLink')?.value || '').trim();
+      if (!v) return;
+      try {
+        await navigator.clipboard.writeText(v);
+        $('feedbackFormMsg').textContent = 'Copied.';
+      } catch {
+        // Fallback
+        const el = $('feedbackLink');
+        if (el) {
+          el.focus();
+          el.select();
+          document.execCommand('copy');
+          $('feedbackFormMsg').textContent = 'Copied.';
+        }
+      }
+    }
+
+    function openFeedbackLink(){
+      const v = String($('feedbackLink')?.value || '').trim();
+      if (!v) return;
+      try { window.open(v, '_blank', 'noopener'); } catch { /* ignore */ }
+    }
+
+    function renderFeedbackSummary(summary){
+      const line = $('feedbackSummaryLine');
+      const list = $('feedbackCommentsList');
+      if (!line || !list) return;
+
+      if (!summary) {
+        line.textContent = '';
+        list.innerHTML = '';
+        return;
+      }
+
+      const c = Number(summary.count || 0);
+      const avg = summary.avgRating == null ? '' : String(summary.avgRating);
+      line.textContent = c ? `Submissions: ${c}${avg ? (' • Avg rating: ' + avg) : ''}` : 'No submissions yet.';
+
+      const comments = Array.isArray(summary.comments) ? summary.comments : [];
+      if (!comments.length) {
+        list.innerHTML = '';
+        return;
+      }
+
+      list.innerHTML = comments.slice(0, 25).map((x) => {
+        const meta = [x.ts ? String(x.ts).slice(0, 19).replace('T', ' ') : '', x.rating ? ('★' + x.rating) : '', x.name || ''].filter(Boolean).join(' • ');
+        return `
+          <div class="card" style="background:#fff; margin-bottom:10px;">
+            <div class="bd">
+              <div class="muted small">${escapeHtml(meta)}</div>
+              <div style="margin-top:6px; white-space:pre-wrap;">${escapeHtml(x.comment || '')}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function loadFeedbackSummary(){
+      $('feedbackFormMsg').textContent = '';
+      try {
+        const e = state.selectedEvent;
+        if (!e || !e.id) throw new Error('select an event');
+        const j = await api('/api/portal/event_feedback?eventId=' + encodeURIComponent(String(e.id)));
+        const summary = j?.summary || null;
+        if (!state._feedbackSummaryByEventId) state._feedbackSummaryByEventId = {};
+        state._feedbackSummaryByEventId[String(e.id)] = summary;
+        renderFeedbackSummary(summary);
+      } catch(e){
+        $('feedbackFormMsg').textContent = String(e.message || e);
+      }
     }
 
     function updateEventInState(updated){
@@ -5260,7 +5578,7 @@
       wrap.classList.toggle('hide', !e);
       if (!e) return;
 
-      const canManage = isCoordinatorRole();
+      const canManage = coordinatorOpsEditable();
       $('assignHostUser')?.toggleAttribute('disabled', !canManage);
       $('assignMediaUser')?.toggleAttribute('disabled', !canManage);
       $('addHostBtn')?.toggleAttribute('disabled', !canManage);
@@ -5287,6 +5605,8 @@
 
       renderAssignments(assignments, usersById);
       renderMyAssignmentActions(assignments);
+
+      renderFeedbackEditor(meta);
     }
 
     async function initEventOps(){
@@ -6332,6 +6652,16 @@
     on('importEventTypesBtn', 'click', () => importEventTypes().catch(() => {}));
     on('loadVendorsBtn', 'click', () => loadVendors().catch(() => {}));
     on('loadEventTypesBtn', 'click', () => loadEventTypes().catch(() => {}));
+
+    on('feedbackEnableBtn', 'click', () => enableOrRegenerateFeedbackLink().catch(() => {}));
+    on('feedbackCopyBtn', 'click', () => copyFeedbackLink().catch(() => {}));
+    on('feedbackOpenBtn', 'click', () => openFeedbackLink());
+    on('feedbackAddQBtn', 'click', () => {
+      if (!coordinatorOpsEditable()) return;
+      addFeedbackQuestionRow(null, { type: 'long_text', label: '' }, { editable: true });
+    });
+    on('feedbackSaveBtn', 'click', () => saveFeedbackForm().catch(() => {}));
+    on('feedbackLoadSummaryBtn', 'click', () => loadFeedbackSummary().catch(() => {}));
 
     on('talentSaveBtn', 'click', () => saveTalentProfile().catch(() => {}));
     on('talentRefreshBtn', 'click', async () => {

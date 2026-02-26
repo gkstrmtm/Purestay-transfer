@@ -1,5 +1,6 @@
 const { sendJson, handleCors, readJson } = require('../../lib/vercelApi');
 const { requirePortalSession, hasRole } = require('../../lib/portalAuth');
+const { getLogTail } = require('../../lib/storage');
 
 function clampInt(n, min, max, fallback) {
   const x = Number(n);
@@ -114,7 +115,21 @@ module.exports = async (req, res) => {
   const needsRecap = !latest;
   const photosUploaded = String(latestPayload.photosUploaded || '').toLowerCase();
   const needsMedia = !latestMedia.length && photosUploaded !== 'yes' && String(checklist.mediaReceived || '') !== 'yes';
-  const needsFeedback = String(checklist.feedbackReceived || '') !== 'yes';
+
+  let hasFeedbackSubmissions = false;
+  try {
+    const tail = await getLogTail(`portal:event_feedback:${eventId}`, 1);
+    hasFeedbackSubmissions = Array.isArray(tail) && tail.length > 0;
+  } catch {
+    hasFeedbackSubmissions = false;
+  }
+
+  const hasFeedbackHighlights = !!String(latestPayload.feedbackHighlights || '').trim();
+  const needsFeedback = (
+    String(checklist.feedbackReceived || '') !== 'yes'
+    && !hasFeedbackSubmissions
+    && !hasFeedbackHighlights
+  );
 
   const eventDate = cleanStr(ev.event_date, 20);
   const dueDate = eventDate ? addDaysYmd(eventDate, 1) : null;

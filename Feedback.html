@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Event Feedback</title>
+  <style>
+    :root{
+      --bg:#0b0d12;
+      --card:#111623;
+      --muted:#98a2b3;
+      --text:#e6e8ee;
+      --border:rgba(255,255,255,.10);
+      --brand:#c79a3b;
+      --ok:#14b87a;
+      --err:#ff6b6b;
+    }
+    html,body{height:100%;}
+    body{margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; background: radial-gradient(1200px 700px at 20% 0%, rgba(199,154,59,.20), transparent 60%), var(--bg); color:var(--text);}
+    .wrap{max-width:820px; margin:0 auto; padding:28px 16px 48px;}
+    .card{background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03)); border:1px solid var(--border); border-radius:16px; overflow:hidden; box-shadow: 0 12px 40px rgba(0,0,0,.35);}
+    .bd{padding:18px 18px;}
+    .row{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+    .muted{color:var(--muted);}
+    .small{font-size:12px;}
+    h1{margin:0; font-size:20px; letter-spacing:.2px;}
+    label{display:block; font-size:12px; color:var(--muted); margin-top:12px; margin-bottom:6px;}
+    input, textarea, select{
+      width:100%; box-sizing:border-box; border:1px solid var(--border);
+      background: rgba(0,0,0,.28); color:var(--text);
+      padding:10px 12px; border-radius:12px; outline:none;
+    }
+    textarea{min-height:110px; resize:vertical;}
+    .btn{appearance:none; border:1px solid rgba(199,154,59,.45); background: rgba(199,154,59,.16); color:var(--text); padding:10px 12px; border-radius:12px; cursor:pointer; font-weight:700;}
+    .btn:disabled{opacity:.55; cursor:not-allowed;}
+    .btn.secondary{border-color: var(--border); background: rgba(255,255,255,.04); font-weight:600;}
+    .pill{border:1px solid var(--border); background: rgba(255,255,255,.04); padding:7px 10px; border-radius:999px; cursor:pointer;}
+    .pill.active{border-color: rgba(199,154,59,.75); background: rgba(199,154,59,.18);}
+    .grid2{display:grid; grid-template-columns: 1fr; gap:12px;}
+    @media (min-width: 720px){ .grid2{grid-template-columns: 1fr 1fr;} }
+    .msg{margin-top:10px; color:var(--err); font-size:13px;}
+    .ok{color:var(--ok);}
+    .q{margin-top:14px; padding-top:14px; border-top:1px solid var(--border);}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="row" style="justify-content:space-between; margin-bottom:14px;">
+      <div>
+        <div class="muted small">PureStay</div>
+        <h1>Event Feedback</h1>
+      </div>
+      <div class="muted small" id="eventLine"></div>
+    </div>
+
+    <div class="card">
+      <div class="bd">
+        <div class="muted small" id="formSubtitle">Thanks for joining us. Your feedback helps us improve future events.</div>
+
+        <div id="loadMsg" class="msg"></div>
+
+        <div id="formWrap" style="display:none;">
+          <div class="q">
+            <div class="muted small" style="font-weight:800;">Overall rating</div>
+            <div class="row" id="ratingRow" style="margin-top:10px;"></div>
+          </div>
+
+          <div id="dynamicQuestions"></div>
+
+          <div class="grid2" style="margin-top:12px;">
+            <div>
+              <label>Your name (optional)</label>
+              <input id="name" placeholder="Name" />
+            </div>
+            <div>
+              <label>Email (optional)</label>
+              <input id="email" placeholder="name@email.com" />
+            </div>
+          </div>
+
+          <label>Anything else you want us to know? (optional)</label>
+          <textarea id="comment" placeholder="What did you like? What should we do next time?"></textarea>
+
+          <div class="row" style="margin-top:12px;">
+            <button id="submitBtn" class="btn" type="button">Submit feedback</button>
+            <button id="resetBtn" class="btn secondary" type="button" style="display:none;">Submit another</button>
+            <div id="submitMsg" class="msg"></div>
+          </div>
+        </div>
+
+        <div id="thanksWrap" style="display:none;">
+          <div class="ok" style="font-weight:900;">Thank you.</div>
+          <div class="muted" style="margin-top:6px;" id="thanksMsg">Your feedback was received.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function $(id){ return document.getElementById(id); }
+
+    function qp(){
+      const u = new URL(location.href);
+      return {
+        eventId: u.searchParams.get('eventId') || u.searchParams.get('event_id') || '',
+        t: u.searchParams.get('t') || u.searchParams.get('token') || '',
+      };
+    }
+
+    function escapeHtml(s){
+      return String(s||'')
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#039;');
+    }
+
+    function setMsg(id, text, { ok = false } = {}){
+      const el = $(id);
+      if (!el) return;
+      el.textContent = String(text || '');
+      el.classList.toggle('ok', !!ok);
+    }
+
+    function buildRating(){
+      const row = $('ratingRow');
+      row.innerHTML = '';
+      for (let i = 1; i <= 5; i++){
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'pill';
+        b.textContent = String(i);
+        b.dataset.rating = String(i);
+        b.addEventListener('click', () => {
+          for (const x of row.querySelectorAll('button[data-rating]')) x.classList.toggle('active', x.dataset.rating === String(i));
+          row.dataset.value = String(i);
+        });
+        row.appendChild(b);
+      }
+    }
+
+    function renderQuestions(questions){
+      const wrap = $('dynamicQuestions');
+      wrap.innerHTML = '';
+      const arr = Array.isArray(questions) ? questions : [];
+      for (let idx = 0; idx < arr.length; idx++){
+        const q = arr[idx] && typeof arr[idx] === 'object' ? arr[idx] : {};
+        const id = 'q_' + idx;
+        const type = String(q.type || 'long_text');
+        const label = String(q.label || '').trim() || ('Question ' + (idx + 1));
+
+        const box = document.createElement('div');
+        box.className = 'q';
+        box.innerHTML = `<label>${escapeHtml(label)}</label>`;
+
+        if (type === 'yes_no'){
+          const sel = document.createElement('select');
+          sel.id = id;
+          sel.innerHTML = '<option value="">Select…</option><option value="yes">Yes</option><option value="no">No</option>';
+          box.appendChild(sel);
+        } else if (type === 'short_text'){
+          const inp = document.createElement('input');
+          inp.id = id;
+          inp.placeholder = 'Your answer';
+          box.appendChild(inp);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.id = id;
+          ta.placeholder = 'Your answer';
+          ta.style.minHeight = '90px';
+          box.appendChild(ta);
+        }
+
+        wrap.appendChild(box);
+      }
+    }
+
+    function readAnswers(questions){
+      const out = [];
+      const arr = Array.isArray(questions) ? questions : [];
+      for (let idx = 0; idx < arr.length; idx++){
+        const q = arr[idx] && typeof arr[idx] === 'object' ? arr[idx] : {};
+        const id = 'q_' + idx;
+        const el = $(id);
+        out.push({
+          label: String(q.label || '').trim() || ('Question ' + (idx + 1)),
+          type: String(q.type || 'long_text'),
+          value: el ? String(el.value || '').trim() : '',
+        });
+      }
+      return out;
+    }
+
+    async function load(){
+      const { eventId, t } = qp();
+      buildRating();
+      setMsg('loadMsg', '');
+      setMsg('submitMsg', '');
+
+      if (!eventId || !t) {
+        setMsg('loadMsg', 'Missing link parameters. Please open the feedback link you were given.');
+        return;
+      }
+
+      try{
+        const r = await fetch('/api/feedback?eventId=' + encodeURIComponent(eventId) + '&t=' + encodeURIComponent(t), { method:'GET' });
+        const j = await r.json().catch(() => null);
+        if (!r.ok || !j || !j.ok) throw new Error(String(j?.error || ('http_' + r.status)));
+
+        const ev = j.event || {};
+        const form = j.form || {};
+
+        $('eventLine').textContent = [ev.title, ev.event_date].filter(Boolean).join(' • ');
+        if (form.subtitle) $('formSubtitle').textContent = String(form.subtitle);
+        if (form.thanksMessage) $('thanksMsg').textContent = String(form.thanksMessage);
+
+        window.__feedback = { eventId: String(eventId), t: String(t), questions: Array.isArray(form.questions) ? form.questions : [] };
+        renderQuestions(window.__feedback.questions);
+
+        $('formWrap').style.display = '';
+      } catch(e){
+        setMsg('loadMsg', String(e.message || e));
+      }
+    }
+
+    async function submit(){
+      setMsg('submitMsg', '');
+      const ctx = window.__feedback;
+      if (!ctx) return;
+
+      const rating = Number($('ratingRow')?.dataset?.value || 0);
+      if (!(rating >= 1 && rating <= 5)){
+        setMsg('submitMsg', 'Please select a rating.');
+        return;
+      }
+
+      const payload = {
+        eventId: ctx.eventId,
+        t: ctx.t,
+        rating,
+        comment: String($('comment').value || '').trim(),
+        name: String($('name').value || '').trim(),
+        email: String($('email').value || '').trim(),
+        answers: readAnswers(ctx.questions),
+      };
+
+      $('submitBtn').disabled = true;
+      try{
+        const r = await fetch('/api/feedback', {
+          method:'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const j = await r.json().catch(() => null);
+        if (!r.ok || !j || !j.ok) throw new Error(String(j?.error || ('http_' + r.status)));
+
+        $('formWrap').style.display = 'none';
+        $('thanksWrap').style.display = '';
+        $('resetBtn').style.display = '';
+        setMsg('submitMsg', '', { ok:true });
+      } catch(e){
+        setMsg('submitMsg', String(e.message || e));
+      } finally {
+        $('submitBtn').disabled = false;
+      }
+    }
+
+    function reset(){
+      $('thanksWrap').style.display = 'none';
+      $('formWrap').style.display = '';
+      $('comment').value = '';
+      $('name').value = '';
+      $('email').value = '';
+      for (const b of $('ratingRow').querySelectorAll('button[data-rating]')) b.classList.remove('active');
+      $('ratingRow').dataset.value = '';
+      const q = window.__feedback?.questions || [];
+      for (let idx = 0; idx < q.length; idx++){
+        const el = $('q_' + idx);
+        if (el) el.value = '';
+      }
+      setMsg('submitMsg', '');
+    }
+
+    $('submitBtn').addEventListener('click', () => submit().catch(() => {}));
+    $('resetBtn').addEventListener('click', () => reset());
+
+    load().catch(() => {});
+  </script>
+</body>
+</html>

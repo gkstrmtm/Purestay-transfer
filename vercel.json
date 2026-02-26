@@ -16,6 +16,7 @@
     { "source": "/budgetcal.html", "destination": "/budget-calculator", "permanent": true }
     ,{ "source": "/OurPackages.html", "destination": "/our-packages", "permanent": true }
     ,{ "source": "/Portal.html", "destination": "/portal", "permanent": true }
+    ,{ "source": "/Feedback.html", "destination": "/feedback", "permanent": true }
   ],
   "rewrites": [
     { "source": "/", "destination": "/Home.html" },
@@ -33,6 +34,8 @@
     { "source": "/our-packages", "destination": "/OurPackages.html" },
 
     { "source": "/portal", "destination": "/Portal.html" },
+
+    { "source": "/feedback", "destination": "/Feedback.html" },
 
   { "source": "/blogs", "destination": "/api/blogs/page" },
   { "source": "/blogs/:slug", "destination": "/api/blogs/page?slug=:slug" },
