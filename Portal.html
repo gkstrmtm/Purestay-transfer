@@ -1528,7 +1528,7 @@
                         <div>
                           <div class="muted small">AI staffing</div>
                           <div style="font-weight:900; margin-top:4px;">Recommendations</div>
-                          <div class="muted small" style="margin-top:4px;">Suggest host + media based on location and specialties.</div>
+                          <div class="muted small" style="margin-top:4px;">Suggest host + media based on location, specialties, and reliability.</div>
                         </div>
                         <div class="row" style="gap:8px; flex-wrap:wrap; justify-content:flex-end;">
                           <button id="aiRecommendTalentBtn" class="btn secondary" type="button">AI recommend</button>
@@ -1723,7 +1723,7 @@
                     <button id="talStep1" class="wizardStep" type="button">Basics</button>
                     <button id="talStep2" class="wizardStep" type="button">Profile</button>
                     <button id="talStep3" class="wizardStep" type="button">Notes</button>
-                    <button id="talStep4" class="wizardStep hide" type="button" style="display:none">Reliability</button>
+                    <button id="talStep4" class="wizardStep hide" type="button">Reliability</button>
                   </div>
                   <button id="talentRefreshBtn" class="btn secondary" type="button">Refresh</button>
                   <button id="talentStopEditingBtn" class="btn secondary hide" type="button">Stop editing</button>
@@ -1794,7 +1794,7 @@
                 </div>
               </div>
 
-              <div id="talReliabilityBox" class="hide talStep" style="margin-top:10px; display:none" data-step="4">
+              <div id="talReliabilityBox" class="hide talStep" style="margin-top:10px;" data-step="4">
                 <div class="two">
                   <div>
                     <label>Reliability score (0-100)</label>
@@ -5334,8 +5334,8 @@
 
     function setTalentStep(next){
       const step = Number(next || 1);
-      const max = 3;
-      const safe = Math.max(1, Math.min(step, 3));
+      const max = $('talReliabilityBox')?.classList.contains('hide') ? 3 : 4;
+      const safe = Math.max(1, Math.min(step, max));
       state.talent.step = safe;
 
       const steps = Array.from(document.querySelectorAll('#viewTalent .talStep'));
@@ -5348,6 +5348,7 @@
         { n: 1, id: 'talStep1' },
         { n: 2, id: 'talStep2' },
         { n: 3, id: 'talStep3' },
+        { n: 4, id: 'talStep4' },
       ];
       for (const b of buttons) {
         const btn = $(b.id);
@@ -5377,6 +5378,7 @@
     function readTalentForm(){
       const specialties = splitCsvList($('talSpecialties')?.value || '', { max: 20, maxLen: 60 });
       const preferredPairings = splitCsvList($('talPairings')?.value || '', { max: 20, maxLen: 80 });
+      const reliabilityFlags = splitCsvList($('talReliabilityFlags')?.value || '', { max: 20, maxLen: 60 });
 
       const out = {
         displayName: String($('talDisplayName')?.value || '').trim(),
@@ -5390,6 +5392,14 @@
         preferredPairings,
         notes: String($('talNotes')?.value || '').trim(),
       };
+
+      if (talentIsCoordinator() && !$('talReliabilityBox')?.classList.contains('hide')) {
+        const score = $('talReliabilityScore')?.value ? Number($('talReliabilityScore').value) : null;
+        out.reliability = {
+          score: Number.isFinite(score) ? Math.max(0, Math.min(100, Math.trunc(score))) : null,
+          flags: reliabilityFlags,
+        };
+      }
 
       return out;
     }
@@ -5408,9 +5418,14 @@
       if ($('talNotes')) $('talNotes').value = String(p.notes || '');
 
       const relBox = $('talReliabilityBox');
-      if (relBox) relBox.classList.add('hide');
+      if (relBox) relBox.classList.toggle('hide', !talentIsCoordinator());
       const relStepBtn = $('talStep4');
-      if (relStepBtn) relStepBtn.classList.add('hide');
+      if (relStepBtn) relStepBtn.classList.toggle('hide', !talentIsCoordinator());
+      if (talentIsCoordinator()) {
+        const rel = p.reliability && typeof p.reliability === 'object' ? p.reliability : {};
+        if ($('talReliabilityScore')) $('talReliabilityScore').value = (rel.score == null ? '' : String(rel.score));
+        if ($('talReliabilityFlags')) $('talReliabilityFlags').value = joinCsvList(rel.flags);
+      }
 
       setTalentStep(Number(state.talent?.step || 1));
     }
@@ -5507,6 +5522,8 @@
         const display = (p && p.displayName) ? String(p.displayName) : String(u.fullName || u.email || uid);
         const loc = p ? [p.homeBaseCity, p.homeBaseState].filter(Boolean).join(', ') : '';
         const specs = p && Array.isArray(p.specialties) ? p.specialties.join(', ') : '';
+        const rel = p && p.reliability && typeof p.reliability === 'object' ? p.reliability : {};
+        const relScore = (rel.score == null) ? '' : String(rel.score);
         const hay = [display, String(u.email || ''), String(u.role || ''), loc, specs].join(' ').toLowerCase();
         if (q && !hay.includes(q)) return null;
 
@@ -5517,6 +5534,7 @@
           email: String(u.email || ''),
           loc,
           specs,
+          relScore,
           hasProfile: !!p,
         };
       }).filter(Boolean);
@@ -5536,6 +5554,7 @@
 
       list.innerHTML = rows.slice(0, 120).map((r) => {
         const badge = r.hasProfile ? '<span class="badge ok">profile</span>' : '<span class="badge">missing</span>';
+        const rel = r.relScore ? `<span class="badge">rel ${escapeHtml(r.relScore)}</span>` : '';
         return `
           <div class="card" style="background:#fff; margin-bottom:10px;">
             <div class="bd">
@@ -5546,7 +5565,7 @@
                   <div class="muted small" style="margin-top:2px; font-family:var(--mono);">${escapeHtml(r.userId)}</div>
                 </div>
                 <div class="row" style="gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-                  ${badge}
+                  ${badge} ${rel}
                   <button class="btn secondary small" type="button" data-edit-talent="${escapeHtml(r.userId)}">Edit</button>
                 </div>
               </div>
@@ -6086,7 +6105,8 @@
         if (!p || typeof p !== 'object') return [];
         const loc = [p.homeBaseCity, p.homeBaseState].filter(Boolean).join(', ');
         const specs = Array.isArray(p.specialties) ? p.specialties.filter(Boolean).slice(0, 3).join(', ') : '';
-        return [loc, specs].filter(Boolean);
+        const rel = (p.reliability && typeof p.reliability === 'object' && p.reliability.score != null) ? ('rel ' + String(p.reliability.score)) : '';
+        return [loc, specs, rel].filter(Boolean);
       }
 
       function option(u){
