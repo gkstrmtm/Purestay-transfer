@@ -1832,11 +1832,23 @@
         </div>
 
         <div id="viewPayments" class="hide">
-          <div class="row" style="justify-content:space-between;">
-            <button id="loadPayoutsBtn" class="btn secondary">Load</button>
+          <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap;">
+            <div>
+              <div class="muted small">Payments</div>
+              <div style="font-weight:900; margin-top:4px;">Payouts</div>
+            </div>
+            <div class="row" style="gap:8px; flex-wrap:wrap;">
+              <div class="segTabs" style="gap:8px;">
+                <button id="payoutsSegAll" class="segBtn" type="button">All</button>
+                <button id="payoutsSegWeek" class="segBtn" type="button">7 days</button>
+                <button id="payoutsSegMonth" class="segBtn" type="button">30 days</button>
+              </div>
+              <button id="loadPayoutsBtn" class="btn secondary" type="button">Refresh</button>
+            </div>
           </div>
           <div style="height:14px"></div>
           <div id="payoutsMsg" class="err"></div>
+          <div id="payoutsTotals" class="muted small" style="margin-top:6px;"></div>
           <div id="payoutsEmpty" class="muted small" style="margin-top:6px;"></div>
           <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
             <table>
@@ -2414,6 +2426,7 @@
       me: null,
       activeTab: 'overview',
       meetingsSubtab: 'list',
+      payoutsPeriodDays: 30,
       managerSubtab: 'tasks',
       viewAsRole: '',
       viewAsUserId: '',
@@ -2502,6 +2515,15 @@
       }
     }
 
+    function setPayoutsPeriodDays(days){
+      const d = Number(days || 0);
+      state.payoutsPeriodDays = Number.isFinite(d) ? Math.max(0, Math.trunc(d)) : 0;
+      renderPayoutsPeriodSeg();
+      if (state.activeTab === 'payments') {
+        loadPayouts().catch(()=>{});
+      }
+    }
+
     function setManagerSubtab(next){
       state.managerSubtab = String(next || 'tasks');
       renderManagerSubtab();
@@ -2578,6 +2600,16 @@
         if (btn) btn.classList.toggle('active', k === t);
         if (pane) pane.classList.toggle('hide', k !== t);
       }
+    }
+
+    function renderPayoutsPeriodSeg(){
+      const days = Number(state.payoutsPeriodDays || 0);
+      const btnAll = $('payoutsSegAll');
+      const btnWeek = $('payoutsSegWeek');
+      const btnMonth = $('payoutsSegMonth');
+      if (btnAll) btnAll.classList.toggle('active', !days);
+      if (btnWeek) btnWeek.classList.toggle('active', days === 7);
+      if (btnMonth) btnMonth.classList.toggle('active', days === 30);
     }
 
     function setBadge(kind, text){
@@ -2869,6 +2901,10 @@
         if (state.meetingsSubtab === 'availability') loadAvailability().catch(()=>{});
         else loadAppointmentsInto('meetingsTbody', 'meetingsMsg').catch(()=>{});
       }
+      if (tab === 'payments') {
+        renderPayoutsPeriodSeg();
+        loadPayouts().catch(()=>{});
+      }
       if (tab === 'accounts') {
         loadAccounts().catch(()=>{});
       }
@@ -2943,6 +2979,7 @@
         await loadTalentTab().catch(()=>{});
       }
       if (tab === 'payments') {
+        renderPayoutsPeriodSeg();
         await loadPayouts().catch(()=>{});
       }
       if (tab === 'manager') {
@@ -3307,7 +3344,7 @@
 
       const cards = [];
       const fmtNum = (n) => Number(n || 0).toLocaleString();
-      const sumMoney = (rows) => (Array.isArray(rows) ? rows : []).reduce((a, r) => a + Number(r.amount || 0), 0);
+      const sumMoney = (rows) => (Array.isArray(rows) ? rows : []).reduce((a, r) => a + (Number(r.amount_cents || 0) / 100), 0);
 
       try{
         if (['dialer','in_person_setter','remote_setter'].includes(er)) {
@@ -7266,10 +7303,34 @@
     async function loadPayouts(){
       setBadge('warn', 'loading');
       $('payoutsMsg').textContent = '';
+      if ($('payoutsTotals')) $('payoutsTotals').textContent = '';
       if ($('payoutsEmpty')) $('payoutsEmpty').textContent = '';
       try{
-        const j = await api('/api/portal/payouts?limit=120');
+        const days = Number(state.payoutsPeriodDays || 0);
+        let qs = 'limit=200';
+        if (days && Number.isFinite(days)) {
+          const d = new Date();
+          d.setUTCDate(d.getUTCDate() - Math.max(1, Math.trunc(days)));
+          const ymd = d.toISOString().slice(0, 10);
+          qs += '&since=' + encodeURIComponent(ymd);
+        }
+
+        const j = await api('/api/portal/payouts?' + qs);
         const payouts = j.payouts || [];
+
+        try{
+          const sumCents = (rows) => (Array.isArray(rows) ? rows : []).reduce((a, p) => a + Number(p.amount_cents || 0), 0);
+          const paid = payouts.filter((p) => String(p.status || '') === 'paid');
+          const pending = payouts.filter((p) => String(p.status || '') !== 'paid');
+          const totalCents = sumCents(payouts);
+          const paidCents = sumCents(paid);
+          const pendingCents = sumCents(pending);
+          const label = days ? `Last ${Math.trunc(days)} days` : 'All time';
+          if ($('payoutsTotals')) $('payoutsTotals').textContent = `${label} • Total ${fmtMoney(totalCents)} • Paid ${fmtMoney(paidCents)} • Pending ${fmtMoney(pendingCents)} • ${payouts.length} payout(s)`;
+        } catch(_e) {
+          if ($('payoutsTotals')) $('payoutsTotals').textContent = '';
+        }
+
         if ($('payoutsEmpty')) $('payoutsEmpty').textContent = payouts.length ? '' : 'No payments yet.';
         if (!payouts.length) {
           $('payoutsTbody').innerHTML = '<tr><td colspan="4" class="muted">No payments yet.</td></tr>';
@@ -7729,6 +7790,9 @@
     });
 
     on('loadPayoutsBtn', 'click', () => loadPayouts().catch(() => {}));
+    on('payoutsSegAll', 'click', () => setPayoutsPeriodDays(0));
+    on('payoutsSegWeek', 'click', () => setPayoutsPeriodDays(7));
+    on('payoutsSegMonth', 'click', () => setPayoutsPeriodDays(30));
 
     on('loadUsersBtn', 'click', () => loadUsers().catch(() => {}));
 
