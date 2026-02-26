@@ -1286,7 +1286,7 @@
               <button id="loadEventsBtn" class="btn secondary" type="button">Refresh</button>
               <div id="eventsSegTabs" class="segTabs hide" style="gap:8px;">
                 <button id="eventsSegMy" class="segBtn" type="button">My</button>
-                <button id="eventsSegOffers" class="segBtn" type="button">Offers</button>
+                <button id="eventsSegAll" class="segBtn" type="button">All</button>
               </div>
             </div>
             <button id="newEventToggle" class="btn secondary hide" type="button">New event</button>
@@ -2622,14 +2622,14 @@
     function renderEventsSubtabSeg(){
       const t = String(state.eventsSubtab || 'all');
       const btnMy = $('eventsSegMy');
-      const btnOffers = $('eventsSegOffers');
+      const btnAll = $('eventsSegAll');
       if (btnMy) btnMy.classList.toggle('active', t === 'my');
-      if (btnOffers) btnOffers.classList.toggle('active', t === 'offers');
+      if (btnAll) btnAll.classList.toggle('active', t === 'all');
     }
 
     function setEventsSubtab(next){
       const t0 = String(next || 'all');
-      const t = (t0 === 'my' || t0 === 'offers') ? t0 : 'all';
+      const t = (t0 === 'my' || t0 === 'all' || t0 === 'offers') ? t0 : 'all';
       state.eventsSubtab = t;
       renderEventsSubtabSeg();
       loadEvents().catch(() => {});
@@ -2879,7 +2879,7 @@
       state.activeTab = safeTab;
       const er = effectiveRole();
       const callsTitle = er === 'in_person_setter' ? 'Booked' : 'Calls';
-      const eventsTitle = (er === 'event_host') ? 'Offers' : (er === 'media_team' ? 'Content' : 'Events');
+      const eventsTitle = (er === 'media_team') ? 'Content' : 'Events';
       const title = {
         overview: 'Overview',
         leads: 'Leads',
@@ -2888,6 +2888,7 @@
         accounts: 'Accounts',
         closer: 'Sales',
         events: eventsTitle,
+        offers: 'Offers',
         talent: 'Talent',
         payments: 'Payments',
         manager: 'Operations'
@@ -2900,6 +2901,7 @@
         accounts: 'Accounts',
         closer: 'Closer',
         events: 'Events',
+        offers: 'Events',
         talent: 'Talent',
         payments: 'Payments',
         manager: 'Manager'
@@ -2921,13 +2923,18 @@
 
       if (safeTab === 'overview') loadOverview().catch(()=>{});
       if (safeTab === 'leads') loadLeads().catch(()=>{});
-      if (safeTab === 'events') {
+      if (safeTab === 'events' || safeTab === 'offers') {
         const seg = $('eventsSegTabs');
-        const showSeg = ['event_host','media_team'].includes(er);
+        const canSeg = ['event_host','media_team'].includes(er);
+        const showSeg = (safeTab === 'events') && canSeg;
         if (seg) seg.classList.toggle('hide', !showSeg);
 
-        // Default to offers for host/media; coordinators see the full list.
-        if (showSeg && (state.eventsSubtab === 'all')) state.eventsSubtab = 'offers';
+        if (safeTab === 'offers') {
+          state.eventsSubtab = 'offers';
+        } else {
+          if (canSeg && !['my','all'].includes(String(state.eventsSubtab || ''))) state.eventsSubtab = 'my';
+          if (!canSeg) state.eventsSubtab = 'all';
+        }
         renderEventsSubtabSeg();
         loadEvents().catch(()=>{});
       }
@@ -3173,7 +3180,11 @@
       }
 
       if (['event_host','media_team','event_coordinator'].includes(er)) {
-        const label = (er === 'event_host') ? 'Offers' : (er === 'media_team' ? 'Content' : 'Events');
+        if (['event_host','media_team'].includes(er)) {
+          navItems.push({ id:'offers', label:'Offers' });
+        }
+
+        const label = (er === 'media_team') ? 'Content' : 'Events';
         navItems.push({ id:'events', label });
 
         // Talent is coordinator tooling; keep it off host/media.
@@ -3214,6 +3225,7 @@
         meetings: 'M',
         accounts: 'A',
         closer: 'S',
+        offers: '✦',
         events: 'E',
         talent: 'T',
         payments: '$',
@@ -3299,9 +3311,9 @@
       // Manager-only controls
       $('newEventToggle').classList.toggle('hide', !(['manager','event_coordinator'].includes(er)));
 
-      // Events offers/my segment only applies to host/media.
+      // Events My/All segment only applies to host/media (and only in Events tab).
       const eventsSeg = $('eventsSegTabs');
-      if (eventsSeg) eventsSeg.classList.toggle('hide', !(['event_host','media_team'].includes(er)));
+      if (eventsSeg) eventsSeg.classList.toggle('hide', true);
 
       // Overview
       $('viewOverview').innerHTML = `
@@ -7260,13 +7272,14 @@
         const er = effectiveRole();
         const effectiveUserId = (isManagerUser() && String(state.viewAsUserId || '').trim()) ? String(state.viewAsUserId || '').trim() : String(state.me?.user?.id || '');
 
-        // Subtab filtering (host/media). Coordinators/managers see all.
+        const desired = (state.activeTab === 'offers') ? 'offers' : String(state.eventsSubtab || 'all');
+
+        // Filtering
         let nextEvents = allEvents;
-        const sub = String(state.eventsSubtab || 'all');
         if (['event_host','media_team'].includes(er)) {
-          if (sub === 'my') {
+          if (desired === 'my') {
             nextEvents = allEvents.filter((ev) => String(ev.assigned_user_id || '') === effectiveUserId);
-          } else if (sub === 'offers') {
+          } else if (desired === 'offers') {
             nextEvents = allEvents.filter((ev) => {
               const asg = String(ev.assigned_role || '').trim();
               const hasAssignments = !!(ev.meta && typeof ev.meta === 'object' && Array.isArray(ev.meta.assignments) && ev.meta.assignments.length);
@@ -7276,6 +7289,9 @@
                 && !!asg
                 && asg === er;
             });
+          } else {
+            // 'all'
+            nextEvents = allEvents;
           }
         }
 
@@ -7702,7 +7718,7 @@
 
     on('loadEventsBtn', 'click', () => loadEvents().catch(() => {}));
     on('eventsSegMy', 'click', () => setEventsSubtab('my'));
-    on('eventsSegOffers', 'click', () => setEventsSubtab('offers'));
+    on('eventsSegAll', 'click', () => setEventsSubtab('all'));
     on('newEventToggle', 'click', () => { $('newEventBox').hidden = !$('newEventBox').hidden; });
     on('createEventBtn', 'click', () => createEvent().catch(() => {}));
     on('createFollowupsBtn', 'click', () => createFollowups().catch(() => {}));
