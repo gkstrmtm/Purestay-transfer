@@ -110,28 +110,24 @@
     .appbrand img{height:46px; width:auto; display:block;}
     .appbrand .t{font-weight: 900; letter-spacing:.2px;}
 
-    .layout{max-width:1180px; margin:0 auto; display:grid; grid-template-columns: var(--sbw, 240px) 1fr; gap: 16px; padding: 16px 18px 28px;}
+    .layout{max-width:1180px; margin:0 auto; display:grid; grid-template-columns: 260px 1fr; gap: 0; padding: 0 18px 28px;}
     @media (max-width: 900px){ .layout{grid-template-columns: 1fr;} }
-
-    body.sbCollapsed .layout{--sbw:72px;}
 
     main{min-width:0;}
 
     .sidebar{
-      background: #fff;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 12px;
+      background:#fff;
+      border-right:1px solid var(--border);
+      padding: 14px 12px;
       position: sticky;
       top: 78px;
-      max-height: calc(100vh - 98px);
+      height: calc(100vh - 78px);
       overflow:auto;
       min-width:0;
     }
 
     @media (max-width: 900px){
-      .sidebar{position:relative; top:auto; max-height:none;}
+      .sidebar{position:relative; top:auto; height:auto; border-right:none; border-bottom:1px solid var(--border);}
     }
 
     .navTitle{font-size:12px; color:var(--muted); font-weight:900; letter-spacing:.08em; text-transform:uppercase; padding: 6px 8px 10px;}
@@ -155,12 +151,8 @@
 
     .navIco{width:22px; height:22px; border:1px solid var(--border); border-radius:8px; display:grid; place-items:center; font-size:12px; color:var(--muted); flex:0 0 auto; background:#fff;}
     .navLbl{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-    body.sbCollapsed .navTitle{display:none;}
-    body.sbCollapsed .navLbl{display:none;}
-    body.sbCollapsed .sidebar{padding:10px;}
-    body.sbCollapsed .ddBtn{padding:10px 10px; justify-content:center;}
-    body.sbCollapsed .ddBtn span:first-child{display:none;}
-    body.sbCollapsed .ddBtn span:last-child{margin:0;}
+    main{padding-left:16px;}
+    @media (max-width: 900px){ main{padding-left:0;} }
 
     .iconBtn{appearance:none; border:1px solid var(--border); background:#fff; color: var(--maroon); border-radius: 12px; padding: 10px 12px; cursor:pointer; font-weight:900;}
     .iconBtn:hover{border-color: rgba(199,154,59,.55)}
@@ -320,7 +312,6 @@
     <div class="appbar">
       <div class="appbarInner">
         <div class="appbrand">
-          <button id="sidebarToggle" class="iconBtn" type="button" aria-label="Toggle sidebar">☰</button>
           <img src="brand/purestay_exact_SVG.svg" alt="PureStay" />
           <div>
             <div class="t">Portal</div>
@@ -2306,19 +2297,7 @@
       return true;
     }
 
-    function setSidebarCollapsed(next){
-      const v = !!next;
-      state.ui.sidebarCollapsed = v;
-      document.body.classList.toggle('sbCollapsed', v);
-      try { localStorage.setItem('portal_sidebar_collapsed', v ? '1' : '0'); } catch(_e) {}
-    }
-
-    function restoreUiPrefs(){
-      try {
-        const v = localStorage.getItem('portal_sidebar_collapsed');
-        setSidebarCollapsed(v === '1');
-      } catch(_e) {}
-    }
+    function restoreUiPrefs(){ /* sidebar is no longer collapsible */ }
 
     function setMeetingsSubtab(next){
       state.meetingsSubtab = String(next || 'list');
@@ -7250,7 +7229,7 @@
     on('closerSegDisposition', 'click', () => setCloserSubtab('disposition'));
     on('closerSegPipeline', 'click', () => setCloserSubtab('pipeline'));
 
-    on('sidebarToggle', 'click', () => setSidebarCollapsed(!state.ui.sidebarCollapsed));
+
 
     on('loadCloserQueueBtn', 'click', () => loadCloserQueue().catch(() => {}));
 
