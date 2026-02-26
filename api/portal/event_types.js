@@ -128,6 +128,59 @@ function eventTypesFromResources() {
   return { ok: true, types: objs.slice(0, 2000), source: 'resources' };
 }
 
+function typeName(t) {
+  return cleanStr(t?.['Event Type'] || t?.event_type || t?.type || t?.name, 400);
+}
+
+function normalizeType(t) {
+  const base = (t && typeof t === 'object') ? t : {};
+  const name = typeName(base);
+  const hook = cleanStr(base?.['Psychological Hook'] || base?.hook, 1000);
+  const classFit = cleanStr(base?.['Class Fit'] || base?.classFit || base?.class_fit, 200);
+  const goal = cleanStr(base?.Goal || base?.goal, 800);
+  const notes = cleanStr(base?.Notes || base?.notes, 2000);
+  const kind = cleanStr(base?.Type || base?.kind, 40);
+  return {
+    ...base,
+    name,
+    hook,
+    classFit,
+    goal,
+    notes,
+    kind,
+  };
+}
+
+function tokenizeQuery(q) {
+  return String(q || '')
+    .toLowerCase()
+    .split(/[^a-z0-9]+/g)
+    .map((t) => t.trim())
+    .filter(Boolean)
+    .slice(0, 12);
+}
+
+function scoreTypeForQuery(t, tokens) {
+  if (!tokens.length) return 0;
+  const name = String(t?.name || '').toLowerCase();
+  const classFit = String(t?.classFit || '').toLowerCase();
+  const hook = String(t?.hook || '').toLowerCase();
+  const goal = String(t?.goal || '').toLowerCase();
+  const notes = String(t?.notes || '').toLowerCase();
+  const kind = String(t?.kind || '').toLowerCase();
+  const blob = [name, classFit, hook, goal, notes, kind].join(' • ');
+
+  let score = 0;
+  for (const tok of tokens) {
+    if (!tok) continue;
+    if (name.includes(tok)) score += 6;
+    else if (classFit.includes(tok)) score += 5;
+    else if (kind.includes(tok)) score += 3;
+    else if (blob.includes(tok)) score += 1;
+  }
+  return score;
+}
+
 module.exports = async (req, res) => {
   if (handleCors(req, res, { methods: ['GET', 'POST', 'OPTIONS'] })) return;
 
@@ -161,12 +214,33 @@ module.exports = async (req, res) => {
       }
     }
 
+    // Normalize + remove junk rows (blank names, repeated header rows).
+    types = types
+      .map(normalizeType)
+      .filter((t) => {
+        const n = String(t?.name || '').trim();
+        if (!n) return false;
+        if (n.toLowerCase() === 'event type') return false;
+        return true;
+      });
+
     if (kind) {
-      types = types.filter((t) => JSON.stringify(t).toLowerCase().includes(kind));
+      types = types.filter((t) => String(t?.kind || '').toLowerCase().includes(kind));
     }
+
     if (q) {
-      types = types.filter((t) => JSON.stringify(t).toLowerCase().includes(q));
+      const tokens = tokenizeQuery(q);
+      types = types
+        .map((t) => ({ t, s: scoreTypeForQuery(t, tokens) }))
+        .filter((x) => x.s > 0)
+        .sort((a, b) => {
+          if (b.s !== a.s) return b.s - a.s;
+          return String(a.t?.name || '').localeCompare(String(b.t?.name || ''));
+        })
+        .map((x) => x.t);
     }
+
+    types = types.slice(0, 500);
 
     return sendJson(res, 200, { ok: true, types, seeded, seedSource });
   }

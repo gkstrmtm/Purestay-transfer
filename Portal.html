@@ -355,7 +355,24 @@
       <nav class="sidebar">
         <div id="nav"></div>
       </nav>
-              <div class="muted small">Zero-friction account management</div>
+      <main class="main">
+        <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap;">
+          <div>
+            <div class="muted small">View</div>
+            <div id="viewTitle" style="font-weight:900; margin-top:4px;">Overview</div>
+          </div>
+        </div>
+
+        <div style="height:12px"></div>
+
+        <div id="viewOverview"></div>
+
+        <div id="viewAccounts" class="hide">
+          <div class="row" style="justify-content:space-between; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+            <div>
+              <div class="muted small">Accounts</div>
+              <div style="font-weight:900; margin-top:4px;">Account management</div>
+              <div class="muted small" style="margin-top:4px;">Search, edit, sentiment, issues, and templates</div>
             </div>
             <div class="row" style="gap:8px;">
               <button id="accountsRefreshBtn" class="btn secondary" type="button">Refresh</button>
@@ -636,6 +653,8 @@
               </div>
             </div>
           </div>
+        </div>
+
         </div>
 
         <div id="viewLeads" class="hide">
@@ -4900,8 +4919,8 @@
 
       const rows = [];
       const times = timeSlots();
-      for (const t of times) {
-        rows.push(`<div class="availTimeCell">${escapeHtml(timeLabel(t))}</div>`);
+          for (const t of types) {
+            const label = String(t?.name || t?.['Event Type'] || t?.event_type || t?.type || '').trim() || JSON.stringify(t).slice(0, 80);
         for (const d of week) {
           const dateKey = ymd(d);
           const active = hasAvailSlot(dateKey, t);
@@ -6968,11 +6987,11 @@
     }
 
     function vendorLabel(v){
-      const name = String(v?.Vendor || v?.vendor || v?.Name || v?.name || '').trim();
-      const city = String(v?.City || v?.city || '').trim();
-      const st = String(v?.State || v?.state || '').trim();
-      const extra = [city, st].filter(Boolean).join(', ');
-      return [name, extra].filter(Boolean).join(' • ') || JSON.stringify(v).slice(0, 80);
+      const name = String(v?.name || v?.['Vendor Name'] || v?.vendorName || v?.Vendor || v?.vendor || v?.Name || '').trim();
+      const type = String(v?.type || v?.Type || v?.Category || v?.category || '').trim();
+      const coverage = String(v?.coverage || v?.['City/Coverage Area'] || v?.City || v?.city || '').trim();
+      const extra = [type, coverage].filter(Boolean).join(' • ');
+      return [name, extra].filter(Boolean).join(' — ') || JSON.stringify(v).slice(0, 80);
     }
 
     async function loadVendors(){
@@ -6986,11 +7005,10 @@
         const evCity = String(e?.city || '').trim().toLowerCase();
         const evState = String(e?.state || '').trim().toLowerCase();
         function scoreVendor(v){
-          const city = String(v?.City || v?.city || '').trim().toLowerCase();
-          const st = String(v?.State || v?.state || '').trim().toLowerCase();
+          const area = String(v?.['City/Coverage Area'] || v?.coverage || v?.City || v?.city || '').trim().toLowerCase();
           let s = 0;
-          if (evState && st && evState === st) s += 1;
-          if (evCity && city && evCity === city) s += 2;
+          if (evState && area && area.includes(evState)) s += 1;
+          if (evCity && area && area.includes(evCity)) s += 2;
           return s;
         }
 
@@ -7321,7 +7339,7 @@
     }
 
     function eventTypeLabel(t){
-      return String(t?.['Event Type'] || t?.event_type || t?.type || t?.name || '').trim() || JSON.stringify(t).slice(0, 80);
+      return String(t?.name || t?.['Event Type'] || t?.event_type || t?.type || '').trim() || JSON.stringify(t).slice(0, 80);
     }
 
     async function loadEventTypes(){
@@ -7348,7 +7366,16 @@
           btn.addEventListener('click', () => {
             const idx = Number(btn.dataset.useType || 0);
             const label = eventTypeLabel(types[idx]);
-            if ($('planEventType')) $('planEventType').value = label;
+            const sel = $('planEventType');
+            if (!sel) return;
+            const has = Array.from(sel.options || []).some((o) => String(o.value) === String(label));
+            if (!has) {
+              const opt = document.createElement('option');
+              opt.value = label;
+              opt.textContent = label;
+              sel.appendChild(opt);
+            }
+            sel.value = label;
           });
         }
       } catch (err) {

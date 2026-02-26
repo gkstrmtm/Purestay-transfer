@@ -130,6 +130,63 @@ function vendorsFromResources() {
   return { ok: true, vendors: objs.slice(0, 2000), source: 'resources' };
 }
 
+function vendorName(v) {
+  return cleanStr(v?.['Vendor Name'] || v?.vendor_name || v?.vendorName || v?.name, 400);
+}
+
+function normalizeVendor(v) {
+  const base = (v && typeof v === 'object') ? v : {};
+  const name = vendorName(base);
+  const type = cleanStr(base?.Type || base?.type || base?.Category || base?.category, 200);
+  const coverage = cleanStr(base?.['City/Coverage Area'] || base?.coverage || base?.City || base?.city, 400);
+  const contact = cleanStr(base?.['Phone / Email'] || base?.contact || base?.phone || base?.email, 600);
+  const rateInfo = cleanStr(base?.['Rate Info'] || base?.rate || base?.rateInfo, 300);
+  const notes = cleanStr(base?.Notes || base?.notes, 2000);
+  return {
+    ...base,
+    name,
+    type,
+    coverage,
+    contact,
+    rateInfo,
+    notes,
+  };
+}
+
+function tokenizeQuery(q) {
+  return String(q || '')
+    .toLowerCase()
+    .split(/[^a-z0-9]+/g)
+    .map((t) => t.trim())
+    .filter(Boolean)
+    .slice(0, 12);
+}
+
+function scoreVendorForQuery(v, tokens) {
+  if (!tokens.length) return 0;
+  const name = String(v?.name || '').toLowerCase();
+  const type = String(v?.type || '').toLowerCase();
+  const coverage = String(v?.coverage || '').toLowerCase();
+  const notes = String(v?.notes || '').toLowerCase();
+  const contact = String(v?.contact || '').toLowerCase();
+  const blob = [name, type, coverage, notes, contact].join(' • ');
+
+  let score = 0;
+  for (const t of tokens) {
+    if (!t) continue;
+    if (name.includes(t)) score += 6;
+    else if (type.includes(t)) score += 5;
+    else if (coverage.includes(t)) score += 2;
+    else if (blob.includes(t)) score += 1;
+  }
+
+  // Light boosts for common vendor intents.
+  if (tokens.includes('dj') && (type.includes('dj') || name.includes('dj'))) score += 4;
+  if (tokens.includes('band') && (type.includes('band') || name.includes('band'))) score += 4;
+  if (tokens.includes('mobile') && (type.includes('mobile') || name.includes('mobile'))) score += 2;
+  return score;
+}
+
 module.exports = async (req, res) => {
   if (handleCors(req, res, { methods: ['GET', 'POST', 'OPTIONS'] })) return;
 
@@ -163,12 +220,33 @@ module.exports = async (req, res) => {
       }
     }
 
+    // Normalize + remove junk rows (blank vendor name, repeated header rows).
+    vendors = vendors
+      .map(normalizeVendor)
+      .filter((v) => {
+        const n = String(v?.name || '').trim();
+        if (!n) return false;
+        if (n.toLowerCase() === 'vendor name') return false;
+        return true;
+      });
+
     if (state) {
-      vendors = vendors.filter((v) => JSON.stringify(v).toLowerCase().includes(`\"state\":\"${state}`) || JSON.stringify(v).toLowerCase().includes(` ${state} `) || JSON.stringify(v).toLowerCase().includes(`,${state}`));
+      vendors = vendors.filter((v) => JSON.stringify(v).toLowerCase().includes(state));
     }
+
     if (q) {
-      vendors = vendors.filter((v) => JSON.stringify(v).toLowerCase().includes(q));
+      const tokens = tokenizeQuery(q);
+      vendors = vendors
+        .map((v) => ({ v, s: scoreVendorForQuery(v, tokens) }))
+        .filter((x) => x.s > 0)
+        .sort((a, b) => {
+          if (b.s !== a.s) return b.s - a.s;
+          return String(a.v?.name || '').localeCompare(String(b.v?.name || ''));
+        })
+        .map((x) => x.v);
     }
+
+    vendors = vendors.slice(0, 500);
 
     return sendJson(res, 200, { ok: true, vendors, seeded, seedSource });
   }
