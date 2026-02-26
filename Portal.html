@@ -162,7 +162,7 @@
       border:1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      overflow:hidden;
+      overflow:visible;
     }
     .card .hd{padding:14px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:12px;}
     .card .hd h2{margin:0; font-size:14px; letter-spacing:.2px}
@@ -213,11 +213,18 @@
     .segBtn{appearance:none; border:1px solid var(--border); background:#fff; padding:9px 12px; border-radius:999px; font-weight:900; color:#3a2f2c; cursor:pointer;}
     .segBtn.active{background: rgba(122,46,38,.08); border-color: rgba(122,46,38,.22); color: var(--maroon)}
 
+    .collapHdr{width:100%; appearance:none; border:1px solid var(--border); background:#fff; padding:10px 12px; border-radius:12px; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:10px; text-align:left; font-weight:900; color:#3a2f2c;}
+    .collapHdr:focus-visible{outline:none; box-shadow: 0 0 0 3px var(--ring); border-color: rgba(199,154,59,.55)}
+    .collapHdr .collapLeft{display:flex; align-items:baseline; gap:10px; min-width:0;}
+    .collapHdr .collapHint{font-weight:700; color: var(--muted); font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+    .collapHdr .collapChev{font-weight:900; color: var(--muted); font-size:12px; flex:0 0 auto;}
+    .collapBody{margin-top:10px;}
+
     .dd{position:relative;}
     .nativeSelectHidden{display:none !important;}
     .ddBtn{width:100%; appearance:none; border:1px solid var(--border); background:#fff; padding:10px 12px; border-radius:12px; font-weight:900; color:#3a2f2c; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:10px;}
     .ddBtn:focus-visible{outline:none; box-shadow: 0 0 0 3px var(--ring); border-color: rgba(199,154,59,.55)}
-    .ddMenu{position:absolute; left:0; right:0; top: calc(100% + 8px); background:#fff; border:1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); padding: 6px; z-index: 40; max-height: 320px; overflow:auto;}
+    .ddMenu{position:absolute; left:0; right:0; top: calc(100% + 8px); background:#fff; border:1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); padding: 6px; z-index: 220; max-height: 320px; overflow:auto;}
     .ddItem{width:100%; text-align:left; appearance:none; border:1px solid transparent; background:transparent; padding:10px 10px; border-radius:12px; cursor:pointer; font-weight:900; color:#3a2f2c;}
     .ddItem:hover{background: rgba(199,154,59,.10); border-color: rgba(199,154,59,.22)}
     .ddItem.active{background: rgba(122,46,38,.08); border-color: rgba(122,46,38,.22); color: var(--maroon)}
@@ -348,25 +355,6 @@
       <nav class="sidebar">
         <div id="nav"></div>
       </nav>
-
-      <main>
-        <section class="card" id="appCard">
-      <div class="hd">
-        <h2 id="viewTitle">Overview</h2>
-        <div class="row">
-          <span class="badge dot" id="viewBadge" aria-label="status"></span>
-          <button id="refreshBtn" class="btn secondary hide">Refresh</button>
-        </div>
-      </div>
-      <div class="bd">
-        <div id="viewOverview">
-          <div class="muted">Sign in to view your dashboard.</div>
-        </div>
-
-        <div id="viewAccounts" class="hide">
-          <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
-            <div>
-              <div style="font-weight:900;">Accounts</div>
               <div class="muted small">Zero-friction account management</div>
             </div>
             <div class="row" style="gap:8px;">
@@ -812,7 +800,7 @@
                         <option value="closer">Sales</option>
                         <option value="event_host">Events</option>
                         <option value="event_coordinator">Operations</option>
-                        <option value="media_team">Content</option>
+                        <option value="media_team">Media</option>
                       </select>
                     </div>
                     <div>
@@ -1274,7 +1262,7 @@
         </div>
 
         <div id="viewEvents" class="hide">
-          <div class="row" style="justify-content:space-between; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+          <div class="row" style="justify-content:space-between; gap:12px; align-items:flex-end; flex-wrap:wrap; position:relative; z-index:40;">
             <div class="row" style="gap:8px; flex-wrap:wrap;">
               <select id="eventStatus" style="max-width:220px">
                 <option value="">All statuses</option>
@@ -1434,39 +1422,66 @@
             </div>
           </div>
 
-            <div id="eventOpsWrap" class="card hide" style="margin-top:12px; background:#fff;">
+          <div id="eventOpsWrap" class="card hide" style="margin-top:12px; background:#fff;">
             <div class="bd">
               <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
                 <div>
                   <div class="muted small">Coordinator / Ops</div>
-                  <div style="font-weight:900; margin-top:4px;">Event checklist & staffing</div>
+                  <div style="font-weight:900; margin-top:4px;">Event operations</div>
                 </div>
                 <button id="createFollowupsBtn" class="btn secondary" type="button">Create 24h follow-ups</button>
               </div>
 
               <div style="height:10px"></div>
               <div id="eventOpsMsg" class="err"></div>
+              <div id="eventOpsReadOnlyLine" class="muted small hide" style="margin-top:6px;">Read-only mode (view-as role preview). Choose a specific person to make edits.</div>
 
-              <div class="two">
-                <div>
-                  <div style="font-weight:900;">Staffing</div>
-                  <div class="muted small">Assign host/media and track acceptance</div>
-                  <div style="height:10px"></div>
+              <div style="height:12px"></div>
 
-                  <div class="row" style="gap:8px; flex-wrap:wrap;">
-                    <select id="assignHostUser" style="min-width:260px;">
-                      <option value="">Assign host…</option>
-                    </select>
-                    <button id="addHostBtn" class="btn secondary" type="button">Add host</button>
-                  </div>
-                  <div style="height:8px"></div>
+              <button class="collapHdr" type="button" data-collapse-target="opsStaffingBody" aria-expanded="true">
+                <div class="collapLeft">
+                  <span>Staffing</span>
+                  <span id="opsStaffingHint" class="collapHint">Assign host/media and track acceptance</span>
+                </div>
+                <span class="collapChev" data-collapse-chev>▲</span>
+              </button>
 
-                  <div class="card" style="background:#fff; border-color: rgba(199,154,59,.25);">
-                    <div class="bd">
+              <div id="opsStaffingBody" class="collapBody">
+                <div class="row" style="gap:8px; flex-wrap:wrap;">
+                  <select id="assignHostUser" style="min-width:260px;">
+                    <option value="">Assign host…</option>
+                  </select>
+                  <button id="addHostBtn" class="btn secondary" type="button">Add host</button>
+                </div>
+
+                <div style="height:8px"></div>
+
+                <div class="row" style="gap:8px; flex-wrap:wrap;">
+                  <select id="assignMediaUser" style="min-width:260px;">
+                    <option value="">Assign media…</option>
+                  </select>
+                  <button id="addMediaBtn" class="btn secondary" type="button">Add media</button>
+                </div>
+
+                <div style="height:10px"></div>
+                <div id="assignmentsList" class="scrollCardList"></div>
+                <div id="myAssignmentActions" class="hide" style="margin-top:10px;"></div>
+
+                <div class="card" style="background:#fff; border-color: rgba(199,154,59,.25); margin-top:10px;">
+                  <div class="bd">
+                    <button class="collapHdr" type="button" data-collapse-target="opsFeedbackBody" aria-expanded="false">
+                      <div class="collapLeft">
+                        <span>Resident feedback</span>
+                        <span class="collapHint">Link + submissions</span>
+                      </div>
+                      <span class="collapChev" data-collapse-chev>▼</span>
+                    </button>
+
+                    <div id="opsFeedbackBody" class="collapBody hide">
                       <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
                         <div>
-                          <div class="muted small">Resident feedback</div>
-                          <div style="font-weight:900; margin-top:4px;">Feedback form & submissions</div>
+                          <div class="muted small">Feedback form</div>
+                          <div style="font-weight:900; margin-top:4px;">Link & submissions</div>
                           <div class="muted small" style="margin-top:4px;">Generate a share link (or QR), then review submissions here.</div>
                         </div>
                         <div class="row" style="gap:8px; flex-wrap:wrap; justify-content:flex-end;">
@@ -1512,22 +1527,23 @@
                       <div id="feedbackCommentsList" style="margin-top:10px;"></div>
                     </div>
                   </div>
-                  <div class="row" style="gap:8px; flex-wrap:wrap;">
-                    <select id="assignMediaUser" style="min-width:260px;">
-                      <option value="">Assign media…</option>
-                    </select>
-                    <button id="addMediaBtn" class="btn secondary" type="button">Add media</button>
-                  </div>
+                </div>
 
-                  <div style="height:10px"></div>
-                  <div id="assignmentsList" class="scrollCardList"></div>
+                <div class="card" style="background:#fff; border-color: rgba(199,154,59,.25); margin-top:10px;">
+                  <div class="bd">
+                    <button class="collapHdr" type="button" data-collapse-target="opsAiStaffingBody" aria-expanded="false">
+                      <div class="collapLeft">
+                        <span>AI staffing</span>
+                        <span class="collapHint">Recommendations</span>
+                      </div>
+                      <span class="collapChev" data-collapse-chev>▼</span>
+                    </button>
 
-                  <div class="card" style="background:#fff; border-color: rgba(199,154,59,.25); margin-top:10px;">
-                    <div class="bd">
+                    <div id="opsAiStaffingBody" class="collapBody hide">
                       <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
                         <div>
-                          <div class="muted small">AI staffing</div>
-                          <div style="font-weight:900; margin-top:4px;">Recommendations</div>
+                          <div class="muted small">Recommendations</div>
+                          <div style="font-weight:900; margin-top:4px;">Suggested host + media</div>
                           <div class="muted small" style="margin-top:4px;">Suggest host + media based on location, specialties, and reliability.</div>
                         </div>
                         <div class="row" style="gap:8px; flex-wrap:wrap; justify-content:flex-end;">
@@ -1540,43 +1556,56 @@
                       <div id="talentAiList"></div>
                     </div>
                   </div>
+                </div>
+              </div>
 
-                  <div id="myAssignmentActions" class="hide" style="margin-top:10px;"></div>
+              <div style="height:12px"></div>
+
+              <button class="collapHdr" type="button" data-collapse-target="opsChecklistBody" aria-expanded="true">
+                <div class="collapLeft">
+                  <span>Checklist</span>
+                  <span class="collapHint">Track deliverables for AM/management</span>
+                </div>
+                <span class="collapChev" data-collapse-chev>▲</span>
+              </button>
+
+              <div id="opsChecklistBody" class="collapBody">
+                <div class="row" style="gap:12px; flex-wrap:wrap;">
+                  <label class="muted small" style="display:flex; align-items:center; gap:8px; margin:0;">
+                    <input id="chkRecapReceived" type="checkbox" style="width:auto;" />
+                    Recap received
+                  </label>
+                  <label class="muted small" style="display:flex; align-items:center; gap:8px; margin:0;">
+                    <input id="chkMediaReceived" type="checkbox" style="width:auto;" />
+                    Media received
+                  </label>
+                  <label class="muted small" style="display:flex; align-items:center; gap:8px; margin:0;">
+                    <input id="chkFeedbackReceived" type="checkbox" style="width:auto;" />
+                    Feedback received
+                  </label>
+                  <label class="muted small" style="display:flex; align-items:center; gap:8px; margin:0;">
+                    <input id="chkReportSent" type="checkbox" style="width:auto;" />
+                    Report sent
+                  </label>
                 </div>
 
-                <div>
-                  <div style="font-weight:900;">Checklist</div>
-                  <div class="muted small">Track deliverables for AM/management</div>
-                  <div style="height:10px"></div>
+                <div style="height:10px"></div>
+                <button id="saveChecklistBtn" class="btn secondary" type="button">Save checklist</button>
 
-                  <div class="row" style="gap:12px; flex-wrap:wrap;">
-                    <label class="muted small" style="display:flex; align-items:center; gap:8px; margin:0;">
-                      <input id="chkRecapReceived" type="checkbox" style="width:auto;" />
-                      Recap received
-                    </label>
-                    <label class="muted small" style="display:flex; align-items:center; gap:8px; margin:0;">
-                      <input id="chkMediaReceived" type="checkbox" style="width:auto;" />
-                      Media received
-                    </label>
-                    <label class="muted small" style="display:flex; align-items:center; gap:8px; margin:0;">
-                      <input id="chkFeedbackReceived" type="checkbox" style="width:auto;" />
-                      Feedback received
-                    </label>
-                    <label class="muted small" style="display:flex; align-items:center; gap:8px; margin:0;">
-                      <input id="chkReportSent" type="checkbox" style="width:auto;" />
-                      Report sent
-                    </label>
-                  </div>
+                <div style="height:12px"></div>
 
-                  <div style="height:10px"></div>
-                  <button id="saveChecklistBtn" class="btn secondary" type="button">Save checklist</button>
+                <div class="card" style="background:#fff; border-color: rgba(199,154,59,.25);">
+                  <div class="bd">
+                    <button class="collapHdr" type="button" data-collapse-target="opsReportBody" aria-expanded="false">
+                      <div class="collapLeft">
+                        <span>Report</span>
+                        <span class="collapHint">Draft + send</span>
+                      </div>
+                      <span class="collapChev" data-collapse-chev>▼</span>
+                    </button>
 
-                  <div style="height:14px"></div>
-
-                  <div class="card" style="background:#fff; border-color: rgba(199,154,59,.25);">
-                    <div class="bd">
-                      <div style="font-weight:900;">Report draft</div>
-                      <div class="muted small" style="margin-top:4px;">Generate a clean report for account manager + management, then copy or send.</div>
+                    <div id="opsReportBody" class="collapBody hide">
+                      <div class="muted small" style="margin-top:2px;">Generate a clean report for account manager + management, then copy or send.</div>
 
                       <div class="row" style="margin-top:10px; gap:8px; flex-wrap:wrap;">
                         <button id="genReportDraftBtn" class="btn secondary" type="button">Generate draft</button>
@@ -1593,112 +1622,138 @@
                 </div>
               </div>
 
-              <div style="height:14px"></div>
+              <div style="height:12px"></div>
 
-              <div class="two">
-                <div>
-                  <div style="font-weight:900;">Plan</div>
-                  <div style="height:10px"></div>
-                  <div class="two">
-                    <div>
-                      <label>Strategy</label>
-                      <select id="planStrategy">
-                        <option value="">Select…</option>
-                        <option value="anchor">Anchor</option>
-                        <option value="momentum">Momentum</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label>Event type</label>
-                      <select id="planEventType">
-                        <option value="">Select…</option>
-                      </select>
-                    </div>
+              <button class="collapHdr" type="button" data-collapse-target="opsPlanBody" aria-expanded="false">
+                <div class="collapLeft">
+                  <span>Plan</span>
+                  <span class="collapHint">Strategy + event type</span>
+                </div>
+                <span class="collapChev" data-collapse-chev>▼</span>
+              </button>
+
+              <div id="opsPlanBody" class="collapBody hide">
+                <div class="two">
+                  <div>
+                    <label>Strategy</label>
+                    <select id="planStrategy">
+                      <option value="">Select…</option>
+                      <option value="anchor">Anchor</option>
+                      <option value="momentum">Momentum</option>
+                    </select>
                   </div>
-                  <div style="margin-top:10px;">
-                    <label>Justification</label>
-                    <textarea id="planJustification" placeholder="Why this strategy/type for this property?"></textarea>
-                  </div>
-                  <div class="row" style="margin-top:10px;">
-                    <button id="savePlanBtn" class="btn secondary" type="button">Save plan</button>
+                  <div>
+                    <label>Event type</label>
+                    <select id="planEventType">
+                      <option value="">Select…</option>
+                    </select>
                   </div>
                 </div>
-
-                <div>
-                  <div style="font-weight:900;">Budget</div>
-                  <div class="muted small">Constraint: host pay ≥ 75% of media pay (when media included)</div>
-                  <div style="height:10px"></div>
-
-                  <div class="two">
-                    <div><label>Host pay ($)</label><input id="budHost" type="number" min="0" step="0.01" /></div>
-                    <div><label>Media pay ($)</label><input id="budMedia" type="number" min="0" step="0.01" /></div>
-                  </div>
-
-                  <div class="two" style="margin-top:10px;">
-                    <div><label>Food/catering ($)</label><input id="budFood" type="number" min="0" step="0.01" /></div>
-                    <div><label>Decor ($)</label><input id="budDecor" type="number" min="0" step="0.01" /></div>
-                  </div>
-
-                  <div class="two" style="margin-top:10px;">
-                    <div><label>Supplies ($)</label><input id="budSupplies" type="number" min="0" step="0.01" /></div>
-                    <div><label>Contingency ($)</label><input id="budContingency" type="number" min="0" step="0.01" /></div>
-                  </div>
-
-                  <div style="margin-top:10px;" class="row">
-                    <button id="saveBudgetBtn" class="btn secondary" type="button">Save budget</button>
-                    <div id="budgetMsg" class="err"></div>
-                  </div>
+                <div style="margin-top:10px;">
+                  <label>Justification</label>
+                  <textarea id="planJustification" placeholder="Why this strategy/type for this property?"></textarea>
+                </div>
+                <div class="row" style="margin-top:10px;">
+                  <button id="savePlanBtn" class="btn secondary" type="button">Save plan</button>
                 </div>
               </div>
 
-              <div style="height:14px"></div>
-              <div class="card" style="background:#fff; border-color: rgba(199,154,59,.25);">
-                <div class="bd">
-                  <div style="font-weight:900;">Vendor & Event Type CSV</div>
-                  <div class="muted small">Paste CSVs here once; they will be stored for browsing</div>
-                  <div style="height:10px"></div>
+              <div style="height:12px"></div>
 
-                  <div class="two">
-                    <div>
-                      <label>Vendors CSV</label>
-                      <textarea id="vendorsCsv" placeholder="paste vendors CSV..."></textarea>
-                      <div class="row" style="margin-top:8px;">
-                        <button id="importVendorsBtn" class="btn secondary" type="button">Import vendors</button>
-                        <div id="importVendorsMsg" class="err"></div>
+              <button class="collapHdr" type="button" data-collapse-target="opsBudgetBody" aria-expanded="false">
+                <div class="collapLeft">
+                  <span>Budget</span>
+                  <span class="collapHint">Host/media + expenses</span>
+                </div>
+                <span class="collapChev" data-collapse-chev>▼</span>
+              </button>
+
+              <div id="opsBudgetBody" class="collapBody hide">
+                <div class="muted small">Constraint: host pay ≥ 75% of media pay (when media included)</div>
+                <div style="height:10px"></div>
+
+                <div class="two">
+                  <div><label>Host pay ($)</label><input id="budHost" type="number" min="0" step="0.01" /></div>
+                  <div><label>Media pay ($)</label><input id="budMedia" type="number" min="0" step="0.01" /></div>
+                </div>
+
+                <div class="two" style="margin-top:10px;">
+                  <div><label>Food/catering ($)</label><input id="budFood" type="number" min="0" step="0.01" /></div>
+                  <div><label>Decor ($)</label><input id="budDecor" type="number" min="0" step="0.01" /></div>
+                </div>
+
+                <div class="two" style="margin-top:10px;">
+                  <div><label>Supplies ($)</label><input id="budSupplies" type="number" min="0" step="0.01" /></div>
+                  <div><label>Contingency ($)</label><input id="budContingency" type="number" min="0" step="0.01" /></div>
+                </div>
+
+                <div style="margin-top:10px;" class="row">
+                  <button id="saveBudgetBtn" class="btn secondary" type="button">Save budget</button>
+                  <div id="budgetMsg" class="err"></div>
+                </div>
+              </div>
+
+              <div style="height:12px"></div>
+
+              <button class="collapHdr" type="button" data-collapse-target="opsVendorsBody" aria-expanded="false">
+                <div class="collapLeft">
+                  <span>Vendors & event types</span>
+                  <span class="collapHint">Browse + reload</span>
+                </div>
+                <span class="collapChev" data-collapse-chev>▼</span>
+              </button>
+
+              <div id="opsVendorsBody" class="collapBody hide">
+                <div class="card" style="background:#fff; border-color: rgba(199,154,59,.25);">
+                  <div class="bd">
+                    <button class="collapHdr" type="button" data-collapse-target="opsCsvImportBody" aria-expanded="false">
+                      <div class="collapLeft">
+                        <span>Import CSV</span>
+                        <span class="collapHint">One-time setup</span>
                       </div>
-                    </div>
-                    <div>
-                      <label>Event types CSV</label>
-                      <textarea id="eventTypesCsv" placeholder="paste event types CSV..."></textarea>
-                      <div class="row" style="margin-top:8px;">
-                        <button id="importEventTypesBtn" class="btn secondary" type="button">Import event types</button>
-                        <div id="importEventTypesMsg" class="err"></div>
+                      <span class="collapChev" data-collapse-chev>▼</span>
+                    </button>
+
+                    <div id="opsCsvImportBody" class="collapBody hide">
+                      <div class="muted small">These lists are loaded from the repo under <span style="font-family: var(--mono);">resources/vendors.csv</span> and <span style="font-family: var(--mono);">resources/event_types.csv</span>. If KV is empty, they auto-seed. Use the buttons below to reload from resources.</div>
+                      <div style="height:10px"></div>
+
+                      <div class="row" style="gap:10px; flex-wrap:wrap; align-items:flex-start;">
+                        <div>
+                          <button id="importVendorsBtn" class="btn secondary" type="button">Reload vendors from resources</button>
+                          <div id="importVendorsMsg" class="err" style="margin-top:6px;"></div>
+                        </div>
+                        <div>
+                          <button id="importEventTypesBtn" class="btn secondary" type="button">Reload event types from resources</button>
+                          <div id="importEventTypesMsg" class="err" style="margin-top:6px;"></div>
+                        </div>
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  <div style="height:10px"></div>
-                  <div class="two">
-                    <div>
-                      <label>Browse vendors</label>
-                      <input id="vendorQ" placeholder="search vendors (name, city, state, etc.)" />
-                      <div class="row" style="margin-top:8px;">
-                        <button id="loadVendorsBtn" class="btn secondary" type="button">Search</button>
-                        <button id="suggestVendorsBtn" class="btn secondary" type="button">Suggest nearby</button>
-                        <button id="aiSuggestVendorsBtn" class="btn secondary" type="button">AI suggest</button>
-                        <div id="vendorsMsg" class="err"></div>
-                      </div>
-                      <div id="vendorsList" class="scrollCardList" style="margin-top:10px;"></div>
+                <div style="height:10px"></div>
+
+                <div class="two">
+                  <div>
+                    <label>Browse vendors</label>
+                    <input id="vendorQ" placeholder="search vendors (name, city, state, etc.)" />
+                    <div class="row" style="margin-top:8px;">
+                      <button id="loadVendorsBtn" class="btn secondary" type="button">Search</button>
+                      <button id="suggestVendorsBtn" class="btn secondary" type="button">Suggest nearby</button>
+                      <button id="aiSuggestVendorsBtn" class="btn secondary" type="button">AI suggest</button>
+                      <div id="vendorsMsg" class="err"></div>
                     </div>
-                    <div>
-                      <label>Browse event types</label>
-                      <input id="eventTypeQ" placeholder="search event types" />
-                      <div class="row" style="margin-top:8px;">
-                        <button id="loadEventTypesBtn" class="btn secondary" type="button">Search</button>
-                        <div id="eventTypesMsg" class="err"></div>
-                      </div>
-                      <div id="eventTypesList" class="scrollCardList" style="margin-top:10px;"></div>
+                    <div id="vendorsList" class="scrollCardList" style="margin-top:10px;"></div>
+                  </div>
+                  <div>
+                    <label>Browse event types</label>
+                    <input id="eventTypeQ" placeholder="search event types" />
+                    <div class="row" style="margin-top:8px;">
+                      <button id="loadEventTypesBtn" class="btn secondary" type="button">Search</button>
+                      <div id="eventTypesMsg" class="err"></div>
                     </div>
+                    <div id="eventTypesList" class="scrollCardList" style="margin-top:10px;"></div>
                   </div>
                 </div>
               </div>
@@ -1937,7 +1992,7 @@
                     <option value="closer">Sales</option>
                     <option value="event_host">Events</option>
                     <option value="event_coordinator">Operations</option>
-                    <option value="media_team">Content</option>
+                    <option value="media_team">Media</option>
                   </select>
                 </div>
               </div>
@@ -1947,74 +2002,91 @@
 
               <div class="card" style="background:#fff; border-color: rgba(199,154,59,.35);">
                 <div class="bd">
-                  <div style="font-weight:900;">Create task</div>
+                  <div class="row" style="justify-content:space-between; align-items:center; gap:10px;">
+                    <div style="font-weight:900;">Create task</div>
+                    <button class="btn secondary small" type="button" data-collapse-target="dispatchCreateBody" aria-expanded="false" title="Collapse/expand">
+                      <span data-collapse-chev>▼</span>
+                    </button>
+                  </div>
                   <div style="height:10px"></div>
-                  <div class="two">
-                    <div>
-                      <label>Lead ID (optional)</label>
-                      <input id="dispatchLeadId" placeholder="123" />
-                    </div>
-                    <div>
-                      <label>Assigned workspace</label>
-                      <select id="dispatchAssignedRole">
-                        <option value="">Select…</option>
-                        <option value="dialer">Calls</option>
-                        <option value="in_person_setter">Booked</option>
-                        <option value="closer">Sales</option>
-                        <option value="event_host">Events</option>
-                        <option value="event_coordinator">Operations</option>
-                        <option value="media_team">Content</option>
-                      </select>
-                    </div>
-                  </div>
 
-                  <div style="margin-top:10px;">
-                    <label>Title</label>
-                    <input id="dispatchTitle" placeholder="Example: Pull comps and prep talking points" />
-                  </div>
-
-                  <div class="two" style="margin-top:10px;">
-                    <div>
-                      <label>Due date</label>
-                      <input id="dispatchDueDate" type="text" data-picker="date" placeholder="YYYY-MM-DD" />
+                  <div id="dispatchCreateBody" class="hide">
+                    <div class="two">
+                      <div>
+                        <label>Lead ID (optional)</label>
+                        <input id="dispatchLeadId" placeholder="123" />
+                        <div class="row" style="margin-top:8px; gap:8px; flex-wrap:wrap;">
+                          <button id="dispatchPickLead" class="btn secondary small" type="button">Pick from Leads</button>
+                          <button id="dispatchUseSelectedLead" class="btn secondary small" type="button">Use selected</button>
+                          <div class="muted small" id="dispatchLeadLine">None</div>
+                        </div>
+                      </div>
+                      <div>
+                        <label>Assigned workspace</label>
+                        <select id="dispatchAssignedRole">
+                          <option value="">Select…</option>
+                          <option value="dialer">Calls</option>
+                          <option value="in_person_setter">Booked</option>
+                          <option value="closer">Sales</option>
+                          <option value="event_host">Events</option>
+                          <option value="event_coordinator">Operations</option>
+                          <option value="media_team">Media</option>
+                        </select>
+                      </div>
                     </div>
-                    <div>
-                      <label>Due time</label>
-                      <input id="dispatchDueTime" type="text" data-picker="time" placeholder="HH:MM" />
-                    </div>
-                  </div>
 
-                  <div class="two" style="margin-top:10px;">
-                    <div>
-                      <label>Assigned user id (optional)</label>
-                      <input id="dispatchAssignedUserId" placeholder="uuid" />
+                    <div style="margin-top:10px;">
+                      <label>Title</label>
+                      <input id="dispatchTitle" placeholder="Example: Pull comps and prep talking points" />
                     </div>
-                    <div>
-                      <label>Priority</label>
-                      <select id="dispatchPriority">
-                        <option value="0">0</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                        <option value="-1">-1</option>
-                        <option value="-2">-2</option>
-                        <option value="-3">-3</option>
-                        <option value="-4">-4</option>
-                        <option value="-5">-5</option>
-                      </select>
+
+                    <div class="two" style="margin-top:10px;">
+                      <div>
+                        <label>Due date</label>
+                        <input id="dispatchDueDate" type="text" data-picker="date" placeholder="YYYY-MM-DD" />
+                      </div>
+                      <div>
+                        <label>Due time</label>
+                        <input id="dispatchDueTime" type="text" data-picker="time" placeholder="HH:MM" />
+                      </div>
                     </div>
-                  </div>
 
-                  <div style="margin-top:10px;">
-                    <label>Notes</label>
-                    <textarea id="dispatchNotes" placeholder="Context and expected output."></textarea>
-                  </div>
+                    <div class="two" style="margin-top:10px;">
+                      <div>
+                        <label>Assigned user (optional)</label>
+                        <select id="dispatchAssignedUserPick">
+                          <option value="">Unassigned</option>
+                        </select>
+                        <input id="dispatchAssignedUserId" class="hide" placeholder="uuid" />
+                        <div class="muted small" style="margin-top:6px;">Tip: pick a workspace above to filter users.</div>
+                      </div>
+                      <div>
+                        <label>Priority</label>
+                        <select id="dispatchPriority">
+                          <option value="0">0</option>
+                          <option value="1">1</option>
+                          <option value="2">2</option>
+                          <option value="3">3</option>
+                          <option value="4">4</option>
+                          <option value="5">5</option>
+                          <option value="-1">-1</option>
+                          <option value="-2">-2</option>
+                          <option value="-3">-3</option>
+                          <option value="-4">-4</option>
+                          <option value="-5">-5</option>
+                        </select>
+                      </div>
+                    </div>
 
-                  <div class="row" style="margin-top:10px;">
-                    <button id="dispatchCreateBtn" class="btn" type="button">Create</button>
-                    <div id="dispatchCreateMsg" class="err"></div>
+                    <div style="margin-top:10px;">
+                      <label>Notes</label>
+                      <textarea id="dispatchNotes" placeholder="Context and expected output."></textarea>
+                    </div>
+
+                    <div class="row" style="margin-top:10px;">
+                      <button id="dispatchCreateBtn" class="btn" type="button">Create</button>
+                      <div id="dispatchCreateMsg" class="err"></div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2053,6 +2125,11 @@
                 <div>
                   <label>Lead ID</label>
                   <input id="mgrLeadId" placeholder="123" />
+                  <div class="row" style="margin-top:8px; gap:8px; flex-wrap:wrap;">
+                    <button id="mgrPickLead" class="btn secondary small" type="button">Pick from Leads</button>
+                    <button id="mgrUseSelectedLead" class="btn secondary small" type="button">Use selected</button>
+                    <div class="muted small" id="mgrLeadLine">None</div>
+                  </div>
                 </div>
                 <div>
                   <label>Assigned workspace</label>
@@ -2063,13 +2140,16 @@
                     <option value="closer">Sales</option>
                     <option value="event_host">Events</option>
                     <option value="event_coordinator">Operations</option>
-                    <option value="media_team">Content</option>
+                    <option value="media_team">Media</option>
                   </select>
                 </div>
               </div>
               <div style="margin-top:10px;">
-                <label>Assigned user id</label>
-                <input id="mgrAssignedUserId" placeholder="uuid" />
+                <label>Assigned user (optional)</label>
+                <select id="mgrAssignedUserPick">
+                  <option value="">(no change)</option>
+                </select>
+                <input id="mgrAssignedUserId" class="hide" placeholder="uuid" />
               </div>
               <div class="row" style="margin-top:10px;">
                 <button id="mgrAssignBtn" class="btn secondary" type="button">Apply</button>
@@ -2167,6 +2247,43 @@
                 <button id="scheduleSaveBtn" class="btn" type="button">Schedule</button>
                 <button id="scheduleClearLead" class="btn secondary" type="button">Clear lead</button>
                 <div id="scheduleMsg" class="err"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="dispatchAssignModal" class="modalBackdrop" role="dialog" aria-modal="true" aria-label="Assign task">
+      <div class="modal sm">
+        <div class="modalHd">
+          <div>
+            <div class="t">Assign task</div>
+            <div class="muted small" id="dispatchAssignTaskLine">—</div>
+          </div>
+          <div class="row" style="gap:8px;">
+            <button id="dispatchAssignClose" class="btn secondary" type="button">Close</button>
+          </div>
+        </div>
+        <div class="modalBd">
+          <div class="card" style="background:#fff; border-color: rgba(199,154,59,.35); box-shadow:none;">
+            <div class="bd">
+              <div class="muted small">Assigned workspace</div>
+              <div id="dispatchAssignRoleLine" style="font-weight:900; margin-top:4px;">—</div>
+
+              <div style="height:12px"></div>
+              <div>
+                <label>Assigned user</label>
+                <select id="dispatchAssignUserPick">
+                  <option value="">Unassigned</option>
+                </select>
+                <div class="muted small" style="margin-top:6px;">Pick a person to assign, or leave unassigned to send it back to the role queue.</div>
+              </div>
+
+              <div class="row" style="margin-top:12px;">
+                <button id="dispatchAssignSave" class="btn" type="button">Save</button>
+                <button id="dispatchAssignClear" class="btn secondary" type="button">Clear assignment</button>
+                <div id="dispatchAssignMsg" class="err"></div>
               </div>
             </div>
           </div>
@@ -2455,7 +2572,7 @@
       },
       closerQueue: [],
       allowedTabs: null,
-      ui: { sidebarCollapsed: false },
+      ui: { sidebarCollapsed: false, collapse: {}, _opsCollapseInit: false },
       availability: { weekOffset: 0, byDate: {}, tz: '', drag: { active: false, mode: '' } },
     };
 
@@ -2537,10 +2654,16 @@
 
       if (state.activeTab === 'manager') {
         if (state.managerSubtab === 'stats') {
-          if (myRole() === 'manager') loadStats().catch(()=>{});
+          if (['manager','event_coordinator'].includes(effectiveRole())) loadStats().catch(()=>{});
         }
         if (state.managerSubtab === 'tasks') {
+          // Default: keep the create-task panel collapsed.
+          if ($('dispatchCreateBody')) restoreCollapsedFromState('dispatchCreateBody', true);
+          ensureUsersCache().then(() => renderDispatchAssigneePicker()).catch(() => {});
           loadDispatchManager().catch(()=>{});
+        }
+        if (state.managerSubtab === 'assign') {
+          ensureUsersCache().then(() => renderMgrAssignUserPicker()).catch(() => {});
         }
       }
     }
@@ -2596,10 +2719,14 @@
 
     function renderMeetingsSubtab(){
       const t = String(state.meetingsSubtab || 'list');
+      const er = effectiveRole();
       const map = {
         list: { btn: 'meetingsSegList', pane: 'meetingsPaneList' },
         availability: { btn: 'meetingsSegAvailability', pane: 'meetingsPaneAvailability' },
       };
+      // Event roles only need availability here.
+      const listBtn = $(map.list.btn);
+      if (listBtn) listBtn.classList.toggle('hide', ['event_host','media_team'].includes(er));
       const keys = Object.keys(map);
       for (const k of keys) {
         const btn = $(map[k].btn);
@@ -2662,6 +2789,7 @@
       { role: 'account_manager', label: 'Account manager' },
       { role: 'event_host', label: 'Event host' },
       { role: 'event_coordinator', label: 'Event coordinator' },
+      { role: 'media_team', label: 'Media team' },
     ];
 
     function roleViewLabel(role){
@@ -2674,7 +2802,7 @@
         account_manager: 'Account manager',
         event_host: 'Event host',
         event_coordinator: 'Event coordinator',
-        media_team: 'Content',
+        media_team: 'Media',
         manager: 'Manager',
       };
       return map[r] || (r ? r.replaceAll('_', ' ') : '—');
@@ -2687,7 +2815,7 @@
       if (['closer','account_manager'].includes(r)) return 'Sales';
       if (r === 'event_host') return 'Events';
       if (r === 'event_coordinator') return 'Operations';
-      if (r === 'media_team') return 'Content';
+      if (r === 'media_team') return 'Media';
       if (r === 'manager') return 'Operations';
       return roleLabel(r);
     }
@@ -2702,7 +2830,7 @@
         account_manager: 'Sales',
         event_host: 'Events',
         event_coordinator: 'Operations',
-        media_team: 'Content',
+        media_team: 'Media',
         manager: 'Operations',
       };
       return map[r] || (r ? r.replaceAll('_', ' ') : '—');
@@ -2767,18 +2895,32 @@
       state.viewAsRole = raw === 'manager' ? '' : raw;
       state.viewAsUserId = '';
 
-      const er = effectiveRole();
-      if (['dialer','in_person_setter','remote_setter'].includes(er)) {
-        state.activeTab = 'calls';
-        if (er === 'in_person_setter') state.dialerSubtab = 'booked';
-      }
-      else if (er === 'closer') state.activeTab = 'closer';
-      else if (er === 'account_manager') state.activeTab = 'accounts';
-      else if (er === 'event_coordinator') state.activeTab = 'manager';
-      else if (['event_host','media_team'].includes(er)) state.activeTab = 'events';
-      else state.activeTab = 'overview';
+      const finish = () => {
+        const er = effectiveRole();
+        if (['dialer','in_person_setter','remote_setter'].includes(er)) {
+          state.activeTab = 'calls';
+          if (er === 'in_person_setter') state.dialerSubtab = 'booked';
+        }
+        else if (er === 'closer') state.activeTab = 'closer';
+        else if (er === 'account_manager') state.activeTab = 'accounts';
+        else if (er === 'event_coordinator') state.activeTab = 'manager';
+        else if (['event_host','media_team'].includes(er)) state.activeTab = 'events';
+        else state.activeTab = 'overview';
 
-      refreshMe().catch(() => {});
+        refreshMe().catch(() => {});
+      };
+
+      // If previewing a role, also select a matching person so the UI isn't empty.
+      if (state.viewAsRole) {
+        ensureUsersCache().then(() => {
+          const people = usersForViewAsRole(state.viewAsRole);
+          const first = people && people[0] ? people[0] : null;
+          if (first && first.userId) state.viewAsUserId = String(first.userId);
+          finish();
+        }).catch(() => finish());
+        return;
+      }
+      finish();
     }
 
     function setViewAsUserId(nextUserId){
@@ -2879,12 +3021,12 @@
       state.activeTab = safeTab;
       const er = effectiveRole();
       const callsTitle = er === 'in_person_setter' ? 'Booked' : 'Calls';
-      const eventsTitle = (er === 'media_team') ? 'Content' : 'Events';
+      const eventsTitle = (er === 'media_team') ? 'Media' : 'Events';
       const title = {
         overview: 'Overview',
         leads: 'Leads',
         calls: callsTitle,
-        meetings: 'My meetings',
+        meetings: (['event_host','media_team'].includes(er) ? 'Availability' : 'My meetings'),
         accounts: 'Accounts',
         closer: 'Sales',
         events: eventsTitle,
@@ -2940,6 +3082,7 @@
       }
       if (safeTab === 'talent') loadTalentTab().catch(()=>{});
       if (safeTab === 'meetings') {
+        if (['event_host','media_team'].includes(er)) state.meetingsSubtab = 'availability';
         renderMeetingsSubtab();
         if (state.meetingsSubtab === 'availability') loadAvailability().catch(()=>{});
         else loadAppointmentsInto('meetingsTbody', 'meetingsMsg').catch(()=>{});
@@ -2972,7 +3115,7 @@
         renderManagerSubtab();
         if (!state.managerSubtab) state.managerSubtab = 'tasks';
         if (state.managerSubtab === 'stats') {
-          if (myRole() === 'manager') loadStats().catch(()=>{});
+          if (['manager','event_coordinator'].includes(effectiveRole())) loadStats().catch(()=>{});
         } else if (state.managerSubtab === 'tasks') {
           loadDispatchManager().catch(()=>{});
         }
@@ -3182,7 +3325,11 @@
       if (['event_host','media_team','event_coordinator'].includes(er)) {
         if (['event_host','media_team','event_coordinator'].includes(er)) navItems.push({ id:'offers', label:'Offers' });
 
-        const label = (er === 'media_team') ? 'Content' : 'Events';
+        if (['event_host','media_team'].includes(er)) {
+          navItems.push({ id:'meetings', label:'Availability' });
+        }
+
+        const label = (er === 'media_team') ? 'Media' : 'Events';
         navItems.push({ id:'events', label });
 
         // Talent is coordinator tooling; keep it off host/media.
@@ -3341,7 +3488,7 @@
         <div class="muted small">At-a-glance only (no mixed workflows).</div>
         <div style="height:10px"></div>
         <div id="overviewMsg" class="err"></div>
-        ${me.profile.role === 'manager' ? `
+        ${(me.profile.role === 'manager' && !inViewAs) ? `
           <div class="card" style="margin: 10px 0 14px 0;">
             <div class="bd">
               <div style="font-weight:900;">Demo data</div>
@@ -3417,6 +3564,7 @@
       const cards = [];
       const fmtNum = (n) => Number(n || 0).toLocaleString();
       const sumMoney = (rows) => (Array.isArray(rows) ? rows : []).reduce((a, r) => a + (Number(r.amount_cents || 0) / 100), 0);
+      const todayYmd = new Date().toISOString().slice(0, 10);
 
       try{
         if (['dialer','in_person_setter','remote_setter'].includes(er)) {
@@ -3485,8 +3633,81 @@
           cards.push({ title: 'Availability', sub: 'Days with slots saved', value: fmtNum(days), hint: 'Open Sales → Availability' });
           cards.push({ title: 'Tasks', sub: 'Open tasks', value: `${fmtNum(openTasks.length)}${overdueTasks.length ? (` • overdue ${fmtNum(overdueTasks.length)}`) : ''}`, hint: 'Open Sales → Tasks' });
           cards.push({ title: 'Commissions', sub: 'Recent payouts', value: `$${sumMoney(payouts).toFixed(2)}`, hint: 'Open Payments' });
+        } else if (['event_host','media_team'].includes(er)) {
+          const [eR, vR, pR] = await Promise.allSettled([
+            api('/api/portal/events?limit=200'),
+            api('/api/portal/availability'),
+            api('/api/portal/payouts?limit=30'),
+          ]);
+
+          const events = eR.status === 'fulfilled' ? (eR.value.events || []) : [];
+          const payouts = pR.status === 'fulfilled' ? (pR.value.payouts || []) : [];
+          const slots = vR.status === 'fulfilled' ? (vR.value.availability?.slots || null) : null;
+          const byDate = slots && typeof slots === 'object' && slots.byDate && typeof slots.byDate === 'object' ? slots.byDate : null;
+          const days = byDate ? Object.keys(byDate).length : 0;
+
+          const offersOpen = events.filter((ev) => {
+            const asg = String(ev.assigned_role || '').trim();
+            return String(ev.status || 'open') === 'open' && !ev.assigned_user_id && asg === er;
+          });
+
+          const upcoming = events.filter((ev) => {
+            const d = String(ev.event_date || '').trim();
+            if (!d) return false;
+            return d >= todayYmd && ['assigned','scheduled','completed','canceled','cancelled','open'].includes(String(ev.status || 'open'));
+          });
+
+          const assignedToMe = events.filter((ev) => {
+            const id = String(state.me?.user?.id || '').trim();
+            return !!id && String(ev.assigned_user_id || '') === id;
+          });
+
+          cards.push({ title: 'Offers', sub: 'Open offers for your role', value: fmtNum(offersOpen.length), hint: 'Open Offers' });
+          cards.push({ title: 'Upcoming', sub: 'Upcoming events you can see', value: fmtNum(upcoming.length), hint: 'Open Events' });
+          cards.push({ title: 'Assigned', sub: 'Events assigned to you', value: fmtNum(assignedToMe.length), hint: 'Open Events → My' });
+          cards.push({ title: 'Availability', sub: 'Days with slots saved', value: fmtNum(days), hint: 'Open Availability' });
+          cards.push({ title: 'Payments', sub: 'Recent payouts', value: `$${sumMoney(payouts).toFixed(2)}`, hint: 'Open Payments' });
+        } else if (er === 'event_coordinator') {
+          const [sR, eR, pR] = await Promise.allSettled([
+            api('/api/portal/stats?scope=all'),
+            api('/api/portal/events?limit=200'),
+            api('/api/portal/payouts?limit=30'),
+          ]);
+
+          const stats = sR.status === 'fulfilled' ? sR.value : {};
+          const c = stats.leadCounts || {};
+          const events = eR.status === 'fulfilled' ? (eR.value.events || []) : [];
+          const payouts = pR.status === 'fulfilled' ? (pR.value.payouts || []) : [];
+
+          const openOffers = events.filter((ev) => String(ev.status || 'open') === 'open' && !ev.assigned_user_id && ['event_host','media_team'].includes(String(ev.assigned_role || '').trim()));
+          const upcomingEvents = events.filter((ev) => {
+            const d = String(ev.event_date || '').trim();
+            return !!d && d >= todayYmd;
+          });
+
+          cards.push({ title: 'Leads', sub: 'New / working / booked', value: `${fmtNum(c.new ?? 0)} / ${fmtNum(c.working ?? 0)} / ${fmtNum(c.booked ?? 0)}`, hint: 'Open Leads' });
+          cards.push({ title: 'Events', sub: 'Upcoming events visible', value: fmtNum(upcomingEvents.length), hint: 'Open Events' });
+          cards.push({ title: 'Offers', sub: 'Open offers (host + media)', value: fmtNum(openOffers.length), hint: 'Open Offers' });
+          cards.push({ title: 'Dispatch', sub: 'Open / overdue', value: `${fmtNum(stats.dispatchOpen ?? 0)} / ${fmtNum(stats.dispatchOverdue ?? 0)}`, hint: 'Open Operations → Tasks' });
+          cards.push({ title: 'Payments', sub: 'Recent payouts', value: `$${sumMoney(payouts).toFixed(2)}`, hint: 'Open Payments' });
         } else if (er === 'manager') {
-          cards.push({ title: 'Manager', sub: 'Use Manager tab for ops/stats', value: '—', hint: 'Open Manager' });
+          const [sR, pR, eR] = await Promise.allSettled([
+            api('/api/portal/stats?scope=all'),
+            api('/api/portal/payouts?limit=30'),
+            api('/api/portal/events?limit=200'),
+          ]);
+          const stats = sR.status === 'fulfilled' ? sR.value : {};
+          const c = stats.leadCounts || {};
+          const payouts = pR.status === 'fulfilled' ? (pR.value.payouts || []) : [];
+          const events = eR.status === 'fulfilled' ? (eR.value.events || []) : [];
+
+          const openOffers = events.filter((ev) => String(ev.status || 'open') === 'open' && !ev.assigned_user_id && ['event_host','media_team'].includes(String(ev.assigned_role || '').trim()));
+
+          cards.push({ title: 'Lead pipeline', sub: 'New / working / booked', value: `${fmtNum(c.new ?? 0)} / ${fmtNum(c.working ?? 0)} / ${fmtNum(c.booked ?? 0)}`, hint: 'Open Leads' });
+          cards.push({ title: 'Calls', sub: 'Calls in last 24h', value: fmtNum(stats.callsLast24h ?? 0), hint: 'Open Operations → Stats' });
+          cards.push({ title: 'Dispatch', sub: 'Open / overdue', value: `${fmtNum(stats.dispatchOpen ?? 0)} / ${fmtNum(stats.dispatchOverdue ?? 0)}`, hint: 'Open Operations → Tasks' });
+          cards.push({ title: 'Offers', sub: 'Open offers (host + media)', value: fmtNum(openOffers.length), hint: 'Open Offers' });
+          cards.push({ title: 'Payments', sub: 'Recent payouts', value: `$${sumMoney(payouts).toFixed(2)}`, hint: 'Open Payments' });
         } else {
           cards.push({ title: 'Workspace', sub: 'Use the menu to open your workspace', value: '—', hint: '' });
         }
@@ -3525,6 +3746,8 @@
       if ($('selectedLeadLine')) $('selectedLeadLine').textContent = line;
       if ($('closerSelectedLead')) $('closerSelectedLead').textContent = line;
       if ($('leadDetailTitle')) $('leadDetailTitle').textContent = line;
+      if ($('dispatchLeadLine')) $('dispatchLeadLine').textContent = line;
+      if ($('mgrLeadLine')) $('mgrLeadLine').textContent = line;
 
       // When cleared, make downstream panes obvious.
       if (!l) {
@@ -3777,12 +4000,14 @@
     async function managerAssignLead(){
       $('mgrAssignMsg').textContent = '';
       try{
-        const id = Number($('mgrLeadId').value || 0);
-        if (!id) throw new Error('Enter a lead id');
+        const raw = String($('mgrLeadId')?.value || '').trim();
+        const id = raw ? Number(raw) : (state.selectedLead ? Number(state.selectedLead.id) : 0);
+        if (!id) throw new Error('Select a lead first');
         const body = { id };
 
         const role = $('mgrAssignedRole').value;
-        const userId = $('mgrAssignedUserId').value.trim();
+        const userPick = String($('mgrAssignedUserPick')?.value || '').trim();
+        const userId = userPick || String($('mgrAssignedUserId')?.value || '').trim();
         if (role) body.assignedRole = role;
         if (userId) body.assignedUserId = userId;
 
@@ -3791,6 +4016,39 @@
       } catch(e){
         $('mgrAssignMsg').textContent = String(e.message || e);
       }
+    }
+
+    function renderMgrAssignUserPicker(){
+      const pickEl = $('mgrAssignedUserPick');
+      if (!pickEl) return;
+      const assignedRole = String($('mgrAssignedRole')?.value || '').trim();
+      const users = Array.isArray(state.usersCache) ? state.usersCache : [];
+      const filtered = assignedRole
+        ? users.filter((u) => String(u?.role || '').trim() === assignedRole)
+        : users.slice();
+
+      filtered.sort((a, b) => {
+        const an = String(a?.fullName || a?.email || a?.userId || '');
+        const bn = String(b?.fullName || b?.email || b?.userId || '');
+        return an.localeCompare(bn);
+      });
+
+      const keep = String(pickEl.value || $('mgrAssignedUserId')?.value || '').trim();
+      const opts = ['<option value="">(no change)</option>'];
+      for (const u of filtered.slice(0, 160)) {
+        const id = String(u?.userId || '').trim();
+        if (!id) continue;
+        const roleLabel = viewingLabel(String(u?.role || ''));
+        const label = String(u?.fullName || u?.email || id).trim();
+        opts.push(`<option value="${escapeHtml(id)}">${escapeHtml(label)} • ${escapeHtml(roleLabel)}</option>`);
+      }
+      pickEl.innerHTML = opts.join('');
+
+      if (keep) {
+        const has = Array.from(pickEl.options).some((o) => String(o.value || '') === keep);
+        if (has) pickEl.value = keep;
+      }
+      if ($('mgrAssignedUserId')) $('mgrAssignedUserId').value = String(pickEl.value || '').trim();
     }
 
     async function loadTeamAvailability(){
@@ -4012,12 +4270,9 @@
             $('dispatchMsg').textContent = '';
             try{
               const id = Number(btn.dataset.mgrAssign);
-              const userId = prompt('Assign user id (uuid) or blank to clear:', '');
-              if (userId == null) return;
-              const nextAssigned = String(userId).trim() || null;
-              await api('/api/portal/dispatch', { method:'PATCH', body: { id, assignedUserId: nextAssigned, status: nextAssigned ? 'assigned' : 'open' } });
-              await loadDispatchManager();
-              setBadge('ok', 'assigned');
+              const t = tasks.find((x) => Number(x.id) === id) || null;
+              if (!t) throw new Error('task_not_found');
+              await openDispatchAssignModal(t);
             } catch(e){
               $('dispatchMsg').textContent = String(e.message || e);
             }
@@ -4073,6 +4328,87 @@
       }
     }
 
+    async function openDispatchAssignModal(task){
+      $('dispatchAssignMsg').textContent = '';
+      state.dispatchAssignTask = task || null;
+      const t = state.dispatchAssignTask;
+
+      try{ await ensureUsersCache(); } catch(_e) {}
+
+      const title = String(t?.title || '').trim();
+      const id = Number(t?.id || 0);
+      const due = dispatchDue(t);
+      const role = viewingLabel(String(t?.assigned_role || ''));
+      $('dispatchAssignTaskLine').textContent = id ? (`#${id} • ${due ? (due + ' • ') : ''}${title || 'Task'}`) : (title || 'Task');
+      $('dispatchAssignRoleLine').textContent = role || '—';
+
+      renderDispatchAssignUserPicker();
+      $('dispatchAssignModal').classList.add('show');
+    }
+
+    function closeDispatchAssignModal(){
+      $('dispatchAssignMsg').textContent = '';
+      state.dispatchAssignTask = null;
+      const m = $('dispatchAssignModal');
+      if (m) m.classList.remove('show');
+    }
+
+    function renderDispatchAssignUserPicker(){
+      const pickEl = $('dispatchAssignUserPick');
+      if (!pickEl) return;
+      const t = state.dispatchAssignTask;
+      const assignedRole = String(t?.assigned_role || '').trim();
+      const users = Array.isArray(state.usersCache) ? state.usersCache : [];
+      const filtered = assignedRole
+        ? users.filter((u) => String(u?.role || '').trim() === assignedRole)
+        : users.slice();
+
+      filtered.sort((a, b) => {
+        const an = String(a?.fullName || a?.email || a?.userId || '');
+        const bn = String(b?.fullName || b?.email || b?.userId || '');
+        return an.localeCompare(bn);
+      });
+
+      const current = String(t?.assigned_user_id || '').trim();
+      const opts = ['<option value="">Unassigned</option>'];
+      for (const u of filtered.slice(0, 220)) {
+        const id = String(u?.userId || '').trim();
+        if (!id) continue;
+        const label = String(u?.fullName || u?.email || id).trim();
+        opts.push(`<option value="${escapeHtml(id)}">${escapeHtml(label)}</option>`);
+      }
+      pickEl.innerHTML = opts.join('');
+
+      if (current) {
+        const has = Array.from(pickEl.options).some((o) => String(o.value || '') === current);
+        if (has) pickEl.value = current;
+      }
+    }
+
+    async function saveDispatchAssign({ clear = false } = {}){
+      $('dispatchAssignMsg').textContent = '';
+      try{
+        const t = state.dispatchAssignTask;
+        const id = Number(t?.id || 0);
+        if (!id) throw new Error('task_not_found');
+        const picked = clear ? '' : String($('dispatchAssignUserPick')?.value || '').trim();
+        const nextAssigned = picked || null;
+        await api('/api/portal/dispatch', {
+          method: 'PATCH',
+          body: {
+            id,
+            assignedUserId: nextAssigned,
+            status: nextAssigned ? 'assigned' : 'open',
+          },
+        });
+        closeDispatchAssignModal();
+        await loadDispatchManager();
+        setBadge('ok', 'assigned');
+      } catch(e){
+        $('dispatchAssignMsg').textContent = String(e.message || e);
+      }
+    }
+
     async function createDispatchTask(){
       $('dispatchCreateMsg').textContent = '';
       try{
@@ -4082,12 +4418,13 @@
         if (!title) throw new Error('Enter a title');
 
         const leadIdRaw = String($('dispatchLeadId').value || '').trim();
-        const leadId = leadIdRaw ? Number(leadIdRaw) : null;
+        const leadId = leadIdRaw ? Number(leadIdRaw) : (state.selectedLead ? Number(state.selectedLead.id) : null);
+        const assignedUserPick = String($('dispatchAssignedUserPick')?.value || '').trim();
         const body = {
           leadId: leadId || null,
           title,
           assignedRole,
-          assignedUserId: String($('dispatchAssignedUserId').value || '').trim() || null,
+          assignedUserId: assignedUserPick || String($('dispatchAssignedUserId').value || '').trim() || null,
           dueDate: $('dispatchDueDate').value || null,
           dueTime: $('dispatchDueTime').value || '',
           priority: Number($('dispatchPriority').value || 0),
@@ -4115,6 +4452,39 @@
       } catch(e){
         $('dispatchMsg').textContent = String(e.message || e);
       }
+    }
+
+    function renderDispatchAssigneePicker(){
+      const pickEl = $('dispatchAssignedUserPick');
+      if (!pickEl) return;
+      const assignedRole = String($('dispatchAssignedRole')?.value || '').trim();
+      const users = Array.isArray(state.usersCache) ? state.usersCache : [];
+      const filtered = assignedRole
+        ? users.filter((u) => String(u?.role || '').trim() === assignedRole)
+        : users.slice();
+
+      filtered.sort((a, b) => {
+        const an = String(a?.fullName || a?.email || a?.userId || '');
+        const bn = String(b?.fullName || b?.email || b?.userId || '');
+        return an.localeCompare(bn);
+      });
+
+      const keep = String(pickEl.value || $('dispatchAssignedUserId')?.value || '').trim();
+
+      const opts = ['<option value="">Unassigned</option>'];
+      for (const u of filtered.slice(0, 120)) {
+        const id = String(u?.userId || '').trim();
+        if (!id) continue;
+        const label = String(u?.fullName || u?.email || id).trim();
+        opts.push(`<option value="${escapeHtml(id)}">${escapeHtml(label)}</option>`);
+      }
+      pickEl.innerHTML = opts.join('');
+
+      if (keep) {
+        const has = Array.from(pickEl.options).some((o) => String(o.value || '') === keep);
+        if (has) pickEl.value = keep;
+      }
+      if ($('dispatchAssignedUserId')) $('dispatchAssignedUserId').value = String(pickEl.value || '').trim();
     }
 
     async function aiResearch(){
@@ -4457,7 +4827,7 @@
 
     function availabilityEditable(){
       const er = effectiveRole();
-      if (!['dialer','remote_setter','in_person_setter','closer','account_manager','manager','event_coordinator'].includes(er)) return false;
+      if (!['dialer','remote_setter','in_person_setter','closer','account_manager','manager','event_coordinator','event_host','media_team'].includes(er)) return false;
       return true;
     }
 
@@ -5396,6 +5766,54 @@
       return { eventStatus, offerText, offerState, offerKind };
     }
 
+    function isCollapsed(targetId){
+      const body = $(targetId);
+      return !!(body && body.classList.contains('hide'));
+    }
+
+    function setCollapsed(targetId, collapsed, { persist = true } = {}){
+      const body = $(targetId);
+      if (body) body.classList.toggle('hide', !!collapsed);
+      const btn = document.querySelector(`button[data-collapse-target="${CSS.escape(String(targetId))}"]`);
+      if (btn) {
+        btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        const chev = btn.querySelector('[data-collapse-chev]');
+        if (chev) chev.textContent = collapsed ? '▼' : '▲';
+      }
+      if (persist) {
+        if (!state.ui || typeof state.ui !== 'object') state.ui = { sidebarCollapsed: false, collapse: {}, _opsCollapseInit: false };
+        if (!state.ui.collapse || typeof state.ui.collapse !== 'object') state.ui.collapse = {};
+        state.ui.collapse[String(targetId)] = collapsed ? 'closed' : 'open';
+      }
+    }
+
+    function restoreCollapsedFromState(targetId, fallbackCollapsed){
+      const key = String(targetId);
+      const v = state?.ui?.collapse && typeof state.ui.collapse === 'object' ? state.ui.collapse[key] : null;
+      if (v === 'open') return setCollapsed(targetId, false, { persist: false });
+      if (v === 'closed') return setCollapsed(targetId, true, { persist: false });
+      return setCollapsed(targetId, !!fallbackCollapsed, { persist: true });
+    }
+
+    function toggleCollapsed(targetId){
+      const next = !isCollapsed(targetId);
+      setCollapsed(targetId, next);
+    }
+
+    function ensureEventOpsCollapseDefaults(){
+      if (state?.ui?._opsCollapseInit) return;
+      restoreCollapsedFromState('opsStaffingBody', false);
+      restoreCollapsedFromState('opsChecklistBody', false);
+      restoreCollapsedFromState('opsPlanBody', true);
+      restoreCollapsedFromState('opsBudgetBody', true);
+      restoreCollapsedFromState('opsVendorsBody', true);
+      restoreCollapsedFromState('opsFeedbackBody', true);
+      restoreCollapsedFromState('opsAiStaffingBody', true);
+      restoreCollapsedFromState('opsReportBody', true);
+      restoreCollapsedFromState('opsCsvImportBody', true);
+      state.ui._opsCollapseInit = true;
+    }
+
     function talentIsCoordinator(){
       return isCoordinatorRole();
     }
@@ -6224,6 +6642,10 @@
       wrap.classList.toggle('hide', !e);
       if (!e) return;
 
+      ensureEventOpsCollapseDefaults();
+      const ro = isCoordinatorRole() && isManagerViewAsPreviewOnly();
+      $('eventOpsReadOnlyLine')?.classList.toggle('hide', !ro);
+
       const canManage = coordinatorOpsEditable();
       $('assignHostUser')?.toggleAttribute('disabled', !canManage);
       $('assignMediaUser')?.toggleAttribute('disabled', !canManage);
@@ -6525,10 +6947,9 @@
     async function importVendors(){
       $('importVendorsMsg').textContent = '';
       try{
-        const csvText = String($('vendorsCsv')?.value || '').trim();
-        if (!csvText) throw new Error('paste_csv');
-        const j = await api('/api/portal/vendors', { method: 'POST', body: { csvText } });
-        $('importVendorsMsg').textContent = `Imported ${Number(j.count || 0)} vendors.`;
+        const j = await api('/api/portal/vendors', { method: 'POST', body: { action: 'reload_from_resources' } });
+        $('importVendorsMsg').textContent = `Reloaded ${Number(j.count || 0)} vendors from resources.`;
+        await loadVendors().catch(() => {});
       } catch (err) {
         $('importVendorsMsg').textContent = String(err.message || err);
       }
@@ -6537,10 +6958,9 @@
     async function importEventTypes(){
       $('importEventTypesMsg').textContent = '';
       try{
-        const csvText = String($('eventTypesCsv')?.value || '').trim();
-        if (!csvText) throw new Error('paste_csv');
-        const j = await api('/api/portal/event_types', { method: 'POST', body: { csvText } });
-        $('importEventTypesMsg').textContent = `Imported ${Number(j.count || 0)} event types.`;
+        const j = await api('/api/portal/event_types', { method: 'POST', body: { action: 'reload_from_resources' } });
+        $('importEventTypesMsg').textContent = `Reloaded ${Number(j.count || 0)} event types from resources.`;
+        await loadEventTypes().catch(() => {});
         await initEventOps();
       } catch (err) {
         $('importEventTypesMsg').textContent = String(err.message || err);
@@ -7341,9 +7761,7 @@
           } else if (desired === 'offers') {
             nextEvents = allEvents.filter((ev) => {
               const asg = String(ev.assigned_role || '').trim();
-              const hasAssignments = !!(ev.meta && typeof ev.meta === 'object' && Array.isArray(ev.meta.assignments) && ev.meta.assignments.length);
               return String(ev.status || 'open') === 'open'
-                && !hasAssignments
                 && !ev.assigned_user_id
                 && !!asg
                 && asg === er;
@@ -7827,6 +8245,16 @@
     on('copyReportDraftBtn', 'click', () => copyReportDraft().catch(() => {}));
     on('sendReportDraftBtn', 'click', () => sendReportDraft().catch(() => {}));
 
+    document.addEventListener('click', (ev) => {
+      if (!(ev.target instanceof Element)) return;
+      const btn = ev.target.closest('button[data-collapse-target]');
+      if (!btn) return;
+      const targetId = String(btn.getAttribute('data-collapse-target') || '').trim();
+      if (!targetId) return;
+      ev.preventDefault();
+      toggleCollapsed(targetId);
+    });
+
     on('talentSaveBtn', 'click', () => saveTalentProfile().catch(() => {}));
     on('talentRefreshBtn', 'click', async () => {
       await loadTalentProfilesCache({ force: true }).catch(() => {});
@@ -7961,6 +8389,8 @@
         if (m && m.classList.contains('show')) closePipelineModal();
         const s = $('scheduleModal');
         if (s && s.classList.contains('show')) closeScheduleModal();
+        const d = $('dispatchAssignModal');
+        if (d && d.classList.contains('show')) closeDispatchAssignModal();
       }
     });
 
@@ -7974,6 +8404,16 @@
       const m = $('scheduleModal');
       if (!m) return;
       if (ev.target === m) closeScheduleModal();
+    });
+
+    on('dispatchAssignClose', 'click', () => closeDispatchAssignModal());
+    on('dispatchAssignSave', 'click', () => saveDispatchAssign().catch(() => {}));
+    on('dispatchAssignClear', 'click', () => saveDispatchAssign({ clear: true }).catch(() => {}));
+
+    on('dispatchAssignModal', 'click', (ev) => {
+      const m = $('dispatchAssignModal');
+      if (!m) return;
+      if (ev.target === m) closeDispatchAssignModal();
     });
 
     on('loadPayoutsBtn', 'click', () => loadPayouts().catch(() => {}));
@@ -7990,10 +8430,40 @@
     on('loadStatsBtn', 'click', () => loadStats().catch(() => {}));
     on('mgrAssignBtn', 'click', () => managerAssignLead().catch(() => {}));
     on('loadTeamAvailBtn', 'click', () => loadTeamAvailability().catch(() => {}));
+    on('mgrPickLead', 'click', () => {
+      state.pickLeadReturnTab = 'manager';
+      state.managerSubtab = 'assign';
+      setTab('leads');
+    });
+    on('mgrUseSelectedLead', 'click', () => {
+      const id = state.selectedLead ? String(state.selectedLead.id || '').trim() : '';
+      if ($('mgrLeadId')) $('mgrLeadId').value = id;
+    });
+    on('mgrAssignedRole', 'change', () => {
+      ensureUsersCache().then(() => renderMgrAssignUserPicker()).catch(() => {});
+    });
+    on('mgrAssignedUserPick', 'change', () => {
+      if ($('mgrAssignedUserId')) $('mgrAssignedUserId').value = String($('mgrAssignedUserPick')?.value || '').trim();
+    });
 
     on('loadDispatchBtn', 'click', () => loadDispatchManager().catch(() => {}));
     on('scanDispatchBtn', 'click', () => scanDispatchOverdue().catch(() => {}));
     on('dispatchCreateBtn', 'click', () => createDispatchTask().catch(() => {}));
+    on('dispatchPickLead', 'click', () => {
+      state.pickLeadReturnTab = 'manager';
+      state.managerSubtab = 'tasks';
+      setTab('leads');
+    });
+    on('dispatchUseSelectedLead', 'click', () => {
+      const id = state.selectedLead ? String(state.selectedLead.id || '').trim() : '';
+      if ($('dispatchLeadId')) $('dispatchLeadId').value = id;
+    });
+    on('dispatchAssignedRole', 'change', () => {
+      ensureUsersCache().then(() => renderDispatchAssigneePicker()).catch(() => {});
+    });
+    on('dispatchAssignedUserPick', 'change', () => {
+      if ($('dispatchAssignedUserId')) $('dispatchAssignedUserId').value = String($('dispatchAssignedUserPick')?.value || '').trim();
+    });
 
     on('loadDialerTasksBtn', 'click', () => loadDispatchInto('dialerTasksTbody', 'dialerTasksMsg', { overdueOnly: !!$('dialerTasksOverdue')?.checked, scope: String($('dialerTasksScope')?.value || 'role') }).catch(() => {}));
     // Closer Dispatch removed from Sales.

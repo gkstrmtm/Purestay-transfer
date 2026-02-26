@@ -1,4 +1,12 @@
 {
+  "functions": {
+    "api/portal/vendors.js": {
+      "includeFiles": ["resources/vendors.csv"]
+    },
+    "api/portal/event_types.js": {
+      "includeFiles": ["resources/event_types.csv"]
+    }
+  },
   "redirects": [
     { "source": "/Home.html", "destination": "/", "permanent": true },
     { "source": "/Discovery.html", "destination": "/discovery", "permanent": true },

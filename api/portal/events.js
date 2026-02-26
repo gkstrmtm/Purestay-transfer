@@ -65,6 +65,11 @@ module.exports = async (req, res) => {
         ];
         if (role) {
           parts.push(...buildRoleOrParts('assigned_role', role));
+          // Coordinators need operational visibility across staffing roles.
+          if (role === 'event_coordinator') {
+            parts.push(...buildRoleOrParts('assigned_role', 'event_host'));
+            parts.push(...buildRoleOrParts('assigned_role', 'media_team'));
+          }
           if (role === 'event_host') parts.push(...buildRoleOrParts('assigned_role', 'media_team'));
           if (role === 'media_team') parts.push(...buildRoleOrParts('assigned_role', 'event_host'));
         }

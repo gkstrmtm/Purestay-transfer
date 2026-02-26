@@ -330,10 +330,29 @@ async function seedDemoData(sb, {
   const selectedLeadIds = leadIds.slice(0, eventsCount);
   for (let i = 0; i < eventsCount; i++) {
     const leadId = selectedLeadIds[i] || null;
-    const status = pick(eventStatuses, i + 1);
+    const status0 = pick(eventStatuses, i + 1);
     const eventDate = addDaysYmd(today, -10 + i);
 
     const isPast = i < 8;
+
+    // Ensure each role preview has visible events:
+    // - Some events are coordinator-run
+    // - Some are host/media offers (open + unassigned)
+    // - Some are already accepted/assigned for host/media
+    const slot = i % 6;
+    const isOffer = slot === 0 || slot === 1 || slot === 2;
+    const primaryRole = isOffer
+      ? (slot % 2 === 0 ? 'event_host' : 'media_team')
+      : (slot === 3 ? 'event_host' : (slot === 4 ? 'media_team' : 'event_coordinator'));
+
+    const primaryUserId = (
+      primaryRole === 'event_host' ? hostId
+        : primaryRole === 'media_team' ? mediaId
+          : coordId
+    );
+
+    // Offers are always open + unassigned.
+    const status = isOffer ? 'open' : status0;
     const isCancelled = status === 'canceled' || status === 'cancelled';
 
     const budget = {
@@ -363,11 +382,35 @@ async function seedDemoData(sb, {
       reportSent: isPast && !isCancelled ? (i % 4 ? 'yes' : 'no') : 'no',
     };
 
-    const assignments = [
+    const baseAssignments = [
       { role: 'event_coordinator', userId: coordId },
       { role: 'event_host', userId: hostId },
       ...(i % 2 === 0 ? [{ role: 'media_team', userId: mediaId }] : []),
     ].filter((a) => a && a.role && a.userId);
+
+    // For offer-style events, keep assignments scoped to the primary role so
+    // the Offers tab can render consistent statuses.
+    let assignments = baseAssignments;
+    if (isOffer) {
+      const offerAssignee = primaryUserId;
+      const offerStatus = (slot === 0) ? 'pending' : (slot === 1 ? 'declined' : 'pending');
+      const sendMode = (slot === 0) ? 'sent' : (slot === 1 ? 'sent' : 'open');
+      assignments = (sendMode === 'open')
+        ? []
+        : [{
+          role: primaryRole,
+          userId: offerAssignee,
+          status: offerStatus,
+          note: offerStatus === 'declined' ? 'Schedule conflict (demo).' : '',
+          updatedAt: nowIso(),
+          decidedAt: offerStatus === 'declined' ? nowIso() : null,
+        }];
+    }
+
+    // If this is an accepted/assigned event for host/media, assign it to that user.
+    const assignedUserId = (!isOffer && ['event_host', 'media_team'].includes(primaryRole) && (slot === 3 || slot === 4))
+      ? primaryUserId
+      : (primaryRole === 'event_coordinator' ? coordId : null);
 
     const createdAt = new Date();
     createdAt.setDate(createdAt.getDate() - (15 - i));
@@ -385,8 +428,8 @@ async function seedDemoData(sb, {
       state: pick(states, i + 2),
       postal_code: `27${String(200 + i).padStart(3, '0')}`,
       area_tag: pick(areaTags, i),
-      assigned_role: 'event_coordinator',
-      assigned_user_id: coordId,
+      assigned_role: primaryRole,
+      assigned_user_id: assignedUserId,
       payout_cents: budget.hostPayCents + budget.mediaPayCents,
       notes: pick([
         'Confirm vendor table layout and signage plan.',
@@ -473,17 +516,21 @@ async function seedDemoData(sb, {
     const when = addDaysYmd(today, (i % 8) - 2);
     const createdAt = new Date();
     createdAt.setDate(createdAt.getDate() - (6 - (i % 6)));
+
+    const apptAssignedRole = (i % 4 === 1) ? 'account_manager' : 'closer';
+    const apptAssignedUserId = (apptAssignedRole === 'account_manager') ? amId : closerId;
+
     appointmentsToInsert.push({
       created_at: createdAt.toISOString(),
-      created_by: pick([dialerId, setterId, mgrId], i) || mgrId,
+      created_by: pick([dialerId, setterId, amId, mgrId], i) || mgrId,
       status: 'scheduled',
       title: `Appointment • Demo Lead ${leadId}`,
       event_date: when,
       start_time: pick(['09:00', '10:30', '13:00', '15:30', '17:00'], i),
       end_time: pick(['09:30', '11:00', '13:30', '16:00', '17:30'], i),
       area_tag: 'appointment',
-      assigned_role: 'closer',
-      assigned_user_id: closerId,
+      assigned_role: apptAssignedRole,
+      assigned_user_id: apptAssignedUserId,
       payout_cents: 0,
       notes: pick([
         'Discovery + next steps.',
@@ -744,7 +791,7 @@ async function seedDemoData(sb, {
       },
     },
   };
-  const usersForAvail = [closerId, amId, mgrId].filter(Boolean);
+  const usersForAvail = [closerId, amId, mgrId, coordId, hostId, mediaId].filter(Boolean);
   for (let i = 0; i < usersForAvail.length; i++) {
     const uid = usersForAvail[i];
     const key = `portal:availability:${uid}`;

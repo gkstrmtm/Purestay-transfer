@@ -1,5 +1,7 @@
 const { sendJson, handleCors, readJson } = require('../../lib/vercelApi');
 const { requirePortalSession, hasRole } = require('../../lib/portalAuth');
+const fs = require('fs');
+const path = require('path');
 
 function cleanStr(v, maxLen) {
   return String(v || '').trim().slice(0, maxLen);
@@ -99,6 +101,23 @@ function toObjects(rows) {
   return out;
 }
 
+function readResourceText(relPath) {
+  try {
+    const full = path.join(process.cwd(), relPath);
+    return fs.readFileSync(full, 'utf8');
+  } catch (e) {
+    return null;
+  }
+}
+
+function vendorsFromResources() {
+  const text = readResourceText('resources/vendors.csv');
+  if (!text) return { ok: false, error: 'resources_missing' };
+  const rows = parseCsv(text);
+  const objs = toObjects(rows);
+  return { ok: true, vendors: objs.slice(0, 2000) };
+}
+
 module.exports = async (req, res) => {
   if (handleCors(req, res, { methods: ['GET', 'POST', 'OPTIONS'] })) return;
 
@@ -118,6 +137,18 @@ module.exports = async (req, res) => {
     const value = (r.value && typeof r.value === 'object') ? r.value : {};
     let vendors = Array.isArray(value.vendors) ? value.vendors : [];
 
+    let seeded = false;
+    if (!vendors.length) {
+      const rr = vendorsFromResources();
+      if (rr.ok && rr.vendors.length) {
+        const w = await upsertKv(s.sbAdmin, key, { vendors: rr.vendors, updatedAt: new Date().toISOString(), source: 'resources' });
+        if (w.ok) {
+          vendors = rr.vendors;
+          seeded = true;
+        }
+      }
+    }
+
     if (state) {
       vendors = vendors.filter((v) => JSON.stringify(v).toLowerCase().includes(`\"state\":\"${state}`) || JSON.stringify(v).toLowerCase().includes(` ${state} `) || JSON.stringify(v).toLowerCase().includes(`,${state}`));
     }
@@ -125,7 +156,7 @@ module.exports = async (req, res) => {
       vendors = vendors.filter((v) => JSON.stringify(v).toLowerCase().includes(q));
     }
 
-    return sendJson(res, 200, { ok: true, vendors });
+    return sendJson(res, 200, { ok: true, vendors, seeded });
   }
 
   if (req.method === 'POST') {
@@ -135,6 +166,16 @@ module.exports = async (req, res) => {
 
     const body = await readJson(req);
     if (!body) return sendJson(res, 400, { ok: false, error: 'invalid_body' });
+
+    const action = cleanStr(body.action, 80).toLowerCase();
+    const reloadFromResources = action === 'reload_from_resources' || action === 'reloadfromresources' || body.reloadFromResources === true;
+    if (reloadFromResources) {
+      const rr = vendorsFromResources();
+      if (!rr.ok) return sendJson(res, 500, { ok: false, error: rr.error });
+      const w = await upsertKv(s.sbAdmin, key, { vendors: rr.vendors, updatedAt: new Date().toISOString(), source: 'resources' });
+      if (!w.ok) return sendJson(res, 500, { ok: false, error: w.error });
+      return sendJson(res, 200, { ok: true, vendors: rr.vendors, count: rr.vendors.length, reloaded: true });
+    }
 
     const csvText = body.csvText != null ? String(body.csvText || '') : '';
     const vendors = Array.isArray(body.vendors) ? body.vendors : null;

@@ -82,7 +82,7 @@ module.exports = async (req, res) => {
   const s = await requirePortalSession(req);
   if (!s.ok) return sendJson(res, s.status || 401, { ok: false, error: s.error });
 
-  if (!hasRole(s.profile, ['dialer', 'remote_setter', 'in_person_setter', 'closer', 'account_manager', 'event_coordinator', 'manager'])) {
+  if (!hasRole(s.profile, ['dialer', 'remote_setter', 'in_person_setter', 'closer', 'account_manager', 'event_coordinator', 'event_host', 'media_team', 'manager'])) {
     return sendJson(res, 403, { ok: false, error: 'forbidden' });
   }
 
