@@ -1578,6 +1578,22 @@
                   <div style="height:10px"></div>
                   <div id="assignmentsList"></div>
 
+                  <div class="card" style="background:#fff; border-color: rgba(199,154,59,.25); margin-top:10px;">
+                    <div class="bd">
+                      <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
+                        <div>
+                          <div class="muted small">AI staffing</div>
+                          <div style="font-weight:900; margin-top:4px;">Recommendations</div>
+                          <div class="muted small" style="margin-top:4px;">Suggest host + media based on location, specialties, and reliability.</div>
+                        </div>
+                        <button id="aiRecommendTalentBtn" class="btn secondary" type="button">AI recommend</button>
+                      </div>
+                      <div style="height:10px"></div>
+                      <div id="talentAiMsg" class="err"></div>
+                      <div id="talentAiList"></div>
+                    </div>
+                  </div>
+
                   <div id="myAssignmentActions" class="hide" style="margin-top:10px;"></div>
                 </div>
 
@@ -1702,6 +1718,7 @@
                       <div class="row" style="margin-top:8px;">
                         <button id="loadVendorsBtn" class="btn secondary" type="button">Search</button>
                         <button id="suggestVendorsBtn" class="btn secondary" type="button">Suggest nearby</button>
+                        <button id="aiSuggestVendorsBtn" class="btn secondary" type="button">AI suggest</button>
                         <div id="vendorsMsg" class="err"></div>
                       </div>
                       <div id="vendorsList" style="margin-top:10px;"></div>
@@ -5584,6 +5601,7 @@
       $('assignMediaUser')?.toggleAttribute('disabled', !canManage);
       $('addHostBtn')?.toggleAttribute('disabled', !canManage);
       $('addMediaBtn')?.toggleAttribute('disabled', !canManage);
+      $('aiRecommendTalentBtn')?.toggleAttribute('disabled', !isCoordinatorRole());
 
       const checklist = meta?.checklist && typeof meta.checklist === 'object' ? meta.checklist : {};
       if ($('chkRecapReceived')) $('chkRecapReceived').checked = String(checklist.recapReceived || '') === 'yes';
@@ -5606,6 +5624,8 @@
 
       renderAssignments(assignments, usersById);
       renderMyAssignmentActions(assignments);
+
+      renderTalentAiFromCache();
 
       renderFeedbackEditor(meta);
     }
@@ -5652,12 +5672,12 @@
       renderEventOpsFromSelected(meta, assignments, usersById);
     }
 
-    async function addAssignment(role){
+    async function addAssignment(role, userIdOverride){
       $('eventOpsMsg').textContent = '';
       try{
         const e = state.selectedEvent;
         if (!e || !e.id) throw new Error('select an event');
-        const userId = role === 'event_host' ? String($('assignHostUser')?.value || '') : String($('assignMediaUser')?.value || '');
+        const userId = String(userIdOverride || (role === 'event_host' ? String($('assignHostUser')?.value || '') : String($('assignMediaUser')?.value || '')) || '');
         if (!userId) throw new Error('select a user');
         const j = await api('/api/portal/event_assignments', { method: 'PATCH', body: { action: 'add', eventId: e.id, role, userId } });
         const next = Array.isArray(j.assignments) ? j.assignments : [];
@@ -5880,6 +5900,189 @@
       const q = [city, st].filter(Boolean).join(' ');
       if ($('vendorQ')) $('vendorQ').value = q;
       loadVendors().catch(()=>{});
+    }
+
+    async function aiSuggestVendorsForSelected(){
+      $('vendorsMsg').textContent = '';
+      try{
+        const e = state.selectedEvent;
+        if (!e || !e.id) throw new Error('select an event');
+        $('vendorsMsg').textContent = 'AI thinking…';
+
+        const j = await api('/api/portal/ai/vendor_suggest?eventId=' + encodeURIComponent(String(e.id)));
+        const picked = Array.isArray(j.picked) ? j.picked : [];
+        const missingInfo = Array.isArray(j.missingInfo) ? j.missingInfo : [];
+        const searchQuery = String(j.searchQuery || '').trim();
+
+        if (!picked.length) {
+          $('vendorsMsg').textContent = 'No AI suggestions returned.';
+          $('vendorsList').innerHTML = '<div class="muted small">No suggestions.</div>';
+          return;
+        }
+
+        $('vendorsMsg').textContent = `AI suggested ${picked.length} vendor(s).`;
+
+        const header = [
+          searchQuery ? `<div class="muted small">Search query: <span style="font-family:var(--mono);">${escapeHtml(searchQuery)}</span></div>` : '',
+          missingInfo.length ? `<div class="muted small" style="margin-top:6px;">Missing info: ${escapeHtml(missingInfo.slice(0, 6).join(' • '))}</div>` : '',
+          '<div style="height:8px"></div>',
+        ].filter(Boolean).join('');
+
+        $('vendorsList').innerHTML = header + picked.slice(0, 12).map((p, i) => {
+          const v = p && typeof p === 'object' ? p.vendor : null;
+          const reason = String(p?.reason || '').trim();
+          const label = vendorLabel(v || {});
+          return `
+            <div class="card" style="background:#fff; margin-bottom:8px;">
+              <div class="bd">
+                <div class="row" style="justify-content:space-between; gap:12px; align-items:flex-start;">
+                  <div>
+                    <div style="font-weight:900;">${escapeHtml(label)} <span class="badge">ai</span></div>
+                    ${reason ? `<div class="muted small" style="margin-top:4px;">${escapeHtml(reason)}</div>` : ''}
+                  </div>
+                  <div class="row" style="gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                    <button class="btn secondary small" type="button" data-add-ai-vendor="${i}">Add to event</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        for (const btn of $('vendorsList').querySelectorAll('button[data-add-ai-vendor]')){
+          btn.addEventListener('click', () => {
+            const idx = Number(btn.dataset.addAiVendor || 0);
+            const v = picked[idx]?.vendor;
+            if (!v) return;
+            addVendorToEvent(v).catch(()=>{});
+          });
+        }
+      } catch (err) {
+        $('vendorsMsg').textContent = String(err.message || err);
+      }
+    }
+
+    function talentDisplayName(userId){
+      const uid = String(userId || '').trim();
+      if (!uid) return '';
+
+      const profilesById = (state._talentProfilesById instanceof Map)
+        ? state._talentProfilesById
+        : new Map((Array.isArray(state.talent?.profiles) ? state.talent.profiles : []).map((p) => [String(p?.userId || ''), p]));
+      const p = profilesById.get(uid) || null;
+
+      const users = Array.isArray(state._eventOpsUsers) ? state._eventOpsUsers : [];
+      const u = users.find((x) => String(x?.userId || '') === uid) || null;
+
+      return String((p && p.displayName) || u?.fullName || u?.email || uid).trim();
+    }
+
+    function renderTalentAiRecommendations(payload){
+      const list = $('talentAiList');
+      if (!list) return;
+      const canAssign = coordinatorOpsEditable();
+      const p = (payload && typeof payload === 'object') ? payload : {};
+      const hosts = Array.isArray(p.hosts) ? p.hosts : [];
+      const media = Array.isArray(p.media) ? p.media : [];
+      const missingInfo = Array.isArray(p.missingInfo) ? p.missingInfo : [];
+
+      if (!hosts.length && !media.length) {
+        list.innerHTML = '<div class="muted small">No recommendations yet.</div>';
+        return;
+      }
+
+      const row = (roleLabel, arr, role) => {
+        if (!arr.length) return '';
+        return `
+          <div style="font-weight:900; margin-top:8px;">${escapeHtml(roleLabel)}</div>
+          <div style="height:6px"></div>
+          ${arr.slice(0, 6).map((it) => {
+            const uid = String(it?.userId || '').trim();
+            const name = talentDisplayName(uid);
+            const reason = String(it?.reason || '').trim();
+            const action = canAssign
+              ? `<button class="btn secondary small" type="button" data-ai-assign="1" data-ai-role="${escapeHtml(role)}" data-ai-user="${escapeHtml(uid)}">Assign</button>`
+              : '<span class="badge">read-only</span>';
+            return `
+              <div class="card" style="background:#fff; margin-bottom:8px;">
+                <div class="bd">
+                  <div class="row" style="justify-content:space-between; gap:12px; align-items:flex-start;">
+                    <div>
+                      <div style="font-weight:900;">${escapeHtml(name)}</div>
+                      <div class="muted small" style="margin-top:2px; font-family:var(--mono);">${escapeHtml(uid)}</div>
+                      ${reason ? `<div class="muted small" style="margin-top:6px;">${escapeHtml(reason)}</div>` : ''}
+                    </div>
+                    <div class="row" style="gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                      ${action}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        `;
+      };
+
+      list.innerHTML = [
+        missingInfo.length ? `<div class="muted small">Missing info: ${escapeHtml(missingInfo.slice(0, 6).join(' • '))}</div><div style="height:8px"></div>` : '',
+        row('Hosts', hosts, 'event_host'),
+        row('Media', media, 'media_team'),
+      ].filter(Boolean).join('') || '<div class="muted small">No recommendations.</div>';
+
+      if (canAssign) {
+        for (const btn of list.querySelectorAll('button[data-ai-assign]')){
+          btn.addEventListener('click', () => {
+            const role = String(btn.dataset.aiRole || '').trim();
+            const uid = String(btn.dataset.aiUser || '').trim();
+            if (!role || !uid) return;
+            addAssignment(role, uid).catch(()=>{});
+          });
+        }
+      }
+    }
+
+    function renderTalentAiFromCache(){
+      const e = state.selectedEvent;
+      const msg = $('talentAiMsg');
+      if (msg) msg.textContent = '';
+      const list = $('talentAiList');
+      if (!list) return;
+      if (!e || !e.id) {
+        list.innerHTML = '<div class="muted small">Select an event to get recommendations.</div>';
+        return;
+      }
+      const map = (state._talentAiByEventId && typeof state._talentAiByEventId === 'object') ? state._talentAiByEventId : {};
+      const payload = map[String(e.id)] || null;
+      renderTalentAiRecommendations(payload);
+    }
+
+    async function aiRecommendTalentForSelected(){
+      const msg = $('talentAiMsg');
+      if (msg) msg.textContent = '';
+      try{
+        const e = state.selectedEvent;
+        if (!e || !e.id) throw new Error('select an event');
+        if (!isCoordinatorRole()) throw new Error('forbidden');
+
+        // Ensure we have local name caches so the UI can render nicely.
+        await loadTalentProfilesCache().catch(()=>{});
+        await loadAssignableUsers().catch(()=>{});
+
+        if (msg) msg.textContent = 'AI thinking…';
+        const j = await api('/api/portal/ai/talent_recommend?eventId=' + encodeURIComponent(String(e.id)));
+
+        if (!state._talentAiByEventId) state._talentAiByEventId = {};
+        state._talentAiByEventId[String(e.id)] = {
+          hosts: Array.isArray(j.hosts) ? j.hosts : [],
+          media: Array.isArray(j.media) ? j.media : [],
+          missingInfo: Array.isArray(j.missingInfo) ? j.missingInfo : [],
+        };
+
+        if (msg) msg.textContent = '';
+        renderTalentAiFromCache();
+      } catch (err) {
+        if (msg) msg.textContent = String(err.message || err);
+      }
     }
 
     async function addVendorToEvent(vendor){
@@ -6686,6 +6889,7 @@
     on('importEventTypesBtn', 'click', () => importEventTypes().catch(() => {}));
     on('loadVendorsBtn', 'click', () => loadVendors().catch(() => {}));
     on('suggestVendorsBtn', 'click', () => suggestVendorsForSelected());
+    on('aiSuggestVendorsBtn', 'click', () => aiSuggestVendorsForSelected().catch(() => {}));
     on('loadEventTypesBtn', 'click', () => loadEventTypes().catch(() => {}));
 
     on('feedbackEnableBtn', 'click', () => enableOrRegenerateFeedbackLink().catch(() => {}));
@@ -6697,6 +6901,8 @@
     });
     on('feedbackSaveBtn', 'click', () => saveFeedbackForm().catch(() => {}));
     on('feedbackLoadSummaryBtn', 'click', () => loadFeedbackSummary().catch(() => {}));
+
+    on('aiRecommendTalentBtn', 'click', () => aiRecommendTalentForSelected().catch(() => {}));
 
     on('talentSaveBtn', 'click', () => saveTalentProfile().catch(() => {}));
     on('talentRefreshBtn', 'click', async () => {
