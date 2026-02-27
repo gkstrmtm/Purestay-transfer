@@ -3232,7 +3232,9 @@
       }
       if (tab === 'events') {
         await loadEvents().catch(()=>{});
-        if (state.selectedEvent?.id) await loadRecaps(state.selectedEvent.id).catch(()=>{});
+        if (state.selectedEvent?.id && ['event_host','media_team'].includes(effectiveRole())) {
+          await loadRecaps(state.selectedEvent.id).catch(()=>{});
+        }
       }
       if (tab === 'talent') {
         await loadTalentTab().catch(()=>{});
@@ -3243,7 +3245,7 @@
       if (tab === 'manager') {
         renderManagerSubtab();
         if (state.managerSubtab === 'stats') {
-          if (myRole() === 'manager') await loadStats().catch(()=>{});
+          if (['manager','event_coordinator'].includes(effectiveRole())) await loadStats().catch(()=>{});
         }
         if (state.managerSubtab === 'tasks') {
           await loadDispatchManager().catch(()=>{});
@@ -3395,7 +3397,7 @@
       }
 
       if (['event_host','media_team','event_coordinator'].includes(er)) {
-        if (['event_host','media_team','event_coordinator'].includes(er)) navItems.push({ id:'offers', label:'Offers' });
+        navItems.push({ id:'offers', label:'Offers' });
 
         if (['event_host','media_team'].includes(er)) {
           navItems.push({ id:'meetings', label:'Availability' });
@@ -3484,7 +3486,8 @@
 
       // Setter-only: show Pull Leads button.
       try {
-        const canPull = !isManagerUser() && ['remote_setter','in_person_setter'].includes(er);
+        // View-as should behave like the selected role.
+        const canPull = ['remote_setter','in_person_setter'].includes(er);
         const pl = $('pullLeadsToggle');
         if (pl) pl.classList.toggle('hide', !canPull);
       } catch(_e) {}
