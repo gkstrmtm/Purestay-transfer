@@ -1457,15 +1457,20 @@
             </div>
           </div>
 
-          <div id="eventOpsWrap" class="card hide" style="margin-top:12px; background:#fff;">
+          <div id="eventOpsWrap" class="card hide" style="margin-top:0; background:#fff;">
             <div class="bd">
               <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
                 <div>
                   <div class="muted small">Coordinator / Ops</div>
                   <div style="font-weight:900; margin-top:4px;">Event operations</div>
                 </div>
-                <button id="createFollowupsBtn" class="btn secondary" type="button">Create 24h follow-ups</button>
+                <div class="row" style="gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                  <button id="closeOpsEventBtn" class="btn secondary" type="button">Close</button>
+                  <button id="createFollowupsBtn" class="btn secondary" type="button">Create 24h follow-ups</button>
+                </div>
               </div>
+
+              <div id="eventOpsSelectedLine" class="muted small" style="margin-top:6px;"></div>
 
               <div style="height:10px"></div>
               <div id="eventOpsMsg" class="err"></div>
@@ -1842,11 +1847,27 @@
           </div>
 
           <div style="height:12px"></div>
-          <div class="muted small">Tip: use “Open” to manage staffing on the event.</div>
+          <div id="offersDetailWrap" class="card hide" style="background:#fff;">
+            <div class="bd">
+              <div class="row" style="justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap;">
+                <div>
+                  <div class="muted small">Offer</div>
+                  <div id="offersDetailTitle" style="font-weight:900; margin-top:4px;"></div>
+                  <div id="offersDetailMeta" class="muted small" style="margin-top:6px;"></div>
+                </div>
+                <div class="row" style="gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                  <button id="offersDetailCloseBtn" class="btn secondary small" type="button">Close</button>
+                  <button id="offersDetailViewEventBtn" class="btn secondary small" type="button">View event ops</button>
+                </div>
+              </div>
+              <div style="height:10px"></div>
+              <div id="offersDetailBody"></div>
+            </div>
+          </div>
         </div>
 
         <div id="viewTalent" class="hide">
-          <div class="card" style="background:#fff;">
+          <div id="talentProfileEditorCard" class="card" style="background:#fff;">
             <div class="bd">
               <div class="wizardTop">
                 <div>
@@ -2564,6 +2585,8 @@
       events: [],
       selectedEvent: null,
       pendingSelectEventId: null,
+      offers: [],
+      selectedOfferEventId: null,
       appointments: [],
       dispatch: [],
       pickLeadReturnTab: 'calls',
@@ -3457,7 +3480,7 @@
       } catch(_e) {}
 
       const mgrStats = $('mgrStatsCard');
-      if (mgrStats) mgrStats.classList.toggle('hide', effectiveRole() !== 'manager');
+      if (mgrStats) mgrStats.classList.toggle('hide', !(['manager','event_coordinator'].includes(effectiveRole())));
 
       // Setter-only: show Pull Leads button.
       try {
@@ -3537,7 +3560,7 @@
         <div class="muted small">At-a-glance only (no mixed workflows).</div>
         <div style="height:10px"></div>
         <div id="overviewMsg" class="err"></div>
-        ${(me.profile.role === 'manager') ? `
+        ${(!inViewAs && me.profile.role === 'manager' && !isManagerViewAsPreviewOnly()) ? `
           <div class="card" style="margin: 10px 0 14px 0;">
             <div class="bd">
               <div style="font-weight:900;">Demo data</div>
@@ -4037,6 +4060,53 @@
             { k: 'dispatch open', v: Number(j.dispatchOpen ?? 0), kind: '' },
             { k: 'dispatch overdue', v: Number(j.dispatchOverdue ?? 0), kind: 'warn' },
           ];
+
+          // Coordinator/manager: include event + offer throughput (derived from events feed).
+          try{
+            const er = effectiveRole();
+            if (['event_coordinator','manager'].includes(er)) {
+              const je = await api('/api/portal/events?limit=200');
+              const all = Array.isArray(je.events) ? je.events : [];
+              const realEvents = all.filter((ev) => {
+                const area = String(ev?.area_tag || '').trim();
+                const kind = String(ev?.meta?.kind || '').trim();
+                const k = (kind || area).trim();
+                return k !== 'appointment' && k !== 'dispatch';
+              });
+
+              const today = new Date();
+              const yyyy = today.getUTCFullYear();
+              const mm = String(today.getUTCMonth() + 1).padStart(2, '0');
+              const dd = String(today.getUTCDate()).padStart(2, '0');
+              const todayIso = `${yyyy}-${mm}-${dd}`;
+
+              const in30 = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+              const y30 = in30.getUTCFullYear();
+              const m30 = String(in30.getUTCMonth() + 1).padStart(2, '0');
+              const d30 = String(in30.getUTCDate()).padStart(2, '0');
+              const iso30 = `${y30}-${m30}-${d30}`;
+
+              const upcoming30 = realEvents.filter((ev) => {
+                const d = String(ev?.event_date || '').trim();
+                return d && d >= todayIso && d <= iso30;
+              });
+
+              const offerEvents = realEvents.filter((ev) => ['event_host','media_team'].includes(String(ev?.assigned_role || '').trim()));
+              const offerCounts = { open: 0, sent: 0, pending: 0, accepted: 0, declined: 0 };
+              for (const ev of offerEvents) {
+                const sum = offerSummaryForEvent(ev);
+                const st = String(sum.offerState || '').trim();
+                if (st && Object.prototype.hasOwnProperty.call(offerCounts, st)) offerCounts[st] += 1;
+              }
+
+              tiles.push(
+                { k: 'events (30d)', v: Number(upcoming30.length || 0), kind: '' },
+                { k: 'offers open', v: Number(offerCounts.open || 0), kind: '' },
+                { k: 'offers pending', v: Number(offerCounts.pending || 0), kind: 'warn' },
+                { k: 'offers accepted', v: Number(offerCounts.accepted || 0), kind: 'ok' },
+              );
+            }
+          } catch(_e) {}
 
           box.innerHTML = tiles.map((t) => `
             <div class="card" style="background:#fff; min-width: 170px; flex: 1 1 170px;">
@@ -5548,14 +5618,19 @@
       const e = state.selectedEvent;
       $('selectedEventLine').textContent = e ? `#${e.id} • ${e.title || ''} • ${(e.event_date || '')}`.trim() : 'None';
 
+      if ($('eventOpsSelectedLine')) $('eventOpsSelectedLine').textContent = e ? `Selected: #${e.id} • ${e.title || ''} • ${(e.event_date || '')}`.trim() : '';
+
       const empty = $('eventDetailsEmpty');
       const wrap = $('eventDetailsWrap');
       if (empty) empty.classList.toggle('hide', !!e);
       if (wrap) wrap.classList.toggle('hide', !e);
 
-      $('eventRecapWrap').classList.toggle('hide', !e);
+      // Coordinators/managers manage ops; hosts/media do recaps.
+      const er0 = effectiveRole();
+      const showRecap = !!(e && ['event_host','media_team'].includes(er0));
+      $('eventRecapWrap').classList.toggle('hide', !showRecap);
 
-      if (e) {
+      if (e && showRecap) {
         const er = effectiveRole();
         const effectiveUserId = (isManagerUser() && String(state.viewAsUserId || '').trim())
           ? String(state.viewAsUserId || '').trim()
@@ -5597,8 +5672,16 @@
       const canUseOps = ['event_coordinator','manager'].includes(effectiveRole());
       if ($('eventOpsWrap')) $('eventOpsWrap').classList.toggle('hide', !(e && canUseOps));
 
-      if (e) loadRecaps(e.id).catch(()=>{});
-      if (e && canUseOps) initEventOps().catch(()=>{});
+      if (e && showRecap) loadRecaps(e.id).catch(()=>{});
+      if (e && canUseOps) {
+        initEventOps().catch(()=>{});
+        try{
+          requestAnimationFrame(() => {
+            const box = $('eventOpsWrap');
+            if (box && !box.classList.contains('hide')) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
+        } catch(_e) {}
+      }
     }
 
     function splitCsvList(text, { max = 30, maxLen = 60 } = {}){
@@ -5651,6 +5734,131 @@
       else if (offerState) offerText = offerState;
       const offerKind = (offerState === 'accepted') ? 'ok' : ((offerState === 'pending') ? 'warn' : '');
       return { eventStatus, offerText, offerState, offerKind };
+    }
+
+    function centsToUsd(cents){
+      const n = Number(cents || 0);
+      if (!Number.isFinite(n)) return '';
+      const dollars = n / 100;
+      return dollars.toLocaleString(undefined, { style: 'currency', currency: 'USD' });
+    }
+
+    function userLabelById(userId){
+      const id = String(userId || '').trim();
+      if (!id) return '';
+      const u = (Array.isArray(state.usersCache) ? state.usersCache : []).find((x) => String(x.userId || '') === id);
+      return String(u?.fullName || u?.email || u?.userId || id).trim();
+    }
+
+    function findOfferEventById(eventId){
+      const id = Number(eventId || 0);
+      if (!id) return null;
+      const fromOffers = (Array.isArray(state.offers) ? state.offers : []).find((x) => Number(x?.id) === id) || null;
+      if (fromOffers) return fromOffers;
+      const fromEvents = (Array.isArray(state.events) ? state.events : []).find((x) => Number(x?.id) === id) || null;
+      return fromEvents;
+    }
+
+    async function openOfferDetail(eventId){
+      const id = Number(eventId || 0);
+      if (!id) return;
+      state.selectedOfferEventId = id;
+      await ensureUsersCache();
+      renderOfferDetailFromState();
+      try{ requestAnimationFrame(() => $('offersDetailWrap')?.scrollIntoView({ behavior: 'smooth', block: 'start' })); } catch(_e) {}
+    }
+
+    function closeOfferDetail({ clearSelection = true } = {}){
+      if (clearSelection) state.selectedOfferEventId = null;
+      const wrap = $('offersDetailWrap');
+      if (wrap) wrap.classList.add('hide');
+    }
+
+    function renderOfferDetailFromState(){
+      const id = Number(state.selectedOfferEventId || 0);
+      const wrap = $('offersDetailWrap');
+      if (!id) {
+        if (wrap) wrap.classList.add('hide');
+        return;
+      }
+
+      const ev = findOfferEventById(id);
+      if (!ev) {
+        if (wrap) wrap.classList.add('hide');
+        return;
+      }
+
+      const meta = (ev.meta && typeof ev.meta === 'object') ? ev.meta : {};
+      const asgRole = String(ev.assigned_role || '').trim();
+      const sum = offerSummaryForEvent(ev);
+
+      const title = $('offersDetailTitle');
+      if (title) title.textContent = `#${ev.id} • ${ev.title || ''}`.trim();
+
+      const metaLine = $('offersDetailMeta');
+      if (metaLine) {
+        const city = [ev.city, ev.state].filter(Boolean).join(', ');
+        metaLine.textContent = [String(ev.event_date || '').trim(), city, asgRole, sum.offerText].filter(Boolean).join(' • ');
+      }
+
+      const viewBtn = $('offersDetailViewEventBtn');
+      if (viewBtn) viewBtn.classList.toggle('hide', !['event_coordinator','manager'].includes(effectiveRole()));
+
+      const body = $('offersDetailBody');
+      if (body) {
+        const budget = (meta.budget && typeof meta.budget === 'object') ? meta.budget : {};
+        const hostPay = Number(budget.hostPayCents || 0);
+        const mediaPay = Number(budget.mediaPayCents || 0);
+        const payoutLine = (hostPay || mediaPay)
+          ? `Host ${centsToUsd(hostPay)} • Media ${centsToUsd(mediaPay)}`
+          : (ev.payout_cents ? centsToUsd(ev.payout_cents) : '');
+
+        const assignments = Array.isArray(meta.assignments) ? meta.assignments : [];
+        const scoped = asgRole ? assignments.filter((a) => String(a?.role || '').trim() === asgRole) : assignments;
+        const sentTo = scoped
+          .map((a) => {
+            const uid = String(a?.userId || '').trim();
+            if (!uid) return null;
+            const st = String(a?.status || 'pending').trim();
+            return `${userLabelById(uid)} (${st})`;
+          })
+          .filter(Boolean);
+
+        const er = effectiveRole();
+        const effectiveUserId = (isManagerUser() && String(state.viewAsUserId || '').trim())
+          ? String(state.viewAsUserId || '').trim()
+          : String(state.me?.user?.id || '');
+        const myAsg = myAssignmentForEvent(ev, er, effectiveUserId);
+        const myStatus = String(myAsg?.status || '').trim();
+
+        const myLine = myStatus ? `<div class="muted small" style="margin-top:6px;">Your status: <span class="badge ${escapeHtml(myStatus === 'accepted' ? 'ok' : (myStatus === 'declined' ? 'warn' : ''))}">${escapeHtml(myStatus)}</span></div>` : '';
+
+        body.innerHTML = `
+          <div class="row" style="gap:10px; flex-wrap:wrap;">
+            <div class="badge">event: ${escapeHtml(String(sum.eventStatus || ev.status || ''))}</div>
+            ${payoutLine ? `<div class="badge">payouts: ${escapeHtml(payoutLine)}</div>` : ''}
+            ${ev.assigned_user_id ? `<div class="badge ok">assigned: ${escapeHtml(userLabelById(ev.assigned_user_id))}</div>` : ''}
+          </div>
+
+          ${sentTo.length ? `
+            <div style="margin-top:10px;">
+              <div class="muted small" style="font-weight:900;">Sent to</div>
+              <div style="margin-top:6px; white-space:pre-wrap;">${escapeHtml(sentTo.join('\n'))}</div>
+            </div>
+          ` : ''}
+
+          ${myLine}
+
+          ${String(ev.notes || '').trim() ? `
+            <div style="margin-top:10px;">
+              <div class="muted small" style="font-weight:900;">Notes</div>
+              <div style="margin-top:6px; white-space:pre-wrap;">${escapeHtml(String(ev.notes || '').trim())}</div>
+            </div>
+          ` : ''}
+        `;
+      }
+
+      if (wrap) wrap.classList.remove('hide');
     }
 
     function isCollapsed(targetId){
@@ -5850,7 +6058,7 @@
       if (talentIsCoordinator()) {
         await ensureUsersCache();
         $('talentDirectoryWrap')?.classList.remove('hide');
-        restoreCollapsedFromState('talentDirBody', true);
+        restoreCollapsedFromState('talentDirBody', false);
         $('talentStopEditingBtn')?.classList.toggle('hide', !String(state.talent.editUserId || '').trim());
       } else {
         $('talentDirectoryWrap')?.classList.add('hide');
@@ -5860,6 +6068,15 @@
       setTalentEditingLine();
 
       const profilesById = await loadTalentProfilesCache();
+
+      // Coordinators shouldn't see the editor until they pick someone to edit.
+      const editorCard = $('talentProfileEditorCard');
+      if (talentIsCoordinator()) {
+        const editing = String(state.talent.editUserId || '').trim();
+        if (editorCard) editorCard.classList.toggle('hide', !editing);
+      } else {
+        if (editorCard) editorCard.classList.remove('hide');
+      }
 
       // Load the active form target.
       const targetUserId = (talentIsCoordinator() && String(state.talent.editUserId || '').trim())
@@ -5880,6 +6097,10 @@
 
       if (talentIsCoordinator()) {
         renderTalentDirectory(profilesById);
+      }
+
+      if (talentIsCoordinator() && String(state.talent.editUserId || '').trim()) {
+        try{ requestAnimationFrame(() => { editorCard?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }); } catch(_e) {}
       }
     }
 
@@ -7939,9 +8160,13 @@
 
         if (!offers.length) {
           tb.innerHTML = '<tr><td colspan="7" class="muted">No offers to show.</td></tr>';
+          state.offers = [];
+          closeOfferDetail({ clearSelection: true });
           setBadge('ok', 'loaded');
           return;
         }
+
+        state.offers = offers;
 
         tb.innerHTML = offers.map((ev) => {
           const date = ev.event_date || '';
@@ -7991,8 +8216,7 @@
           if (openBtn) {
             const id = Number(openBtn.getAttribute('data-offer-open') || 0);
             if (!id) return;
-            state.pendingSelectEventId = id;
-            setTab('events');
+            openOfferDetail(id).catch(() => {});
             return;
           }
 
@@ -8007,11 +8231,17 @@
               if (!decision || !eventId || !role) throw new Error('invalid_action');
               await respondAssignmentForEvent(eventId, role, decision);
               await loadOffers();
+
+              // Keep the details panel fresh if it's open.
+              renderOfferDetailFromState();
             } catch(e){
               if ($('offersMsg')) $('offersMsg').textContent = String(e.message || e);
             }
           }
         };
+
+        // If something was already open, keep it open.
+        renderOfferDetailFromState();
 
         setBadge('ok', 'loaded');
       } catch(e){
@@ -8614,6 +8844,15 @@
     on('loadOffersBtn', 'click', () => loadOffers().catch(() => {}));
     on('offersStatePick', 'change', () => loadOffers().catch(() => {}));
 
+    on('offersDetailCloseBtn', 'click', () => closeOfferDetail({ clearSelection: true }));
+    on('offersDetailViewEventBtn', 'click', () => {
+      const id = Number(state.selectedOfferEventId || 0);
+      if (!id) return;
+      if (!['event_coordinator','manager'].includes(effectiveRole())) return;
+      state.pendingSelectEventId = id;
+      setTab('events');
+    });
+
     on('loadEventsBtn', 'click', () => loadEvents().catch(() => {}));
     on('eventsSegMy', 'click', () => setEventsSubtab('my'));
     on('eventsSegAll', 'click', () => setEventsSubtab('all'));
@@ -8637,6 +8876,8 @@
     on('planEventTypeSearchBtn', 'click', () => filterPlanEventTypes());
     on('planEventTypeResetBtn', 'click', () => resetPlanEventTypes());
     on('planEventType', 'change', () => renderPlanEventTypeDetails());
+
+    on('closeOpsEventBtn', 'click', () => setSelectedEvent(null));
 
     // Enter-to-search convenience
     try{
