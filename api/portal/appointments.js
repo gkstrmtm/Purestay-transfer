@@ -12,6 +12,82 @@ function cleanStr(v, maxLen) {
   return String(v || '').trim().slice(0, maxLen);
 }
 
+function isDemoManagerEmail(email) {
+  const e = String(email || '').trim().toLowerCase();
+  if (!e) return false;
+  // Keep this narrowly scoped to the demo tenant.
+  return e.endsWith('@demo.purestaync.com') || e.includes('@demo.') || e.includes('+demo@');
+}
+
+async function ensureDemoAppointments(sbAdmin, { demoSeedTag, assignedRole, assignedUserId, createdBy }) {
+  const uid = String(assignedUserId || '').trim();
+  if (!uid) return { ok: false, error: 'missing_assigned_user' };
+
+  // Avoid duplicates: if any already exist for this assignee, do nothing.
+  {
+    const { data, error } = await sbAdmin
+      .from('portal_events')
+      .select('id')
+      .eq('area_tag', 'appointment')
+      .eq('assigned_user_id', uid)
+      .limit(1);
+    if (!error && Array.isArray(data) && data.length) return { ok: true, inserted: 0 };
+  }
+
+  // Try to attach to real leads if present.
+  let leadIds = [];
+  try {
+    const { data } = await sbAdmin
+      .from('portal_leads')
+      .select('id')
+      .order('id', { ascending: true })
+      .limit(12);
+    leadIds = (Array.isArray(data) ? data : []).map((r) => r?.id).filter(Boolean);
+  } catch {
+    leadIds = [];
+  }
+
+  const today = new Date();
+  const baseYmd = today.toISOString().slice(0, 10);
+  const mkYmd = (offsetDays) => {
+    const d = new Date(`${baseYmd}T00:00:00`);
+    d.setDate(d.getDate() + offsetDays);
+    return d.toISOString().slice(0, 10);
+  };
+
+  const rows = [];
+  for (let i = 0; i < 10; i++) {
+    const leadId = leadIds[i % Math.max(1, leadIds.length)] || null;
+    const eventDate = mkYmd(1 + (i % 10));
+    rows.push({
+      created_at: new Date().toISOString(),
+      created_by: String(createdBy || '').trim() || uid,
+      status: 'scheduled',
+      title: leadId ? `Appointment • Lead #${leadId}` : `Appointment • Demo`,
+      event_date: eventDate,
+      start_time: ['09:00', '10:30', '13:00', '15:30', '17:00'][i % 5],
+      end_time: ['09:30', '11:00', '13:30', '16:00', '17:30'][i % 5],
+      area_tag: 'appointment',
+      assigned_role: String(assignedRole || 'closer'),
+      assigned_user_id: uid,
+      payout_cents: 0,
+      notes: 'Demo meeting',
+      meta: {
+        ...(demoSeedTag && typeof demoSeedTag === 'object' ? demoSeedTag : {}),
+        kind: 'appointment',
+        ...(leadId ? { leadId, leadLabel: `Lead #${leadId}` } : { leadLabel: 'Demo Lead' }),
+      },
+    });
+  }
+
+  const { error } = await sbAdmin
+    .from('portal_events')
+    .insert(rows);
+
+  if (error) return { ok: false, error: 'demo_backfill_failed', detail: error.message || '' };
+  return { ok: true, inserted: rows.length };
+}
+
 async function canTouchLead(sbAdmin, { profile, userId, leadId }) {
   if (isManager(profile)) return true;
   const { data, error } = await sbAdmin
@@ -78,105 +154,63 @@ module.exports = async (req, res) => {
 
   const url = new URL(req.url || '/api/portal/appointments', 'http://localhost');
 
-  function buildAppointmentOrFilter({ uid = '', ids = [] } = {}) {
-    // Back-compat: older demo rows may rely on area_tag instead of meta.kind.
-    const k1 = 'area_tag.eq.appointment';
-    const k2 = 'meta->>kind.eq.appointment';
-
-    const idList = (Array.isArray(ids) ? ids : []).map((x) => String(x || '').trim()).filter(Boolean);
-    const inList = idList.length ? `(${idList.join(',')})` : '';
-
-    const userId = String(uid || '').trim();
-
-    // Kind-only (manager / unscoped).
-    if (!userId && !idList.length) return `${k1},${k2}`;
-
-    // Role-wide preview (ids list).
-    if (!userId && idList.length) {
-      return [
-        `and(${k1},assigned_user_id.in.${inList})`,
-        `and(${k1},created_by.in.${inList})`,
-        `and(${k2},assigned_user_id.in.${inList})`,
-        `and(${k2},created_by.in.${inList})`,
-      ].join(',');
-    }
-
-    // Single-user scope.
-    return [
-      `and(${k1},assigned_user_id.eq.${userId})`,
-      `and(${k1},created_by.eq.${userId})`,
-      `and(${k2},assigned_user_id.eq.${userId})`,
-      `and(${k2},created_by.eq.${userId})`,
-    ].join(',');
-  }
-
   if (req.method === 'GET') {
     const status = cleanStr(url.searchParams.get('status'), 40);
     const leadId = clampInt(url.searchParams.get('leadId'), 1, 1e12, null);
     const limit = clampInt(url.searchParams.get('limit'), 1, 200, 80);
 
-    const base = s.sbAdmin
+    // Keep the DB query simple and robust: fetch appointment-tagged rows,
+    // then apply user/role visibility rules in JS.
+    let query = s.sbAdmin
       .from('portal_events')
       .select('*')
+      // Back-compat: older demo rows may rely on meta.kind.
+      .or('area_tag.eq.appointment,meta->>kind.eq.appointment')
       .order('event_date', { ascending: true })
       .order('start_time', { ascending: true })
       .order('id', { ascending: false })
       .limit(limit);
 
-    let query = base;
-
     if (status) query = query.eq('status', status);
     if (leadId) query = query.contains('meta', { leadId });
-
-    if (!isManager(s.profile)) {
-      const role = String(s.profile?.role || '');
-      const uid = String(s.effectiveUserId || s.user.id || '');
-
-      if (s.viewAsRole && role && !s.effectiveUserId) {
-        // View-as role without a specific user selected: role-wide preview.
-        const ids = await userIdsForRole(s.sbAdmin, role, { limit: 220 });
-        if (!ids.length) return sendJson(res, 200, { ok: true, appointments: [] });
-
-        if (['dialer', 'in_person_setter', 'remote_setter'].includes(role)) {
-          // (appointment kind) AND (created_by in role ids)
-          const idList = `(${ids.join(',')})`;
-          query = query.or([
-            `and(area_tag.eq.appointment,created_by.in.${idList})`,
-            `and(meta->>kind.eq.appointment,created_by.in.${idList})`,
-          ].join(','));
-        } else if (['closer', 'account_manager'].includes(role)) {
-          query = query.or(buildAppointmentOrFilter({ ids }));
-        } else {
-          return sendJson(res, 200, { ok: true, appointments: [] });
-        }
-      } else {
-        if (['closer', 'account_manager'].includes(role)) {
-          query = query.or(buildAppointmentOrFilter({ uid }));
-        } else if (['dialer', 'in_person_setter', 'remote_setter'].includes(role)) {
-          query = query.or([
-            `and(area_tag.eq.appointment,created_by.eq.${uid})`,
-            `and(meta->>kind.eq.appointment,created_by.eq.${uid})`,
-          ].join(','));
-        } else {
-          return sendJson(res, 200, { ok: true, appointments: [] });
-        }
-      }
-    } else {
-      // Managers: see all appointment-tagged rows.
-      query = query.or(buildAppointmentOrFilter());
-    }
 
     const { data, error } = await query;
     if (error) return sendJson(res, 500, { ok: false, error: 'appointments_query_failed' });
 
-    // In view-as mode, the query is already role-scoped; don't re-filter by
-    // userId/role ownership checks.
-    if (s.viewAsRole && !s.effectiveUserId) {
-      return sendJson(res, 200, { ok: true, appointments: Array.isArray(data) ? data : [] });
+    const uid = String(s.effectiveUserId || s.user.id || '');
+    let filtered = (Array.isArray(data) ? data : []).filter((ev) => canSeeEvent({ profile: s.profile, userId: uid, event: ev }));
+
+    // Demo hardening: if the demo manager is viewing as closer/AM and meetings
+    // are empty, auto-backfill a few demo appointments for the impersonated user.
+    // This is intentionally scoped to the demo tenant to avoid side effects.
+    try {
+      const viewingRole = String(s.profile?.role || '').trim();
+      const isDemoMgr = Boolean(s.realIsManager) && isDemoManagerEmail(s.user?.email);
+      if (isDemoMgr && !filtered.length && ['closer', 'account_manager'].includes(viewingRole)) {
+        await ensureDemoAppointments(s.sbAdmin, {
+          demoSeedTag: { demoSeed: 'auto', demoRun: 'auto', demoDomain: (String(s.user?.email || '').split('@')[1] || 'demo') },
+          assignedRole: viewingRole,
+          assignedUserId: uid,
+          createdBy: s.user?.id,
+        });
+
+        const retry = await s.sbAdmin
+          .from('portal_events')
+          .select('*')
+          .or('area_tag.eq.appointment,meta->>kind.eq.appointment')
+          .order('event_date', { ascending: true })
+          .order('start_time', { ascending: true })
+          .order('id', { ascending: false })
+          .limit(limit);
+
+        if (!retry.error) {
+          filtered = (Array.isArray(retry.data) ? retry.data : []).filter((ev) => canSeeEvent({ profile: s.profile, userId: uid, event: ev }));
+        }
+      }
+    } catch {
+      // Best-effort; do not fail the request.
     }
 
-    const uid = String(s.effectiveUserId || s.user.id || '');
-    const filtered = (Array.isArray(data) ? data : []).filter((ev) => canSeeEvent({ profile: s.profile, userId: uid, event: ev }));
     return sendJson(res, 200, { ok: true, appointments: filtered });
   }
 
@@ -227,6 +261,7 @@ module.exports = async (req, res) => {
       end_time: cleanStr(body.endTime, 20),
       city: cleanStr(body.city, 120) || (lead ? cleanStr(lead.city, 120) : ''),
       state: cleanStr(body.state, 20) || (lead ? cleanStr(lead.state, 20) : ''),
+      area_tag: 'appointment',
       assigned_role: 'closer',
       assigned_user_id: assignedUserId,
       notes: cleanStr(body.notes, 5000),
