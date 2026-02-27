@@ -1213,6 +1213,18 @@ module.exports = async (req, res) => {
 
   const ok = results.every((x) => x && x.ok);
 
+  // Store the role→userId mapping so manager view-as can deterministically
+  // impersonate the canonical demo users without needing a person picker.
+  try {
+    await upsertKv(sb, 'portal:demo_user_ids_by_role', {
+      updatedAt: nowIso(),
+      domain,
+      userIdsByRole,
+    });
+  } catch {
+    // Best-effort only.
+  }
+
   let demo = null;
   if (seedData) {
     demo = await seedDemoData(sb, {

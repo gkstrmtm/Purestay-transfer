@@ -678,7 +678,11 @@
           </div>
 
           <div style="height:10px"></div>
-          <div class="pipe" id="leadsPipeline"></div>
+          <div class="card" style="background:#fff;">
+            <div class="bd">
+              <div class="pipe" id="leadsPipeline"></div>
+            </div>
+          </div>
 
           <div id="pullLeadsBox" class="card" style="margin-top:14px; background: #fff;" hidden>
             <div class="bd">
@@ -1126,7 +1130,6 @@
                     <div>
                       <div style="font-weight:900;">Availability</div>
                       <div class="muted small" style="margin-top:4px;">Select times you can take meetings. Times are shown in your local timezone (<span id="availTzLabel"></span>).</div>
-                      <div id="availReadOnlyNote" class="muted small" style="margin-top:6px; display:none;">Role preview is read-only — pick a person to edit.</div>
                     </div>
                     <div class="row" style="gap:8px;">
                       <button id="availPrevWeek" class="btn secondary" type="button">Prev week</button>
@@ -1140,10 +1143,6 @@
                   <div style="height:10px"></div>
                   <div class="row" style="justify-content:space-between; gap:10px;">
                     <div class="muted small" id="availWeekLabel">—</div>
-                    <div class="row hide" style="gap:8px;">
-                      <div class="muted small" style="font-weight:900;">Viewing</div>
-                      <select id="availPerson" style="max-width: 360px;"></select>
-                    </div>
                   </div>
                   <div style="height:10px"></div>
                   <div id="availMsg" class="err"></div>
@@ -1955,15 +1954,22 @@
         <div id="viewPayments" class="hide">
           <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap;">
             <div>
-              <div class="muted small">Payments</div>
+              <div class="muted small">Finance</div>
               <div style="font-weight:900; margin-top:4px;">Payouts</div>
             </div>
             <div class="row" style="gap:8px; flex-wrap:wrap;">
-              <div class="segTabs" style="gap:8px;">
-                <button id="payoutsSegAll" class="segBtn" type="button">All</button>
-                <button id="payoutsSegWeek" class="segBtn" type="button">7 days</button>
-                <button id="payoutsSegMonth" class="segBtn" type="button">30 days</button>
-              </div>
+              <select id="payoutsPeriodPick" style="min-width:150px;">
+                <option value="0">All time</option>
+                <option value="7">Last 7 days</option>
+                <option value="30">Last 30 days</option>
+              </select>
+              <select id="payoutsStatusPick" style="min-width:150px;">
+                <option value="">All statuses</option>
+                <option value="paid">Paid</option>
+                <option value="pending">Pending</option>
+              </select>
+              <input id="payoutsQ" placeholder="Search payouts" style="min-width:220px; max-width:320px;" />
+              <button id="payoutsSearchBtn" class="btn secondary" type="button">Search</button>
               <button id="loadPayoutsBtn" class="btn secondary" type="button">Refresh</button>
             </div>
           </div>
@@ -1971,8 +1977,14 @@
           <div class="card" style="background:#fff;">
             <div class="bd">
               <div id="payoutsMsg" class="err"></div>
-              <div id="payoutsTotals" class="muted small" style="margin-top:6px;"></div>
-              <div id="payoutsEmpty" class="muted small" style="margin-top:6px;"></div>
+              <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap; margin-top:6px;">
+                <div>
+                  <div id="payoutsTotals" class="muted small"></div>
+                  <div id="payoutsTotalBig" style="font-weight:950; font-size:34px; letter-spacing:-0.02em; margin-top:2px;">$0.00</div>
+                  <div id="payoutsTotalsSub" class="muted small" style="margin-top:4px;"></div>
+                </div>
+              </div>
+              <div id="payoutsEmpty" class="muted small" style="margin-top:10px;"></div>
               <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px; margin-top:10px;">
                 <table>
                   <thead>
@@ -2803,12 +2815,12 @@
 
     function renderPayoutsPeriodSeg(){
       const days = Number(state.payoutsPeriodDays || 0);
-      const btnAll = $('payoutsSegAll');
-      const btnWeek = $('payoutsSegWeek');
-      const btnMonth = $('payoutsSegMonth');
-      if (btnAll) btnAll.classList.toggle('active', !days);
-      if (btnWeek) btnWeek.classList.toggle('active', days === 7);
-      if (btnMonth) btnMonth.classList.toggle('active', days === 30);
+      const pick = $('payoutsPeriodPick');
+      if (pick) pick.value = String(Number.isFinite(days) ? Math.max(0, Math.trunc(days)) : 0);
+      const status = $('payoutsStatusPick');
+      if (status) status.value = String(state.payoutsStatus || '');
+      const q = $('payoutsQ');
+      if (q) q.value = String(state.payoutsQ || '');
     }
 
     function renderEventsSubtabSeg(){
@@ -3030,16 +3042,6 @@
         refreshMe().catch(() => {});
       };
 
-      // If previewing a role, also select a matching person so the UI isn't empty.
-      if (state.viewAsRole) {
-        ensureUsersCache().then(() => {
-          const people = usersForViewAsRole(state.viewAsRole);
-          const preferred = pickPreferredUserForRole(state.viewAsRole, people);
-          if (preferred && preferred.userId) state.viewAsUserId = String(preferred.userId);
-          finish();
-        }).catch(() => finish());
-        return;
-      }
       finish();
     }
 
@@ -3100,21 +3102,14 @@
     }
 
     function hideManualLoadButtons(){
-      const ids = [
-        'loadLeadsBtn','loadQueueBtn','loadEventsBtn','loadPayoutsBtn',
-        'loadStatsBtn','loadDispatchBtn','loadDialerTasksBtn','loadCloserTasksBtn','loadApptsBtn',
-        'refreshBtn','loadDialerTimelineBtn','meetingsRefreshBtn','dialerBookedRefreshBtn',
-      ];
-      for (const id of ids) {
-        const el = $(id);
-        if (el) el.classList.add('hide');
-      }
+      // Keep manual refresh/load controls visible.
     }
 
     let autoRefreshTimer = null;
     let autoRefreshQueued = false;
 
     function queueAutoRefreshSoon(){
+      if (String(state.activeTab || '') === 'payments') return;
       if (autoRefreshQueued) return;
       autoRefreshQueued = true;
       setTimeout(async () => {
@@ -3124,10 +3119,9 @@
     }
 
     function startAutoRefresh(){
+      // Disabled: periodic auto-refresh caused visible UI flicker.
       if (autoRefreshTimer) clearInterval(autoRefreshTimer);
-      autoRefreshTimer = setInterval(() => {
-        autoRefreshActiveView().catch(()=>{});
-      }, 15000);
+      autoRefreshTimer = null;
     }
 
     document.addEventListener('visibilitychange', () => {
@@ -3152,7 +3146,7 @@
         events: eventsTitle,
         offers: 'Offers',
         talent: 'Talent',
-        payments: 'Payments',
+        payments: 'Payouts',
         manager: 'Operations'
       }[safeTab] || 'Overview';
       const viewKey = {
@@ -3243,7 +3237,6 @@
         }
       }
 
-      queueAutoRefreshSoon();
     }
 
     async function autoRefreshActiveView(){
@@ -3274,7 +3267,11 @@
         // Closer Dispatch removed from Sales.
       }
       if (tab === 'meetings') {
-        await loadAppointmentsInto('meetingsTbody', 'meetingsMsg').catch(()=>{});
+        if (String(state.meetingsSubtab || '') === 'availability') {
+          await loadAvailability().catch(()=>{});
+        } else {
+          await loadAppointmentsInto('meetingsTbody', 'meetingsMsg').catch(()=>{});
+        }
       }
       if (tab === 'accounts') {
         await loadAccounts().catch(()=>{});
@@ -3287,8 +3284,7 @@
         await loadTalentTab().catch(()=>{});
       }
       if (tab === 'payments') {
-        renderPayoutsPeriodSeg();
-        await loadPayouts().catch(()=>{});
+        // Manual refresh only.
       }
       if (tab === 'manager') {
         renderManagerSubtab();
@@ -3411,7 +3407,7 @@
       const realRole = String(me.profile.role || '').trim();
       const er = effectiveRole();
 
-      // Manager view-as needs the user roster to offer a person picker.
+      // Managers may need the user roster in manager tools.
       if (isManagerUser()) await ensureUsersCache();
 
       const vRole = isManagerUser() ? String(state.viewAsRole || '').trim() : '';
@@ -3460,7 +3456,7 @@
       if (er === 'event_coordinator' || er === 'manager') {
         navItems.push({ id:'manager', label:'Operations' });
       }
-      navItems.push({ id:'payments', label:'Payments' });
+      navItems.push({ id:'payments', label:'Payouts' });
 
       // Managers should also be able to view offers.
       if (er === 'manager') {
@@ -3493,26 +3489,7 @@
           </div>
         `;
 
-        const personPick = currentRole !== 'manager' ? (() => {
-          const people = usersForViewAsRole(currentRole);
-          if (!people.length) return '';
-          const opts = ['<option value="">Auto (default)</option>'].concat(people.map((u) => {
-            const id = String(u?.userId || '').trim();
-            if (!id) return '';
-            const label = String(u?.fullName || u?.email || id).trim();
-            return `<option value="${escapeHtml(id)}">${escapeHtml(label)}</option>`;
-          }).filter(Boolean));
-
-          return `
-            <div style="height:10px"></div>
-            <div class="navTitle">Person</div>
-            <select id="viewAsPerson" style="margin-top:6px;">
-              ${opts.join('')}
-            </select>
-          `;
-        })() : '';
-
-        return `${viewSelect}${personPick}<div style="height:10px"></div><div class="navTitle">Menu</div>`;
+        return `${viewSelect}<div style="height:10px"></div><div class="navTitle">Menu</div>`;
       })() : '<div class="navTitle">Menu</div>';
 
       const ico = {
@@ -3603,20 +3580,6 @@
         }
       } catch(_e) {}
 
-      // Optional: manager can pick a specific person inside the role.
-      try {
-        const pick = $('viewAsPerson');
-        if (pick) {
-          // Keep UI in sync.
-          pick.value = String(state.viewAsUserId || '').trim();
-          pick.addEventListener('change', () => {
-            const v = String(pick.value || '').trim();
-            state.viewAsUserId = v;
-            refreshMe().catch(() => {});
-          });
-        }
-      } catch(_e) {}
-
       // No explicit exit button: managers can switch back to Manager in the Views dropdown.
 
       // Manager-only controls
@@ -3682,19 +3645,21 @@
               else if (state && state.counts) {
                 const verb = append ? 'Added' : 'Seeded';
                 const runs = Array.isArray(state.runs) ? state.runs.length : null;
-                msg.textContent = `${verb}: ${state.counts.leads} leads, ${state.counts.events} events, ${state.counts.appointments} meetings, ${state.counts.payouts} payments, ${state.counts.accounts} accounts.${runs ? ` Runs: ${runs}.` : ''}`;
+                msg.textContent = `${verb}: ${state.counts.leads} leads, ${state.counts.events} events, ${state.counts.appointments} meetings, ${state.counts.payouts} payouts, ${state.counts.accounts} accounts.${runs ? ` Runs: ${runs}.` : ''}`;
               }
               else msg.textContent = 'Seed complete.';
             }
             // Refresh whatever the user is looking at.
             await loadOverview().catch(() => {});
+            if (String(state.activeTab || '') === 'payments') await loadPayouts().catch(() => {});
+            else await autoRefreshActiveView().catch(() => {});
           } catch(e) {
             if (msg) msg.textContent = String(e.message || e);
           }
         };
 
         const b1 = $('seedDemoBtn');
-        if (b1) b1.addEventListener('click', () => seedDemo({ force: false, append: false }));
+        if (b1) b1.addEventListener('click', () => seedDemo({ force: true, append: false }));
         const bMore = $('seedDemoMoreBtn');
         if (bMore) bMore.addEventListener('click', () => seedDemo({ force: false, append: true }));
         const b2 = $('seedDemoForceBtn');
@@ -3763,7 +3728,7 @@
             title: 'Commissions',
             sub: 'Recent payouts',
             value: `$${sumMoney(payouts).toFixed(2)}`,
-            hint: 'Open Payments',
+            hint: 'Open Payouts',
           });
         } else if (['closer','account_manager'].includes(er)) {
           const [aR, dR, vR, pR] = await Promise.allSettled([
@@ -3787,7 +3752,7 @@
           cards.push({ title: 'Meetings', sub: 'Scheduled appointments', value: fmtNum(upcoming.length), hint: 'Open Sales → Meetings' });
           cards.push({ title: 'Availability', sub: 'Days with slots saved', value: fmtNum(days), hint: 'Open Sales → Availability' });
           cards.push({ title: 'Tasks', sub: 'Open tasks', value: `${fmtNum(openTasks.length)}${overdueTasks.length ? (` • overdue ${fmtNum(overdueTasks.length)}`) : ''}`, hint: 'Open Sales → Tasks' });
-          cards.push({ title: 'Commissions', sub: 'Recent payouts', value: `$${sumMoney(payouts).toFixed(2)}`, hint: 'Open Payments' });
+          cards.push({ title: 'Commissions', sub: 'Recent payouts', value: `$${sumMoney(payouts).toFixed(2)}`, hint: 'Open Payouts' });
         } else if (['event_host','media_team'].includes(er)) {
           const [eR, vR, pR] = await Promise.allSettled([
             api('/api/portal/events?limit=200'),
@@ -3821,7 +3786,7 @@
           cards.push({ title: 'Upcoming', sub: 'Upcoming events you can see', value: fmtNum(upcoming.length), hint: 'Open Events' });
           cards.push({ title: 'Assigned', sub: 'Events assigned to you', value: fmtNum(assignedToMe.length), hint: 'Open Events → My' });
           cards.push({ title: 'Availability', sub: 'Days with slots saved', value: fmtNum(days), hint: 'Open Availability' });
-          cards.push({ title: 'Payments', sub: 'Recent payouts', value: `$${sumMoney(payouts).toFixed(2)}`, hint: 'Open Payments' });
+          cards.push({ title: 'Payouts', sub: 'Recent payouts', value: `$${sumMoney(payouts).toFixed(2)}`, hint: 'Open Payouts' });
         } else if (er === 'event_coordinator') {
           const [sR, eR, pR] = await Promise.allSettled([
             api('/api/portal/stats?scope=all'),
@@ -3844,7 +3809,7 @@
           cards.push({ title: 'Events', sub: 'Upcoming events visible', value: fmtNum(upcomingEvents.length), hint: 'Open Events' });
           cards.push({ title: 'Offers', sub: 'Open offers (host + media)', value: fmtNum(openOffers.length), hint: 'Open Offers' });
           cards.push({ title: 'Dispatch', sub: 'Open / overdue', value: `${fmtNum(stats.dispatchOpen ?? 0)} / ${fmtNum(stats.dispatchOverdue ?? 0)}`, hint: 'Open Operations → Tasks' });
-          cards.push({ title: 'Payments', sub: 'Recent payouts', value: `$${sumMoney(payouts).toFixed(2)}`, hint: 'Open Payments' });
+          cards.push({ title: 'Payouts', sub: 'Recent payouts', value: `$${sumMoney(payouts).toFixed(2)}`, hint: 'Open Payouts' });
         } else if (er === 'manager') {
           const [sR, pR, eR] = await Promise.allSettled([
             api('/api/portal/stats?scope=all'),
@@ -3862,7 +3827,7 @@
           cards.push({ title: 'Calls', sub: 'Calls in last 24h', value: fmtNum(stats.callsLast24h ?? 0), hint: 'Open Operations → Stats' });
           cards.push({ title: 'Dispatch', sub: 'Open / overdue', value: `${fmtNum(stats.dispatchOpen ?? 0)} / ${fmtNum(stats.dispatchOverdue ?? 0)}`, hint: 'Open Operations → Tasks' });
           cards.push({ title: 'Offers', sub: 'Open offers (host + media)', value: fmtNum(openOffers.length), hint: 'Open Offers' });
-          cards.push({ title: 'Payments', sub: 'Recent payouts', value: `$${sumMoney(payouts).toFixed(2)}`, hint: 'Open Payments' });
+          cards.push({ title: 'Payouts', sub: 'Recent payouts', value: `$${sumMoney(payouts).toFixed(2)}`, hint: 'Open Payouts' });
         } else {
           cards.push({ title: 'Workspace', sub: 'Use the menu to open your workspace', value: '—', hint: '' });
         }
@@ -5153,39 +5118,9 @@
       $('availMsg').textContent = '';
       ensureAvailInit();
 
-      // Only allow a real manager (not view-as) to view another person's availability.
       try{
-        await ensureUsersCache();
-        const canPick = isManagerUser() && effectiveRole() === 'manager';
-        const sel = $('availPerson');
-        const list = Array.isArray(state.usersCache) ? state.usersCache : [];
-        const people = list.filter((u) => ['closer','account_manager','manager'].includes(String(u.role || '').trim()));
-        if (sel) {
-          sel.closest('.row')?.classList?.toggle('hide', !(canPick && people.length));
-          if (!canPick) {
-            state.availability.viewUserId = '';
-            sel.innerHTML = '';
-          } else if (people.length) {
-            const active = String(state.availability.viewUserId || '').trim();
-            const opts = [`<option value="" ${!active ? 'selected' : ''}>My availability</option>`];
-            for (const u of people) {
-              const id = String(u.userId || '').trim();
-              if (!id) continue;
-              const label = String(u.fullName || u.email || u.role || id).trim();
-              const role = String(u.role || '').trim();
-              const name = label || id;
-              opts.push(`<option value="${escapeHtml(id)}" ${id === active ? 'selected' : ''}>${escapeHtml(name)}${role ? (` • ${escapeHtml(roleViewLabel(role))}`) : ''}</option>`);
-            }
-            sel.innerHTML = opts.join('');
-          }
-        }
-      } catch(_e) {}
-
-      try{
-        const canPick = isManagerUser() && effectiveRole() === 'manager';
-        const viewUid = canPick ? String(state.availability.viewUserId || '').trim() : '';
-        const url = viewUid ? (`/api/portal/availability?userId=${encodeURIComponent(viewUid)}`) : '/api/portal/availability';
-        const j = await api(url);
+        state.availability.viewUserId = '';
+        const j = await api('/api/portal/availability');
         const slots = j.availability?.slots && typeof j.availability.slots === 'object' ? j.availability.slots : {};
         const byDate = slots.byDate && typeof slots.byDate === 'object' ? slots.byDate : {};
         state.availability.byDate = byDate;
@@ -8372,6 +8307,8 @@
       setBadge('warn', 'loading');
       $('payoutsMsg').textContent = '';
       if ($('payoutsTotals')) $('payoutsTotals').textContent = '';
+      if ($('payoutsTotalsSub')) $('payoutsTotalsSub').textContent = '';
+      if ($('payoutsTotalBig')) $('payoutsTotalBig').textContent = '$0.00';
       if ($('payoutsEmpty')) $('payoutsEmpty').textContent = '';
       try{
         const days = Number(state.payoutsPeriodDays || 0);
@@ -8384,24 +8321,63 @@
         }
 
         const j = await api('/api/portal/payouts?' + qs);
-        const payouts = j.payouts || [];
+        const payoutsAll = j.payouts || [];
+
+        const norm = (v) => String(v || '').trim().toLowerCase();
+        const q = norm(state.payoutsQ || '');
+        const wantStatus = norm(state.payoutsStatus || '');
+        const matchesStatus = (p) => {
+          const s = norm(p?.status || '');
+          if (!wantStatus) return true;
+          if (wantStatus === 'pending') return s !== 'paid';
+          return s === wantStatus;
+        };
+
+        let payouts = Array.isArray(payoutsAll) ? payoutsAll.slice() : [];
+        payouts = payouts.filter((p) => matchesStatus(p));
+        if (q) {
+          payouts = payouts.filter((p) => {
+            const date = String(p?.created_at || '').slice(0, 10);
+            const desc = norm(p?.description || '');
+            const status = norm(p?.status || '');
+            const amt = norm(fmtMoney(p?.amount_cents || 0));
+            return desc.includes(q) || status.includes(q) || date.includes(q) || amt.includes(q);
+          });
+        }
 
         try{
           const sumCents = (rows) => (Array.isArray(rows) ? rows : []).reduce((a, p) => a + Number(p.amount_cents || 0), 0);
-          const paid = payouts.filter((p) => String(p.status || '') === 'paid');
-          const pending = payouts.filter((p) => String(p.status || '') !== 'paid');
+          const paid = payouts.filter((p) => norm(p.status) === 'paid');
+          const pending = payouts.filter((p) => norm(p.status) !== 'paid');
           const totalCents = sumCents(payouts);
           const paidCents = sumCents(paid);
           const pendingCents = sumCents(pending);
           const label = days ? `Last ${Math.trunc(days)} days` : 'All time';
-          if ($('payoutsTotals')) $('payoutsTotals').textContent = `${label} • Total ${fmtMoney(totalCents)} • Paid ${fmtMoney(paidCents)} • Pending ${fmtMoney(pendingCents)} • ${payouts.length} payout(s)`;
+          const fBits = [
+            wantStatus ? `Status: ${wantStatus}` : '',
+            q ? `Search: “${q}”` : '',
+          ].filter(Boolean);
+          if ($('payoutsTotals')) $('payoutsTotals').textContent = fBits.length ? `${label} • ${fBits.join(' • ')}` : label;
+          if ($('payoutsTotalBig')) $('payoutsTotalBig').textContent = fmtMoney(totalCents);
+          if ($('payoutsTotalsSub')) {
+            const shown = payouts.length;
+            const total = Array.isArray(payoutsAll) ? payoutsAll.length : 0;
+            const suffix = (shown !== total) ? ` • Showing ${shown} of ${total}` : ` • ${shown} payout(s)`;
+            $('payoutsTotalsSub').textContent = `Paid ${fmtMoney(paidCents)} • Pending ${fmtMoney(pendingCents)}${suffix}`;
+          }
         } catch(_e) {
           if ($('payoutsTotals')) $('payoutsTotals').textContent = '';
+          if ($('payoutsTotalsSub')) $('payoutsTotalsSub').textContent = '';
         }
 
-        if ($('payoutsEmpty')) $('payoutsEmpty').textContent = payouts.length ? '' : 'No payments yet.';
+        if ($('payoutsEmpty')) {
+          if (!payoutsAll.length) $('payoutsEmpty').textContent = 'No payouts yet.';
+          else if (!payouts.length) $('payoutsEmpty').textContent = 'No payouts match your filters.';
+          else $('payoutsEmpty').textContent = '';
+        }
+
         if (!payouts.length) {
-          $('payoutsTbody').innerHTML = '<tr><td colspan="4" class="muted">No payments yet.</td></tr>';
+          $('payoutsTbody').innerHTML = '<tr><td colspan="4" class="muted">No payouts to show.</td></tr>';
           setBadge('ok', 'loaded');
           return;
         }
@@ -8786,11 +8762,6 @@
     });
 
     on('availSaveBtn', 'click', () => saveAvailability().catch(() => {}));
-    on('availPerson', 'change', () => {
-      ensureAvailInit();
-      state.availability.viewUserId = String($('availPerson')?.value || '').trim();
-      loadAvailability().catch(() => {});
-    });
     on('availPrevWeek', 'click', () => { ensureAvailInit(); state.availability.weekOffset -= 1; renderAvailWeekGrid(); });
     on('availNextWeek', 'click', () => { ensureAvailInit(); state.availability.weekOffset += 1; renderAvailWeekGrid(); });
     on('availToday', 'click', () => { ensureAvailInit(); state.availability.weekOffset = 0; renderAvailWeekGrid(); });
@@ -8896,9 +8867,22 @@
     });
 
     on('loadPayoutsBtn', 'click', () => loadPayouts().catch(() => {}));
-    on('payoutsSegAll', 'click', () => setPayoutsPeriodDays(0));
-    on('payoutsSegWeek', 'click', () => setPayoutsPeriodDays(7));
-    on('payoutsSegMonth', 'click', () => setPayoutsPeriodDays(30));
+    on('payoutsPeriodPick', 'change', () => setPayoutsPeriodDays(Number($('payoutsPeriodPick')?.value || 0)));
+    on('payoutsStatusPick', 'change', () => {
+      state.payoutsStatus = String($('payoutsStatusPick')?.value || '').trim();
+      if (state.activeTab === 'payments') loadPayouts().catch(() => {});
+    });
+    on('payoutsSearchBtn', 'click', () => {
+      state.payoutsQ = String($('payoutsQ')?.value || '');
+      if (state.activeTab === 'payments') loadPayouts().catch(() => {});
+    });
+    on('payoutsQ', 'keydown', (ev) => {
+      if (ev.key === 'Enter') {
+        ev.preventDefault();
+        state.payoutsQ = String($('payoutsQ')?.value || '');
+        if (state.activeTab === 'payments') loadPayouts().catch(() => {});
+      }
+    });
 
     on('loadUsersBtn', 'click', () => loadUsers().catch(() => {}));
 
