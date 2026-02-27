@@ -73,6 +73,36 @@ function mkUuid() {
   }
 }
 
+async function findAuthUserIdByEmail(sb, email, { perPage = 200, maxPages = 25 } = {}) {
+  const target = String(email || '').trim().toLowerCase();
+  if (!target) return '';
+  const pp = Math.max(1, Math.min(1000, Number(perPage || 200)));
+  const pages = Math.max(1, Math.min(200, Number(maxPages || 25)));
+  for (let page = 1; page <= pages; page++) {
+    // eslint-disable-next-line no-await-in-loop
+    const listed = await sb.auth.admin.listUsers({ page, perPage: pp });
+    const users = listed?.data?.users || [];
+    const found = users.find((u) => String(u?.email || '').trim().toLowerCase() === target);
+    if (found?.id) return String(found.id);
+    if (!users.length) break;
+  }
+  return '';
+}
+
+async function findProfileUserIdByRole(sb, role) {
+  const r = String(role || '').trim();
+  if (!r) return '';
+  const { data, error } = await sb
+    .from('portal_profiles')
+    .select('user_id, role, created_at')
+    .eq('role', r)
+    .order('created_at', { ascending: true })
+    .limit(1);
+  if (error) return '';
+  const row = Array.isArray(data) ? data[0] : null;
+  return String(row?.user_id || '').trim();
+}
+
 async function getKv(sb, key) {
   const { data, error } = await sb
     .from('purestay_kv')
@@ -141,14 +171,14 @@ async function seedDemoData(sb, {
     await sb.from('purestay_sets').delete().like('set_key', `portal:demo:${demoSeedId}:%`);
   }
 
-  const mgrId = userIdsByRole.manager || null;
-  const closerId = userIdsByRole.closer || mgrId;
-  const amId = userIdsByRole.account_manager || mgrId;
-  const dialerId = userIdsByRole.dialer || mgrId;
-  const setterId = userIdsByRole.remote_setter || userIdsByRole.in_person_setter || mgrId;
-  const coordId = userIdsByRole.event_coordinator || mgrId;
-  const hostId = userIdsByRole.event_host || mgrId;
-  const mediaId = userIdsByRole.media_team || mgrId;
+  const mgrId = userIdsByRole.manager || await findProfileUserIdByRole(sb, 'manager') || null;
+  const closerId = userIdsByRole.closer || await findProfileUserIdByRole(sb, 'closer') || mgrId;
+  const amId = userIdsByRole.account_manager || await findProfileUserIdByRole(sb, 'account_manager') || mgrId;
+  const dialerId = userIdsByRole.dialer || await findProfileUserIdByRole(sb, 'dialer') || mgrId;
+  const setterId = userIdsByRole.remote_setter || userIdsByRole.in_person_setter || await findProfileUserIdByRole(sb, 'remote_setter') || await findProfileUserIdByRole(sb, 'in_person_setter') || mgrId;
+  const coordId = userIdsByRole.event_coordinator || await findProfileUserIdByRole(sb, 'event_coordinator') || mgrId;
+  const hostId = userIdsByRole.event_host || await findProfileUserIdByRole(sb, 'event_host') || mgrId;
+  const mediaId = userIdsByRole.media_team || await findProfileUserIdByRole(sb, 'media_team') || mgrId;
 
   const today = ymdFromDate(new Date());
   const seedTag = { demoSeed: demoSeedId, demoRun: runId, demoDomain: domain };
@@ -1152,10 +1182,13 @@ module.exports = async (req, res) => {
     let userId = created?.data?.user?.id || '';
 
     if (!userId) {
-      // If already exists, look it up
-      const listed = await sb.auth.admin.listUsers({ page: 1, perPage: 200 });
-      const found = (listed?.data?.users || []).find((u) => String(u.email || '').toLowerCase() === email.toLowerCase());
-      userId = found?.id || '';
+      // If already exists, look it up (paging, projects may have >200 users).
+      userId = await findAuthUserIdByEmail(sb, email, { perPage: 200, maxPages: 25 });
+    }
+
+    if (!userId) {
+      // Fallback: if auth lookup fails, use any existing profile row for this role.
+      userId = await findProfileUserIdByRole(sb, role);
     }
 
     if (!userId) {

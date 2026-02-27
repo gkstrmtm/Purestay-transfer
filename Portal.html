@@ -876,7 +876,8 @@
           </div>
 
           <div id="dialerPaneCall">
-          <div class="card" style="background:#fff; margin-bottom:14px;">
+            <div class="two" style="align-items:start;">
+            <div class="card" style="background:#fff; margin-bottom:14px;">
             <div class="bd">
               <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
                 <div>
@@ -889,7 +890,7 @@
               </div>
               <div style="height:10px"></div>
               <div id="queueMsg" class="err"></div>
-              <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
+                <div style="overflow:auto; max-height: 58vh; border:1px solid var(--border); border-radius: 12px;">
                 <table>
                   <thead>
                     <tr>
@@ -908,7 +909,7 @@
             </div>
           </div>
 
-          <div class="card" style="background: #fff;">
+            <div class="card" style="background: #fff; position: sticky; top: 14px;">
             <div class="bd">
               <div class="row" style="justify-content:space-between;">
                 <div>
@@ -972,6 +973,8 @@
                 </div>
               </div>
             </div>
+          </div>
+
           </div>
 
           <div style="height:14px"></div>
@@ -1965,21 +1968,25 @@
             </div>
           </div>
           <div style="height:14px"></div>
-          <div id="payoutsMsg" class="err"></div>
-          <div id="payoutsTotals" class="muted small" style="margin-top:6px;"></div>
-          <div id="payoutsEmpty" class="muted small" style="margin-top:6px;"></div>
-          <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px;">
-            <table>
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                  <th>Description</th>
-                </tr>
-              </thead>
-              <tbody id="payoutsTbody"></tbody>
-            </table>
+          <div class="card" style="background:#fff;">
+            <div class="bd">
+              <div id="payoutsMsg" class="err"></div>
+              <div id="payoutsTotals" class="muted small" style="margin-top:6px;"></div>
+              <div id="payoutsEmpty" class="muted small" style="margin-top:6px;"></div>
+              <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px; margin-top:10px;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Amount</th>
+                      <th>Status</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody id="payoutsTbody"></tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -2972,6 +2979,16 @@
       return [r];
     }
 
+    function pickPreferredUserForRole(role, people){
+      const r = String(role || '').trim().toLowerCase();
+      const rows = Array.isArray(people) ? people : [];
+      if (!r || !rows.length) return null;
+      // Prefer the canonical demo user for the role: `${role}@...`
+      const exactEmail = rows.find((u) => String(u?.email || '').trim().toLowerCase().startsWith(r + '@'));
+      if (exactEmail) return exactEmail;
+      return rows[0] || null;
+    }
+
     function usersForViewAsRole(role){
       const keys = roleKeysForPeople(role);
       const all = Array.isArray(state.usersCache) ? state.usersCache : [];
@@ -3017,8 +3034,8 @@
       if (state.viewAsRole) {
         ensureUsersCache().then(() => {
           const people = usersForViewAsRole(state.viewAsRole);
-          const first = people && people[0] ? people[0] : null;
-          if (first && first.userId) state.viewAsUserId = String(first.userId);
+          const preferred = pickPreferredUserForRole(state.viewAsRole, people);
+          if (preferred && preferred.userId) state.viewAsUserId = String(preferred.userId);
           finish();
         }).catch(() => finish());
         return;
@@ -3476,7 +3493,26 @@
           </div>
         `;
 
-        return `${viewSelect}<div style="height:10px"></div><div class="navTitle">Menu</div>`;
+        const personPick = currentRole !== 'manager' ? (() => {
+          const people = usersForViewAsRole(currentRole);
+          if (!people.length) return '';
+          const opts = ['<option value="">Auto (default)</option>'].concat(people.map((u) => {
+            const id = String(u?.userId || '').trim();
+            if (!id) return '';
+            const label = String(u?.fullName || u?.email || id).trim();
+            return `<option value="${escapeHtml(id)}">${escapeHtml(label)}</option>`;
+          }).filter(Boolean));
+
+          return `
+            <div style="height:10px"></div>
+            <div class="navTitle">Person</div>
+            <select id="viewAsPerson" style="margin-top:6px;">
+              ${opts.join('')}
+            </select>
+          `;
+        })() : '';
+
+        return `${viewSelect}${personPick}<div style="height:10px"></div><div class="navTitle">Menu</div>`;
       })() : '<div class="navTitle">Menu</div>';
 
       const ico = {
@@ -3564,6 +3600,20 @@
             close();
           };
           document.addEventListener('click', window.__portalViewDdCloser, true);
+        }
+      } catch(_e) {}
+
+      // Optional: manager can pick a specific person inside the role.
+      try {
+        const pick = $('viewAsPerson');
+        if (pick) {
+          // Keep UI in sync.
+          pick.value = String(state.viewAsUserId || '').trim();
+          pick.addEventListener('change', () => {
+            const v = String(pick.value || '').trim();
+            state.viewAsUserId = v;
+            refreshMe().catch(() => {});
+          });
         }
       } catch(_e) {}
 
@@ -8218,6 +8268,14 @@
             ? `<div style="margin-top:6px;"><span class="badge ${sum.offerKind}">${escapeHtml(sum.offerText)}</span></div>`
             : '';
 
+          // In offers contexts, show ONE status label (offer/assignment state) to avoid
+          // confusing combinations like "open" + "pending".
+          const inOffersContext = (desired === 'offers') || isOffersTab;
+          const primaryOfferText = myStatus || sum.offerText || '';
+          const statusCell = inOffersContext
+            ? `<span class="badge">${escapeHtml(primaryOfferText || String(ev.status || ''))}</span>`
+            : `<span class="badge">${escapeHtml(ev.status || '')}</span>${offerBadge}${myStatusBadge}`;
+
           const acceptBtn = '';
 
           return `
@@ -8226,7 +8284,7 @@
               <td class="muted">${date}</td>
               <td>${escapeHtml(ev.title || '')}</td>
               <td class="muted">${escapeHtml(city)}</td>
-              <td><span class="badge">${escapeHtml(ev.status || '')}</span>${offerBadge}${myStatusBadge}</td>
+              <td>${statusCell}</td>
               <td class="muted">${asg}</td>
               <td>${selectBtn} ${offerActions} ${acceptBtn}</td>
             </tr>
