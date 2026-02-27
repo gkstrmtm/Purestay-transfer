@@ -202,6 +202,26 @@ module.exports = async (req, res) => {
     const value = (r.value && typeof r.value === 'object') ? r.value : {};
     let types = Array.isArray(value.types) ? value.types : [];
 
+    // Auto-refresh from resources when KV is missing/stale.
+    // This keeps the UI always up-to-date without exposing any setup workflow.
+    try {
+      const rr = eventTypesFromResources();
+      const valueSource = cleanStr(value?.source, 40).toLowerCase();
+      const allowAutoRefresh = !valueSource || valueSource === 'resources' || valueSource === 'builtin';
+      if (allowAutoRefresh && rr && rr.ok && Array.isArray(rr.types) && rr.types.length) {
+        const resourceCount = rr.types.length;
+        const kvCount = types.length;
+        if (resourceCount > kvCount) {
+          const w = await upsertKv(s.sbAdmin, key, { types: rr.types, updatedAt: new Date().toISOString(), source: rr.source || 'unknown' });
+          if (w.ok) {
+            types = rr.types;
+          }
+        }
+      }
+    } catch {
+      // ignore refresh failures
+    }
+
     let seeded = false;
     let seedSource = 'none';
     if (!types.length) {

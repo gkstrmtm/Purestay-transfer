@@ -1683,6 +1683,7 @@
                       <option value="">Select…</option>
                     </select>
                     <div class="muted small" style="margin-top:6px;">Search and pick an event type.</div>
+                    <div id="planEventTypeDetails" class="muted small" style="margin-top:8px;"></div>
                     <div class="row" style="margin-top:8px; gap:8px; flex-wrap:wrap;">
                       <input id="planEventTypeQ" placeholder="search event types (e.g. student, class B, DJ, trivia...)" style="max-width:420px;" />
                       <button id="planEventTypeSearchBtn" class="btn secondary" type="button">Search</button>
@@ -1764,7 +1765,7 @@
               <button class="collapHdr" type="button" data-collapse-target="opsVendorsBody" aria-expanded="false">
                 <div class="collapLeft">
                   <span>Vendors & event types</span>
-                  <span class="collapHint">Browse + reload</span>
+                  <span class="collapHint">Browse</span>
                 </div>
                 <span class="collapChev" data-collapse-chev>▼</span>
               </button>
@@ -6589,6 +6590,7 @@
       if ($('planStrategy')) $('planStrategy').value = String(plan.strategy || '');
       if ($('planEventType')) $('planEventType').value = String(plan.eventType || '');
       if ($('planJustification')) $('planJustification').value = String(plan.justification || '');
+      renderPlanEventTypeDetails();
 
       // Plan vendors UI
       try{
@@ -7420,6 +7422,41 @@
       return String(t?.name || t?.['Event Type'] || t?.event_type || t?.type || '').trim() || JSON.stringify(t).slice(0, 80);
     }
 
+    function renderPlanEventTypeDetails(){
+      const box = $('planEventTypeDetails');
+      if (!box) return;
+      try{
+        const label = String($('planEventType')?.value || '').trim();
+        if (!label) { box.textContent = ''; return; }
+
+        const types = Array.isArray(state._eventOpsTypes) ? state._eventOpsTypes : [];
+        const t = types.find((x) => eventTypeLabel(x) === label) || null;
+        if (!t) { box.textContent = ''; return; }
+
+        const kind = String(t?.kind || t?.Type || '').trim();
+        const classFit = String(t?.classFit || t?.['Class Fit'] || '').trim();
+        const hook = String(t?.hook || t?.['Psychological Hook'] || '').trim();
+        const goal = String(t?.goal || t?.Goal || '').trim();
+        const notes = String(t?.notes || t?.Notes || '').trim();
+
+        const bits = [
+          kind ? `<span class="badge">${escapeHtml(kind)}</span>` : '',
+          classFit ? `<span class="badge">${escapeHtml(classFit)}</span>` : '',
+        ].filter(Boolean).join(' ');
+
+        const lines = [
+          bits ? `<div class="row" style="gap:6px; flex-wrap:wrap;">${bits}</div>` : '',
+          hook ? `<div style="margin-top:6px;"><span style="font-weight:900;">Hook:</span> ${escapeHtml(hook)}</div>` : '',
+          goal ? `<div style="margin-top:4px;"><span style="font-weight:900;">Goal:</span> ${escapeHtml(goal)}</div>` : '',
+          notes ? `<div style="margin-top:4px;">${escapeHtml(notes)}</div>` : '',
+        ].filter(Boolean);
+
+        box.innerHTML = lines.join('');
+      } catch(_e) {
+        box.textContent = '';
+      }
+    }
+
     async function loadEventTypes(){
       $('eventTypesMsg').textContent = '';
       try{
@@ -7428,10 +7465,18 @@
         const types = Array.isArray(j.types) ? j.types : [];
         $('eventTypesList').innerHTML = types.slice(0, 30).map((t, i) => {
           const label = eventTypeLabel(t);
+          const kind = String(t?.kind || t?.Type || '').trim();
+          const classFit = String(t?.classFit || t?.['Class Fit'] || '').trim();
+          const hook = String(t?.hook || t?.['Psychological Hook'] || '').trim();
+          const goal = String(t?.goal || t?.Goal || '').trim();
+          const meta = [kind, classFit].filter(Boolean).join(' • ');
           return `
             <div class="card" style="background:#fff; margin-bottom:8px;">
               <div class="bd">
                 <div style="font-weight:900;">${escapeHtml(label)}</div>
+                ${meta ? `<div class="muted small" style="margin-top:4px;">${escapeHtml(meta)}</div>` : ''}
+                ${hook ? `<div class="muted small" style="margin-top:4px;"><span style="font-weight:900;">Hook:</span> ${escapeHtml(hook.slice(0, 180))}</div>` : ''}
+                ${goal ? `<div class="muted small" style="margin-top:2px;"><span style="font-weight:900;">Goal:</span> ${escapeHtml(goal.slice(0, 180))}</div>` : ''}
                 <div class="row" style="margin-top:8px;">
                   <button class="btn secondary small" type="button" data-use-type="${i}">Use as event type</button>
                 </div>
@@ -7454,6 +7499,7 @@
               sel.appendChild(opt);
             }
             sel.value = label;
+            renderPlanEventTypeDetails();
           });
         }
       } catch (err) {
@@ -8590,6 +8636,7 @@
     on('planVendorSuggestBtn', 'click', () => suggestPlanVendorsFromEventType());
     on('planEventTypeSearchBtn', 'click', () => filterPlanEventTypes());
     on('planEventTypeResetBtn', 'click', () => resetPlanEventTypes());
+    on('planEventType', 'change', () => renderPlanEventTypeDetails());
 
     // Enter-to-search convenience
     try{
