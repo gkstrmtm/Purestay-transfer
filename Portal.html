@@ -191,6 +191,10 @@
     }
     input:focus, select:focus, textarea:focus{box-shadow: 0 0 0 3px var(--ring); border-color: rgba(199,154,59,.55)}
     textarea{min-height: 120px; resize: vertical;}
+
+    /* Talent editor: make locked/read-only fields look like display text (not disabled form controls). */
+    .talAsText{background: transparent !important; border-color: transparent !important; box-shadow:none !important; padding-left:0 !important; padding-right:0 !important; color:#3a2f2c !important; background-image:none !important; appearance:none !important;}
+    textarea.talAsText{padding-top:0 !important; padding-bottom:0 !important; min-height: 0 !important; height:auto !important;}
     .scrollBox{scrollbar-gutter: stable;}
     .scrollY{overflow:auto; scrollbar-gutter: stable;}
     .scrollCardList{overflow:auto; max-height: 52vh; scrollbar-gutter: stable;}
@@ -2001,33 +2005,33 @@
                 </div>
 
                 <div id="talInternalProfileBox" style="margin-top:14px;" class="hide">
-                  <div style="font-weight:900;">Internal profile (coordinator)</div>
-                  <div class="muted small" style="margin-top:4px;">These are internal notes and tags used for staffing decisions.</div>
+                  <div style="font-weight:900;">Coordinator tags</div>
+                  <div class="muted small" style="margin-top:4px;">Internal tags for staffing decisions (editable by coordinators).</div>
 
                   <div style="height:10px"></div>
 
                   <div>
-                    <label>Internal specialties</label>
+                    <label>Specialties</label>
                     <div class="chipAddRow">
-                      <input id="talInternalSpecialtyInput" placeholder="Add an internal specialty" />
+                      <input id="talInternalSpecialtyInput" placeholder="Add a specialty" />
                       <button id="talInternalSpecialtyAdd" class="btn secondary small" type="button">＋</button>
                     </div>
                     <div id="talInternalSpecialties" class="chips" style="margin-top:8px;"></div>
                   </div>
 
                   <div style="margin-top:10px;">
-                    <label>Internal tone / style</label>
+                    <label>Tone / style</label>
                     <div class="chipAddRow">
-                      <input id="talInternalToneInput" placeholder="Add an internal tone" />
+                      <input id="talInternalToneInput" placeholder="Add a tone" />
                       <button id="talInternalToneAdd" class="btn secondary small" type="button">＋</button>
                     </div>
                     <div id="talInternalTone" class="chips" style="margin-top:8px;"></div>
                   </div>
 
                   <div style="margin-top:10px;">
-                    <label>Internal gear / capabilities</label>
+                    <label>Gear / capabilities</label>
                     <div class="chipAddRow">
-                      <input id="talInternalGearInput" placeholder="Add internal gear/capability" />
+                      <input id="talInternalGearInput" placeholder="Add gear/capability" />
                       <button id="talInternalGearAdd" class="btn secondary small" type="button">＋</button>
                     </div>
                     <div id="talInternalGear" class="chips" style="margin-top:8px;"></div>
@@ -2882,7 +2886,10 @@
     }
 
     function setManagerSubtab(next){
-      state.managerSubtab = String(next || 'tasks');
+      const canSeeUsers = isManagerUser();
+      let n = String(next || 'tasks');
+      if (n === 'users' && !canSeeUsers) n = 'tasks';
+      state.managerSubtab = n;
       renderManagerSubtab();
 
       if (state.activeTab === 'manager') {
@@ -2901,7 +2908,13 @@
     }
 
     function renderManagerSubtab(){
-      const t0 = String(state.managerSubtab || 'tasks');
+      const canSeeUsers = isManagerUser();
+      const usersBtn = $('mgrSegUsers');
+      const usersPane = $('mgrPaneUsers');
+      if (usersBtn) usersBtn.classList.toggle('hide', !canSeeUsers);
+
+      const t0raw = String(state.managerSubtab || 'tasks');
+      const t0 = (!canSeeUsers && t0raw === 'users') ? 'tasks' : t0raw;
       const map = {
         stats: { btn: 'mgrSegStats', pane: 'mgrPaneStats' },
         tasks: { btn: 'mgrSegTasks', pane: 'mgrPaneTasks' },
@@ -2910,6 +2923,10 @@
       const t = map[t0] ? t0 : 'tasks';
       if (t !== t0) state.managerSubtab = t;
       for (const k of Object.keys(map)){
+        if (k === 'users' && !canSeeUsers) {
+          if (usersPane) usersPane.classList.add('hide');
+          continue;
+        }
         const btn = $(map[k].btn);
         const pane = $(map[k].pane);
         if (btn) btn.classList.toggle('active', k === t);
@@ -6398,21 +6415,30 @@
       // Avatar controls (public)
       const up = $('talAvatarUploadBtn');
       const rm = $('talAvatarRemoveBtn');
-      if (up) up.disabled = !publicEditable;
-      if (rm) rm.disabled = !publicEditable;
+      if (up) up.classList.toggle('hide', !publicEditable);
+      if (rm) rm.classList.toggle('hide', !publicEditable);
 
       // Public fields
       for (const id of ['talDisplayName', 'talCity', 'talState', 'talBio', 'talPublicNotes']) {
         const el = $(id);
-        if (el) el.disabled = !publicEditable;
+        if (el) {
+          el.disabled = !publicEditable;
+          el.classList.toggle('talAsText', !publicEditable);
+        }
       }
       const roleEl = $('talRole');
-      if (roleEl) roleEl.disabled = true; // role locked always
+      if (roleEl) {
+        roleEl.disabled = true; // role locked always
+        roleEl.classList.add('talAsText');
+      }
 
       // Public chip adders
       for (const id of ['talPublicSpecialtyInput','talPublicSpecialtyAdd','talPublicToneInput','talPublicToneAdd','talPublicGearInput','talPublicGearAdd','talPublicPairingsAdd']) {
         const el = $(id);
-        if (el) el.disabled = !publicEditable;
+        if (el) {
+          el.disabled = !publicEditable;
+          el.classList.toggle('hide', !publicEditable);
+        }
       }
 
       // Internal fields + chip adders
@@ -6420,6 +6446,14 @@
       if (internalBox) internalBox.classList.toggle('hide', !talentIsCoordinator());
       const internalNotesBox = $('talInternalNotesBox');
       if (internalNotesBox) internalNotesBox.classList.toggle('hide', !talentIsCoordinator());
+
+      // For coordinators, keep editable tags visible near the top of Profile step.
+      if (talentIsCoordinator() && internalBox && internalBox.parentElement) {
+        const firstPublicGroup = $('talPublicSpecialtyInput')?.closest('div');
+        if (firstPublicGroup && firstPublicGroup.parentElement === internalBox.parentElement) {
+          internalBox.parentElement.insertBefore(internalBox, firstPublicGroup);
+        }
+      }
 
       for (const id of ['talInternalNotes','talInternalSpecialtyInput','talInternalSpecialtyAdd','talInternalToneInput','talInternalToneAdd','talInternalGearInput','talInternalGearAdd']) {
         const el = $(id);
@@ -6676,12 +6710,12 @@
         </div>`;
 
         return `
-          <tr>
+          <tr class="clickRow" data-talent-open-user="${escapeHtml(r.userId)}">
             <td>${avatarHtml}<div class="muted small" style="margin-top:4px;">${escapeHtml([r.loc, r.specs].filter(Boolean).join(' • '))}</div></td>
             <td><span class="badge">${escapeHtml(viewingLabel(r.role))}</span></td>
             <td>${relHtml} ${badge}</td>
             <td class="muted">${escapeHtml(aText)}</td>
-            <td><button class="btn secondary small" type="button" data-talent-edit-user="${escapeHtml(r.userId)}">Edit</button></td>
+            <td><button class="btn secondary small" type="button" data-talent-open-user="${escapeHtml(r.userId)}">Open</button></td>
           </tr>
         `;
       }).join('');
@@ -9838,9 +9872,20 @@
         return;
       }
 
-      const editTalentBtn = ev.target.closest('button[data-talent-edit-user]');
-      if (editTalentBtn) {
-        const userId = String(editTalentBtn.getAttribute('data-talent-edit-user') || '').trim();
+      const openTalentBtn = ev.target.closest('button[data-talent-open-user]');
+      if (openTalentBtn) {
+        const userId = String(openTalentBtn.getAttribute('data-talent-open-user') || '').trim();
+        if (!userId) return;
+        state.talent.editUserId = userId;
+        state.talent.step = 1;
+        $('talentStopEditingBtn')?.classList.remove('hide');
+        loadTalentTab().catch(() => {});
+        return;
+      }
+
+      const openTalentRow = ev.target.closest('tr[data-talent-open-user]');
+      if (openTalentRow && !ev.target.closest('button')) {
+        const userId = String(openTalentRow.getAttribute('data-talent-open-user') || '').trim();
         if (!userId) return;
         state.talent.editUserId = userId;
         state.talent.step = 1;
