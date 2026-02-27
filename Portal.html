@@ -813,23 +813,17 @@
                     </div>
                   </div>
 
-                  <div class="two" style="margin-top:10px;">
-                    <div>
-                      <label>Assigned workspace</label>
-                      <select id="leadEditAssignedRole">
-                        <option value="">(unchanged)</option>
-                        <option value="dialer">Calls</option>
-                        <option value="in_person_setter">Booked</option>
-                        <option value="closer">Sales</option>
-                        <option value="event_host">Events</option>
-                        <option value="event_coordinator">Operations</option>
-                        <option value="media_team">Media</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label>Assigned user id (manager only)</label>
-                      <input id="leadEditAssignedUser" placeholder="uuid" />
-                    </div>
+                  <div style="margin-top:10px;">
+                    <label>Assigned workspace</label>
+                    <select id="leadEditAssignedRole">
+                      <option value="">(unchanged)</option>
+                      <option value="dialer">Calls</option>
+                      <option value="in_person_setter">Booked</option>
+                      <option value="closer">Sales</option>
+                      <option value="event_host">Events</option>
+                      <option value="event_coordinator">Operations</option>
+                      <option value="media_team">Media</option>
+                    </select>
                   </div>
 
                   <div style="margin-top:10px;">
@@ -1455,7 +1449,7 @@
 
               <div style="height:10px"></div>
               <div id="eventOpsMsg" class="err"></div>
-              <div id="eventOpsReadOnlyLine" class="muted small hide" style="margin-top:6px;">Read-only mode (view-as role preview). Choose a specific person to make edits.</div>
+              <div id="eventOpsReadOnlyLine" class="muted small hide" style="margin-top:6px;">Read-only mode (view-as role preview).</div>
 
               <div style="height:12px"></div>
 
@@ -2128,31 +2122,21 @@
                       </div>
                     </div>
 
-                    <div class="two" style="margin-top:10px;">
-                      <div>
-                        <label>Assigned user (optional)</label>
-                        <select id="dispatchAssignedUserPick">
-                          <option value="">Unassigned</option>
-                        </select>
-                        <input id="dispatchAssignedUserId" class="hide" placeholder="uuid" />
-                        <div class="muted small" style="margin-top:6px;">Tip: pick a workspace above to filter users.</div>
-                      </div>
-                      <div>
-                        <label>Priority</label>
-                        <select id="dispatchPriority">
-                          <option value="0">0</option>
-                          <option value="1">1</option>
-                          <option value="2">2</option>
-                          <option value="3">3</option>
-                          <option value="4">4</option>
-                          <option value="5">5</option>
-                          <option value="-1">-1</option>
-                          <option value="-2">-2</option>
-                          <option value="-3">-3</option>
-                          <option value="-4">-4</option>
-                          <option value="-5">-5</option>
-                        </select>
-                      </div>
+                    <div style="margin-top:10px;">
+                      <label>Priority</label>
+                      <select id="dispatchPriority">
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="-1">-1</option>
+                        <option value="-2">-2</option>
+                        <option value="-3">-3</option>
+                        <option value="-4">-4</option>
+                        <option value="-5">-5</option>
+                      </select>
                     </div>
 
                     <div style="margin-top:10px;">
@@ -2196,7 +2180,7 @@
           <div class="card" style="background:#fff;">
             <div class="bd">
               <div style="font-weight:900;">Lead assignment</div>
-              <div class="muted small" style="margin-top:4px;">Assign a lead to a workspace or a specific person</div>
+              <div class="muted small" style="margin-top:4px;">Assign a lead to a workspace</div>
               <div style="height:10px"></div>
               <div class="two">
                 <div>
@@ -2221,13 +2205,6 @@
                   </select>
                 </div>
               </div>
-              <div style="margin-top:10px;">
-                <label>Assigned user (optional)</label>
-                <select id="mgrAssignedUserPick">
-                  <option value="">(no change)</option>
-                </select>
-                <input id="mgrAssignedUserId" class="hide" placeholder="uuid" />
-              </div>
               <div class="row" style="margin-top:10px;">
                 <button id="mgrAssignBtn" class="btn secondary" type="button">Apply</button>
                 <div id="mgrAssignMsg" class="err"></div>
@@ -2236,7 +2213,7 @@
           </div>
 
           <div style="height:14px"></div>
-          <div class="muted small">Tip: user id assignment overrides workspace routing.</div>
+          <div class="muted small">Tip: workspace routing keeps the demo automatic.</div>
           </div>
 
           <div id="mgrPaneUsers" class="hide">
@@ -2324,43 +2301,6 @@
                 <button id="scheduleSaveBtn" class="btn" type="button">Schedule</button>
                 <button id="scheduleClearLead" class="btn secondary" type="button">Clear lead</button>
                 <div id="scheduleMsg" class="err"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="dispatchAssignModal" class="modalBackdrop" role="dialog" aria-modal="true" aria-label="Assign task">
-      <div class="modal sm">
-        <div class="modalHd">
-          <div>
-            <div class="t">Assign task</div>
-            <div class="muted small" id="dispatchAssignTaskLine">—</div>
-          </div>
-          <div class="row" style="gap:8px;">
-            <button id="dispatchAssignClose" class="btn secondary" type="button">Close</button>
-          </div>
-        </div>
-        <div class="modalBd">
-          <div class="card" style="background:#fff; border-color: rgba(199,154,59,.35); box-shadow:none;">
-            <div class="bd">
-              <div class="muted small">Assigned workspace</div>
-              <div id="dispatchAssignRoleLine" style="font-weight:900; margin-top:4px;">—</div>
-
-              <div style="height:12px"></div>
-              <div>
-                <label>Assigned user</label>
-                <select id="dispatchAssignUserPick">
-                  <option value="">Unassigned</option>
-                </select>
-                <div class="muted small" style="margin-top:6px;">Pick a person to assign, or leave unassigned to send it back to the role queue.</div>
-              </div>
-
-              <div class="row" style="margin-top:12px;">
-                <button id="dispatchAssignSave" class="btn" type="button">Save</button>
-                <button id="dispatchAssignClear" class="btn secondary" type="button">Clear assignment</button>
-                <div id="dispatchAssignMsg" class="err"></div>
               </div>
             </div>
           </div>
@@ -2736,11 +2676,7 @@
         if (state.managerSubtab === 'tasks') {
           // Default: keep the create-task panel collapsed.
           if ($('dispatchCreateBody')) restoreCollapsedFromState('dispatchCreateBody', true);
-          ensureUsersCache().then(() => renderDispatchAssigneePicker()).catch(() => {});
           loadDispatchManager().catch(()=>{});
-        }
-        if (state.managerSubtab === 'assign') {
-          ensureUsersCache().then(() => renderMgrAssignUserPicker()).catch(() => {});
         }
       }
     }
@@ -3365,7 +3301,7 @@
       if (!j || !j.ok) {
         const err = String(j?.error || ('http_' + r.status));
         if (err === 'view_as_read_only') throw new Error('View-as is read-only');
-        if (err === 'view_as_requires_user') throw new Error('Pick a person to edit (role preview is read-only)');
+        if (err === 'view_as_requires_user') throw new Error('Read-only mode (role preview).');
         throw new Error(err);
       }
       if (String(method || 'GET').toUpperCase() !== 'GET') {
@@ -3881,7 +3817,6 @@
         if ($('leadEditStatus')) $('leadEditStatus').value = '';
         if ($('leadEditPriority')) $('leadEditPriority').value = '';
         if ($('leadEditAssignedRole')) $('leadEditAssignedRole').value = '';
-        if ($('leadEditAssignedUser')) $('leadEditAssignedUser').value = '';
         const fu = l.meta && typeof l.meta === 'object' ? String(l.meta.followup || '') : '';
         if ($('leadEditFollowup')) $('leadEditFollowup').value = fu;
       }
@@ -4000,13 +3935,11 @@
         const st = $('leadEditStatus').value;
         const pr = $('leadEditPriority').value;
         const ar = $('leadEditAssignedRole').value;
-        const au = $('leadEditAssignedUser').value.trim();
         const fu = $('leadEditFollowup').value.trim();
 
         if (st) patch.status = st;
         if (pr !== '') patch.priority = Number(pr);
         if (ar) patch.assignedRole = ar;
-        if (au) patch.assignedUserId = au;
 
         // Merge meta followup
         const nextMeta = Object.assign({}, (lead.meta && typeof lead.meta === 'object') ? lead.meta : {});
@@ -4135,49 +4068,13 @@
         const body = { id };
 
         const role = $('mgrAssignedRole').value;
-        const userPick = String($('mgrAssignedUserPick')?.value || '').trim();
-        const userId = userPick || String($('mgrAssignedUserId')?.value || '').trim();
         if (role) body.assignedRole = role;
-        if (userId) body.assignedUserId = userId;
 
         await api('/api/portal/leads', { method:'PATCH', body });
         setBadge('ok', 'assigned');
       } catch(e){
         $('mgrAssignMsg').textContent = String(e.message || e);
       }
-    }
-
-    function renderMgrAssignUserPicker(){
-      const pickEl = $('mgrAssignedUserPick');
-      if (!pickEl) return;
-      const assignedRole = String($('mgrAssignedRole')?.value || '').trim();
-      const users = Array.isArray(state.usersCache) ? state.usersCache : [];
-      const filtered = assignedRole
-        ? users.filter((u) => String(u?.role || '').trim() === assignedRole)
-        : users.slice();
-
-      filtered.sort((a, b) => {
-        const an = String(a?.fullName || a?.email || a?.userId || '');
-        const bn = String(b?.fullName || b?.email || b?.userId || '');
-        return an.localeCompare(bn);
-      });
-
-      const keep = String(pickEl.value || $('mgrAssignedUserId')?.value || '').trim();
-      const opts = ['<option value="">(no change)</option>'];
-      for (const u of filtered.slice(0, 160)) {
-        const id = String(u?.userId || '').trim();
-        if (!id) continue;
-        const roleLabel = viewingLabel(String(u?.role || ''));
-        const label = String(u?.fullName || u?.email || id).trim();
-        opts.push(`<option value="${escapeHtml(id)}">${escapeHtml(label)} • ${escapeHtml(roleLabel)}</option>`);
-      }
-      pickEl.innerHTML = opts.join('');
-
-      if (keep) {
-        const has = Array.from(pickEl.options).some((o) => String(o.value || '') === keep);
-        if (has) pickEl.value = keep;
-      }
-      if ($('mgrAssignedUserId')) $('mgrAssignedUserId').value = String(pickEl.value || '').trim();
     }
 
     async function loadTeamAvailability(){
@@ -4385,7 +4282,6 @@
               <td class="muted">${escapeHtml(leadLine)}</td>
               <td><span class="badge">${escapeHtml(st)}</span></td>
               <td>
-                <button class="btn secondary small" data-mgr-assign="${t.id}">Assign</button>
                 <button class="btn secondary small" data-mgr-done="${t.id}">Done</button>
                 <button class="btn secondary small" data-mgr-cancel="${t.id}">Cancel</button>
                 ${escBtn}
@@ -4393,20 +4289,6 @@
             </tr>
           `;
         }).join('');
-
-        for (const btn of tb.querySelectorAll('button[data-mgr-assign]')){
-          btn.addEventListener('click', async () => {
-            $('dispatchMsg').textContent = '';
-            try{
-              const id = Number(btn.dataset.mgrAssign);
-              const t = tasks.find((x) => Number(x.id) === id) || null;
-              if (!t) throw new Error('task_not_found');
-              await openDispatchAssignModal(t);
-            } catch(e){
-              $('dispatchMsg').textContent = String(e.message || e);
-            }
-          });
-        }
 
         for (const btn of tb.querySelectorAll('button[data-mgr-done]')){
           btn.addEventListener('click', async () => {
@@ -4457,87 +4339,6 @@
       }
     }
 
-    async function openDispatchAssignModal(task){
-      $('dispatchAssignMsg').textContent = '';
-      state.dispatchAssignTask = task || null;
-      const t = state.dispatchAssignTask;
-
-      try{ await ensureUsersCache(); } catch(_e) {}
-
-      const title = String(t?.title || '').trim();
-      const id = Number(t?.id || 0);
-      const due = dispatchDue(t);
-      const role = viewingLabel(String(t?.assigned_role || ''));
-      $('dispatchAssignTaskLine').textContent = id ? (`#${id} • ${due ? (due + ' • ') : ''}${title || 'Task'}`) : (title || 'Task');
-      $('dispatchAssignRoleLine').textContent = role || '—';
-
-      renderDispatchAssignUserPicker();
-      $('dispatchAssignModal').classList.add('show');
-    }
-
-    function closeDispatchAssignModal(){
-      $('dispatchAssignMsg').textContent = '';
-      state.dispatchAssignTask = null;
-      const m = $('dispatchAssignModal');
-      if (m) m.classList.remove('show');
-    }
-
-    function renderDispatchAssignUserPicker(){
-      const pickEl = $('dispatchAssignUserPick');
-      if (!pickEl) return;
-      const t = state.dispatchAssignTask;
-      const assignedRole = String(t?.assigned_role || '').trim();
-      const users = Array.isArray(state.usersCache) ? state.usersCache : [];
-      const filtered = assignedRole
-        ? users.filter((u) => String(u?.role || '').trim() === assignedRole)
-        : users.slice();
-
-      filtered.sort((a, b) => {
-        const an = String(a?.fullName || a?.email || a?.userId || '');
-        const bn = String(b?.fullName || b?.email || b?.userId || '');
-        return an.localeCompare(bn);
-      });
-
-      const current = String(t?.assigned_user_id || '').trim();
-      const opts = ['<option value="">Unassigned</option>'];
-      for (const u of filtered.slice(0, 220)) {
-        const id = String(u?.userId || '').trim();
-        if (!id) continue;
-        const label = String(u?.fullName || u?.email || id).trim();
-        opts.push(`<option value="${escapeHtml(id)}">${escapeHtml(label)}</option>`);
-      }
-      pickEl.innerHTML = opts.join('');
-
-      if (current) {
-        const has = Array.from(pickEl.options).some((o) => String(o.value || '') === current);
-        if (has) pickEl.value = current;
-      }
-    }
-
-    async function saveDispatchAssign({ clear = false } = {}){
-      $('dispatchAssignMsg').textContent = '';
-      try{
-        const t = state.dispatchAssignTask;
-        const id = Number(t?.id || 0);
-        if (!id) throw new Error('task_not_found');
-        const picked = clear ? '' : String($('dispatchAssignUserPick')?.value || '').trim();
-        const nextAssigned = picked || null;
-        await api('/api/portal/dispatch', {
-          method: 'PATCH',
-          body: {
-            id,
-            assignedUserId: nextAssigned,
-            status: nextAssigned ? 'assigned' : 'open',
-          },
-        });
-        closeDispatchAssignModal();
-        await loadDispatchManager();
-        setBadge('ok', 'assigned');
-      } catch(e){
-        $('dispatchAssignMsg').textContent = String(e.message || e);
-      }
-    }
-
     async function createDispatchTask(){
       $('dispatchCreateMsg').textContent = '';
       try{
@@ -4548,12 +4349,10 @@
 
         const leadIdRaw = String($('dispatchLeadId').value || '').trim();
         const leadId = leadIdRaw ? Number(leadIdRaw) : (state.selectedLead ? Number(state.selectedLead.id) : null);
-        const assignedUserPick = String($('dispatchAssignedUserPick')?.value || '').trim();
         const body = {
           leadId: leadId || null,
           title,
           assignedRole,
-          assignedUserId: assignedUserPick || String($('dispatchAssignedUserId').value || '').trim() || null,
           dueDate: $('dispatchDueDate').value || null,
           dueTime: $('dispatchDueTime').value || '',
           priority: Number($('dispatchPriority').value || 0),
@@ -4563,7 +4362,6 @@
         await api('/api/portal/dispatch', { method:'POST', body });
         $('dispatchTitle').value = '';
         $('dispatchNotes').value = '';
-        $('dispatchAssignedUserId').value = '';
         await loadDispatchManager();
         setBadge('ok', 'created');
       } catch(e){
@@ -4581,39 +4379,6 @@
       } catch(e){
         $('dispatchMsg').textContent = String(e.message || e);
       }
-    }
-
-    function renderDispatchAssigneePicker(){
-      const pickEl = $('dispatchAssignedUserPick');
-      if (!pickEl) return;
-      const assignedRole = String($('dispatchAssignedRole')?.value || '').trim();
-      const users = Array.isArray(state.usersCache) ? state.usersCache : [];
-      const filtered = assignedRole
-        ? users.filter((u) => String(u?.role || '').trim() === assignedRole)
-        : users.slice();
-
-      filtered.sort((a, b) => {
-        const an = String(a?.fullName || a?.email || a?.userId || '');
-        const bn = String(b?.fullName || b?.email || b?.userId || '');
-        return an.localeCompare(bn);
-      });
-
-      const keep = String(pickEl.value || $('dispatchAssignedUserId')?.value || '').trim();
-
-      const opts = ['<option value="">Unassigned</option>'];
-      for (const u of filtered.slice(0, 120)) {
-        const id = String(u?.userId || '').trim();
-        if (!id) continue;
-        const label = String(u?.fullName || u?.email || id).trim();
-        opts.push(`<option value="${escapeHtml(id)}">${escapeHtml(label)}</option>`);
-      }
-      pickEl.innerHTML = opts.join('');
-
-      if (keep) {
-        const has = Array.from(pickEl.options).some((o) => String(o.value || '') === keep);
-        if (has) pickEl.value = keep;
-      }
-      if ($('dispatchAssignedUserId')) $('dispatchAssignedUserId').value = String(pickEl.value || '').trim();
     }
 
     async function aiResearch(){
@@ -6363,7 +6128,7 @@
     }
 
     function coordinatorOpsEditable(){
-      // Role-only preview is read-only; impersonating a specific person is editable.
+      // Role-only preview is read-only; user-scoped view-as is editable.
       return isCoordinatorRole() && !isManagerViewAsPreviewOnly();
     }
 
@@ -8472,7 +8237,7 @@
             try{
               const userId = String(btn.dataset.editUser || '').trim();
               const current = users.find((x) => String(x.userId) === userId);
-              const nextRole = prompt('Workspace for person:', current?.role || '');
+              const nextRole = prompt('Workspace:', current?.role || '');
               if (nextRole == null) return;
               const nextName = prompt('Full name:', current?.fullName || '');
               if (nextName == null) return;
@@ -8839,8 +8604,6 @@
         if (m && m.classList.contains('show')) closePipelineModal();
         const s = $('scheduleModal');
         if (s && s.classList.contains('show')) closeScheduleModal();
-        const d = $('dispatchAssignModal');
-        if (d && d.classList.contains('show')) closeDispatchAssignModal();
       }
     });
 
@@ -8854,16 +8617,6 @@
       const m = $('scheduleModal');
       if (!m) return;
       if (ev.target === m) closeScheduleModal();
-    });
-
-    on('dispatchAssignClose', 'click', () => closeDispatchAssignModal());
-    on('dispatchAssignSave', 'click', () => saveDispatchAssign().catch(() => {}));
-    on('dispatchAssignClear', 'click', () => saveDispatchAssign({ clear: true }).catch(() => {}));
-
-    on('dispatchAssignModal', 'click', (ev) => {
-      const m = $('dispatchAssignModal');
-      if (!m) return;
-      if (ev.target === m) closeDispatchAssignModal();
     });
 
     on('loadPayoutsBtn', 'click', () => loadPayouts().catch(() => {}));
@@ -8902,12 +8655,6 @@
       const id = state.selectedLead ? String(state.selectedLead.id || '').trim() : '';
       if ($('mgrLeadId')) $('mgrLeadId').value = id;
     });
-    on('mgrAssignedRole', 'change', () => {
-      ensureUsersCache().then(() => renderMgrAssignUserPicker()).catch(() => {});
-    });
-    on('mgrAssignedUserPick', 'change', () => {
-      if ($('mgrAssignedUserId')) $('mgrAssignedUserId').value = String($('mgrAssignedUserPick')?.value || '').trim();
-    });
 
     on('loadDispatchBtn', 'click', () => loadDispatchManager().catch(() => {}));
     on('scanDispatchBtn', 'click', () => scanDispatchOverdue().catch(() => {}));
@@ -8920,12 +8667,6 @@
     on('dispatchUseSelectedLead', 'click', () => {
       const id = state.selectedLead ? String(state.selectedLead.id || '').trim() : '';
       if ($('dispatchLeadId')) $('dispatchLeadId').value = id;
-    });
-    on('dispatchAssignedRole', 'change', () => {
-      ensureUsersCache().then(() => renderDispatchAssigneePicker()).catch(() => {});
-    });
-    on('dispatchAssignedUserPick', 'change', () => {
-      if ($('dispatchAssignedUserId')) $('dispatchAssignedUserId').value = String($('dispatchAssignedUserPick')?.value || '').trim();
     });
 
     on('loadDialerTasksBtn', 'click', () => loadDispatchInto('dialerTasksTbody', 'dialerTasksMsg', { overdueOnly: !!$('dialerTasksOverdue')?.checked, scope: String($('dialerTasksScope')?.value || 'role') }).catch(() => {}));
