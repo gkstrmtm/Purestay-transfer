@@ -78,7 +78,9 @@ module.exports = async (req, res) => {
   const requestedUserId = clampUuid(url.searchParams.get('userId'));
 
   const baseUserId = String(s.effectiveUserId || s.user.id || '');
-  let userId = (s.realIsManager && requestedUserId) ? requestedUserId : baseUserId;
+  // Allow managers to view any userId; allow real event coordinators to view other users read-only.
+  const canViewOtherUser = !!requestedUserId && (s.realIsManager || hasRole(s.realProfile, ['event_coordinator']));
+  let userId = canViewOtherUser ? requestedUserId : baseUserId;
   const key = `portal:availability:${userId}`;
 
   if (req.method === 'GET') {

@@ -305,6 +305,29 @@
     .wizardStep{font-size:12px; font-weight:900; color:#3a2f2c; border:1px solid var(--border); background:#fff; padding:8px 10px; border-radius:999px; cursor:pointer;}
     .wizardStep.active{background: rgba(122,46,38,.08); border-color: rgba(122,46,38,.22); color: var(--maroon)}
     .wizardNav{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+
+    .avatarCircle{width:40px; height:40px; border-radius:999px; overflow:hidden; background: rgba(0,0,0,.06); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-weight:950; color: rgba(0,0,0,.55); flex: 0 0 auto; background-size:cover; background-position:center; background-repeat:no-repeat;}
+    .avatarCircle img{width:100%; height:100%; object-fit:cover; display:block;}
+    .avatarCircle.lg{width:68px; height:68px; font-size:18px;}
+
+    .chips{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+    .chip{display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border:1px solid var(--border); border-radius:999px; background:#fff; font-weight:800; font-size:12px;}
+    .chip button{border:0; background:transparent; cursor:pointer; font-weight:950; color: rgba(0,0,0,.55); padding:0; line-height:1;}
+    .chip button:hover{color: rgba(0,0,0,.85)}
+    .chipAddRow{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+    .chipAddRow input{max-width:320px;}
+
+    .relBadge{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; border:1px solid var(--border); background:#fff; font-weight:950; font-size:12px;}
+    .relBadge.good{border-color: rgba(15,118,110,.35); background: rgba(15,118,110,.08); color: rgba(8,88,82,.95)}
+    .relBadge.mid{border-color: rgba(199,154,59,.45); background: rgba(199,154,59,.10); color: rgba(120,86,18,.95)}
+    .relBadge.bad{border-color: rgba(190,54,54,.35); background: rgba(190,54,54,.10); color: rgba(120,20,20,.95)}
+
+    .relRange{width:260px; max-width:100%; height:10px; border-radius:999px; background: linear-gradient(90deg, rgba(190,54,54,.85), rgba(199,154,59,.95), rgba(15,118,110,.95)); outline: none; -webkit-appearance: none; appearance: none;}
+    .relRange::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:18px; height:18px; border-radius:999px; background:#fff; border:2px solid rgba(0,0,0,.25); cursor:pointer;}
+    .relRange::-moz-range-thumb{width:18px; height:18px; border-radius:999px; background:#fff; border:2px solid rgba(0,0,0,.25); cursor:pointer;}
+
+    .cropBox{width:260px; height:260px; border-radius:999px; border:1px solid var(--border); background: rgba(0,0,0,.04); overflow:hidden; position:relative; touch-action:none;}
+    .cropBox img{position:absolute; left:50%; top:50%; transform: translate(-50%, -50%); user-select:none; -webkit-user-drag:none;}
   </style>
 </head>
 <body>
@@ -1880,7 +1903,7 @@
                     <button id="talStep1" class="wizardStep" type="button">Basics</button>
                     <button id="talStep2" class="wizardStep" type="button">Profile</button>
                     <button id="talStep3" class="wizardStep" type="button">Notes</button>
-                    <button id="talStep4" class="wizardStep hide" type="button">Reliability</button>
+                    <button id="talStep4" class="wizardStep hide" type="button">Step 4</button>
                   </div>
                   <button id="talentRefreshBtn" class="btn secondary" type="button">Refresh</button>
                   <button id="talentStopEditingBtn" class="btn secondary hide" type="button">Cancel</button>
@@ -1891,6 +1914,25 @@
               <div id="talentMsg" class="err"></div>
 
               <div id="talentStep1" class="talStep" data-step="1">
+                <div class="row" style="justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+                  <div class="row" style="gap:12px; align-items:center;">
+                    <div id="talAvatarCircle" class="avatarCircle lg" aria-label="Profile photo"></div>
+                    <div>
+                      <div class="muted small">Profile photo</div>
+                      <div class="row" style="gap:8px; margin-top:6px; flex-wrap:wrap;">
+                        <input id="talAvatarFile" type="file" accept="image/*" class="hide" />
+                        <button id="talAvatarUploadBtn" class="btn secondary small" type="button">Upload</button>
+                        <button id="talAvatarRemoveBtn" class="btn secondary small" type="button">Remove</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row" style="gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                    <button id="talSelfEditBtn" class="btn secondary" type="button">Edit profile</button>
+                    <button id="talSelfCancelBtn" class="btn secondary hide" type="button">Cancel</button>
+                  </div>
+                </div>
+
+                <div style="height:10px"></div>
                 <div class="two">
                   <div>
                     <label>Display name</label>
@@ -1920,46 +1962,147 @@
 
               <div id="talentStep2" class="talStep hide" data-step="2">
                 <div>
-                  <label>Specialties (comma separated)</label>
-                  <input id="talSpecialties" placeholder="ex: games, luxury, families" />
+                  <div style="font-weight:900;">Talent provided</div>
+                  <div class="muted small" style="margin-top:4px;">Only the talent can edit these fields.</div>
+                </div>
+
+                <div style="height:10px"></div>
+
+                <div>
+                  <label>Specialties</label>
+                  <div class="chipAddRow">
+                    <input id="talPublicSpecialtyInput" placeholder="Add a specialty" />
+                    <button id="talPublicSpecialtyAdd" class="btn secondary small" type="button">＋</button>
+                  </div>
+                  <div id="talPublicSpecialties" class="chips" style="margin-top:8px;"></div>
                 </div>
 
                 <div style="margin-top:10px;">
                   <label>Tone / style</label>
-                  <input id="talTone" placeholder="high-energy, warm, professional" />
+                  <div class="chipAddRow">
+                    <input id="talPublicToneInput" placeholder="Add a tone" />
+                    <button id="talPublicToneAdd" class="btn secondary small" type="button">＋</button>
+                  </div>
+                  <div id="talPublicTone" class="chips" style="margin-top:8px;"></div>
                 </div>
 
                 <div style="margin-top:10px;">
                   <label>Gear / capabilities</label>
-                  <input id="talGear" placeholder="camera, gimbal, lighting, drone (if licensed)" />
+                  <div class="chipAddRow">
+                    <input id="talPublicGearInput" placeholder="Add a gear/capability" />
+                    <button id="talPublicGearAdd" class="btn secondary small" type="button">＋</button>
+                  </div>
+                  <div id="talPublicGear" class="chips" style="margin-top:8px;"></div>
                 </div>
 
                 <div style="margin-top:10px;">
                   <label>Bio</label>
                   <textarea id="talBio" placeholder="Short bio used for matching and reporting"></textarea>
                 </div>
+
+                <div id="talInternalProfileBox" style="margin-top:14px;" class="hide">
+                  <div style="font-weight:900;">Internal profile (coordinator)</div>
+                  <div class="muted small" style="margin-top:4px;">These are internal notes and tags used for staffing decisions.</div>
+
+                  <div style="height:10px"></div>
+
+                  <div>
+                    <label>Internal specialties</label>
+                    <div class="chipAddRow">
+                      <input id="talInternalSpecialtyInput" placeholder="Add an internal specialty" />
+                      <button id="talInternalSpecialtyAdd" class="btn secondary small" type="button">＋</button>
+                    </div>
+                    <div id="talInternalSpecialties" class="chips" style="margin-top:8px;"></div>
+                  </div>
+
+                  <div style="margin-top:10px;">
+                    <label>Internal tone / style</label>
+                    <div class="chipAddRow">
+                      <input id="talInternalToneInput" placeholder="Add an internal tone" />
+                      <button id="talInternalToneAdd" class="btn secondary small" type="button">＋</button>
+                    </div>
+                    <div id="talInternalTone" class="chips" style="margin-top:8px;"></div>
+                  </div>
+
+                  <div style="margin-top:10px;">
+                    <label>Internal gear / capabilities</label>
+                    <div class="chipAddRow">
+                      <input id="talInternalGearInput" placeholder="Add internal gear/capability" />
+                      <button id="talInternalGearAdd" class="btn secondary small" type="button">＋</button>
+                    </div>
+                    <div id="talInternalGear" class="chips" style="margin-top:8px;"></div>
+                  </div>
+                </div>
               </div>
 
               <div id="talentStep3" class="talStep hide" data-step="3">
                 <div>
-                  <label>Preferred pairings (user IDs comma separated)</label>
-                  <input id="talPairings" placeholder="uuid1, uuid2" />
+                  <label>Preferred pairings</label>
+                  <div class="row" style="gap:8px; flex-wrap:wrap;">
+                    <button id="talPublicPairingsAdd" class="btn secondary small" type="button">Add pairing</button>
+                    <div class="muted small">Pick from Event Hosts + Media Team.</div>
+                  </div>
+                  <div id="talPublicPairings" class="chips" style="margin-top:8px;"></div>
                 </div>
-                <div style="margin-top:10px;">
-                  <label>Notes (internal)</label>
-                  <textarea id="talNotes"></textarea>
+
+                <div id="talInternalNotesBox" class="hide" style="margin-top:12px;">
+                  <label>Internal notes</label>
+                  <textarea id="talInternalNotes"></textarea>
+                </div>
+
+                <div id="talPublicNotesBox" style="margin-top:12px;">
+                  <label>Notes</label>
+                  <textarea id="talPublicNotes" placeholder="Private notes you want to remember."></textarea>
                 </div>
               </div>
 
-              <div id="talReliabilityBox" class="hide talStep" style="margin-top:10px;" data-step="4">
-                <div class="two">
-                  <div>
-                    <label>Reliability score (0-100)</label>
-                    <input id="talReliabilityScore" type="number" min="0" max="100" step="1" />
+              <div id="talentStep4" class="talStep hide" data-step="4">
+                <div id="talReliabilityBox" class="hide">
+                  <div style="font-weight:900;">Reliability</div>
+                  <div class="muted small" style="margin-top:4px;">Internal coordinator rating used for staffing decisions.</div>
+
+                  <div style="height:10px"></div>
+                  <div class="row" style="gap:12px; align-items:center; flex-wrap:wrap;">
+                    <div>
+                      <label>Reliability score</label>
+                      <div class="row" style="gap:10px; align-items:center; flex-wrap:wrap;">
+                        <input id="talReliabilityScore" class="relRange" type="range" min="0" max="100" step="1" />
+                        <div id="talReliabilityScoreLabel" class="relBadge">Unrated</div>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <label>Reliability flags (comma separated)</label>
-                    <input id="talReliabilityFlags" placeholder="late, no_show, great" />
+
+                  <div style="margin-top:12px;">
+                    <label>Reliability flags</label>
+                    <div class="chipAddRow">
+                      <input id="talReliabilityFlagInput" placeholder="Add a flag" />
+                      <button id="talReliabilityFlagAdd" class="btn secondary small" type="button">＋</button>
+                    </div>
+                    <div id="talReliabilityFlags" class="chips" style="margin-top:8px;"></div>
+                  </div>
+                </div>
+
+                <div id="talAvailabilityBox" class="hide">
+                  <div style="font-weight:900;">Availability</div>
+                  <div class="muted small" style="margin-top:4px;">Select times you are available. Times are shown in your local timezone (<span id="talAvailTzLabel"></span>).</div>
+
+                  <div style="height:10px"></div>
+                  <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap;">
+                    <div class="muted small" id="talAvailWeekLabel">—</div>
+                    <div class="row" style="gap:8px; flex-wrap:wrap;">
+                      <button id="talAvailPrevWeek" class="btn secondary" type="button">Prev week</button>
+                      <button id="talAvailToday" class="btn secondary" type="button">This week</button>
+                      <button id="talAvailNextWeek" class="btn secondary" type="button">Next week</button>
+                      <button id="talAvailClearWeek" class="btn secondary" type="button">Clear week</button>
+                      <button id="talAvailSaveBtn" class="btn" type="button">Save</button>
+                    </div>
+                  </div>
+
+                  <div style="height:10px"></div>
+                  <div id="talAvailMsg" class="err"></div>
+
+                  <div class="availGridWrap" style="margin-top:10px;">
+                    <div class="availWeekGrid" id="talAvailWeekGrid"></div>
                   </div>
                 </div>
               </div>
@@ -1994,7 +2137,21 @@
 
                 <div style="height:10px"></div>
                 <div id="talentDirMsg" class="err"></div>
-                <div id="talentDirList" class="scrollCardList"></div>
+
+                <div style="overflow:auto; border:1px solid var(--border); border-radius: 12px; margin-top:8px;">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Talent</th>
+                        <th>Role</th>
+                        <th>Reliability</th>
+                        <th>Availability</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody id="talentUsersTbody"></tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
@@ -2245,21 +2402,12 @@
                       <th>Name</th>
                       <th>Email</th>
                       <th>Role</th>
+                      <th>Availability</th>
                       <th></th>
                     </tr>
                   </thead>
                   <tbody id="usersTbody"></tbody>
                 </table>
-              </div>
-
-              <div style="height:12px"></div>
-              <div class="card" style="background:#fff;">
-                <div class="bd">
-                  <div style="font-weight:900;">Team availability</div>
-                  <div style="height:10px"></div>
-                  <div id="teamAvailMsg" class="err"></div>
-                  <div id="teamAvailList" class="scrollCardList"></div>
-                </div>
               </div>
             </div>
           </div>
@@ -2310,6 +2458,57 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="peoplePickModal" class="modalBackdrop" role="dialog" aria-modal="true" aria-label="Pick person">
+      <div class="modal">
+        <div class="modalHd">
+          <div>
+            <div class="t" id="peoplePickTitle">Pick person</div>
+            <div class="muted small" id="peoplePickSub">Event hosts + media team</div>
+          </div>
+          <div class="row" style="gap:8px;">
+            <button id="peoplePickClose" class="btn secondary" type="button">Close</button>
+          </div>
+        </div>
+        <div class="modalBd">
+          <div class="row" style="gap:10px; align-items:center; flex-wrap:wrap;">
+            <input id="peoplePickQ" placeholder="Search by name or email" style="min-width:240px;" />
+            <div class="muted small" id="peoplePickCount"></div>
+          </div>
+          <div style="height:10px"></div>
+          <div id="peoplePickList" class="modalList"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="avatarCropModal" class="modalBackdrop" role="dialog" aria-modal="true" aria-label="Crop profile photo">
+      <div class="modal sm">
+        <div class="modalHd">
+          <div>
+            <div class="t">Crop photo</div>
+            <div class="muted small">Drag to position, then save.</div>
+          </div>
+          <div class="row" style="gap:8px;">
+            <button id="avatarCropCancel" class="btn secondary" type="button">Cancel</button>
+            <button id="avatarCropSave" class="btn" type="button">Save</button>
+          </div>
+        </div>
+        <div class="modalBd">
+          <div class="row" style="justify-content:center;">
+            <div id="avatarCropBox" class="cropBox">
+              <img id="avatarCropImg" alt="Crop" />
+            </div>
+          </div>
+          <div style="height:10px"></div>
+          <div>
+            <label>Zoom</label>
+            <input id="avatarCropZoom" type="range" min="1" max="3" step="0.01" value="1" />
+          </div>
+          <div style="height:10px"></div>
+          <div id="avatarCropMsg" class="err"></div>
         </div>
       </div>
     </div>
@@ -2594,13 +2793,21 @@
         profiles: [],
         editUserId: '',
         q: '',
+        qTimer: null,
         step: 1,
+        selfEditing: false,
+        form: null,
+        avail: { weekOffset: 0, byDate: {}, tz: '', drag: { active: false, mode: '' }, viewUserId: '' },
       },
       closerQueue: [],
       allowedTabs: null,
       ui: { sidebarCollapsed: false, collapse: {}, _opsCollapseInit: false },
       availability: { weekOffset: 0, byDate: {}, tz: '', drag: { active: false, mode: '' } },
     };
+
+    state.peoplePick = { open: false, q: '', onPick: null };
+    state.avatarCrop = { open: false, dataUrl: '', dx: 0, dy: 0, zoom: 1, _drag: null };
+    state._availabilityCache = {}; // userId -> { loadedAt, availability }
 
     const scheduleModalState = { after: null };
 
@@ -2688,7 +2895,7 @@
           loadDispatchManager().catch(()=>{});
         }
         if (state.managerSubtab === 'users') {
-          loadUsers().then(() => loadTeamAvailability()).catch(() => {});
+          loadUsers().catch(() => {});
         }
       }
     }
@@ -3165,7 +3372,7 @@
         } else if (state.managerSubtab === 'tasks') {
           loadDispatchManager().catch(()=>{});
         } else if (state.managerSubtab === 'users') {
-          loadUsers().then(() => loadTeamAvailability()).catch(() => {});
+          loadUsers().catch(() => {});
         }
       }
 
@@ -4106,8 +4313,11 @@
     }
 
     async function loadTeamAvailability(){
-      $('teamAvailMsg').textContent = '';
+      // Legacy (Team availability card removed). Keep as a safe no-op.
+      const msg = $('teamAvailMsg');
       const box = $('teamAvailList');
+      if (!msg && !box) return;
+      if (msg) msg.textContent = '';
       if (box) box.innerHTML = '';
       try{
         if (!state.usersCache || !Array.isArray(state.usersCache) || !state.usersCache.length) {
@@ -4181,7 +4391,7 @@
           }
         }
       } catch(e){
-        $('teamAvailMsg').textContent = String(e.message || e);
+        if (msg) msg.textContent = String(e.message || e);
       }
     }
 
@@ -5914,9 +6124,178 @@
       return isCoordinatorRole();
     }
 
+    function effectiveUserIdForView(){
+      const v = String(state.viewAsUserId || '').trim();
+      if (isManagerUser() && v) return v;
+      return String(state.me?.user?.id || '').trim();
+    }
+
+    function normalizeTalentRecord(raw, { fallbackUserId = '', defaultRole = '' } = {}){
+      const r = (raw && typeof raw === 'object') ? raw : {};
+      const userId = String(r.userId || fallbackUserId || '').trim();
+      const pubIn = (r.public && typeof r.public === 'object') ? r.public : r;
+      const intIn = (r.internal && typeof r.internal === 'object') ? r.internal : r;
+      const cleanList = (v) => (Array.isArray(v) ? v : splitCsvList(v || '', { max: 30, maxLen: 80 }));
+      const pub = {
+        userId,
+        displayName: String(pubIn.displayName || r.displayName || '').trim(),
+        role: String(pubIn.role || r.role || defaultRole || '').trim(),
+        homeBaseCity: String(pubIn.homeBaseCity || r.homeBaseCity || '').trim(),
+        homeBaseState: String(pubIn.homeBaseState || r.homeBaseState || '').trim(),
+        bio: String(pubIn.bio || r.bio || '').trim(),
+        notes: String(pubIn.notes || '').trim(),
+        specialties: cleanList(pubIn.specialties),
+        tone: cleanList(pubIn.tone || r.tone),
+        gear: cleanList(pubIn.gear || r.gear),
+        preferredPairings: cleanList(pubIn.preferredPairings),
+        avatarDataUrl: String(pubIn.avatarDataUrl || '').trim(),
+      };
+      const intRel = (intIn.reliability && typeof intIn.reliability === 'object') ? intIn.reliability : (r.reliability && typeof r.reliability === 'object' ? r.reliability : {});
+      const internal = {
+        userId,
+        notes: String(intIn.notes || r.notes || '').trim(),
+        specialties: cleanList(intIn.specialties),
+        tone: cleanList(intIn.tone),
+        gear: cleanList(intIn.gear),
+        preferredPairings: cleanList(intIn.preferredPairings),
+        reliability: {
+          score: (intRel.score == null || intRel.score === '') ? null : Number(intRel.score),
+          flags: cleanList(intRel.flags),
+        },
+      };
+      if (!Number.isFinite(internal.reliability.score)) internal.reliability.score = null;
+      return {
+        userId,
+        public: pub,
+        internal,
+        updatedAt: String(r.updatedAt || '').trim(),
+      };
+    }
+
+    function avatarInitials(label){
+      const s = String(label || '').trim();
+      if (!s) return '';
+      const parts = s.replace(/[^a-zA-Z0-9\s]/g, ' ').split(/\s+/).filter(Boolean);
+      const a = (parts[0] || '').slice(0, 1);
+      const b = (parts.length > 1 ? parts[parts.length - 1] : '').slice(0, 1);
+      return (a + b).toUpperCase();
+    }
+
+    function setAvatarCircle(el, dataUrl, fallbackLabel){
+      if (!el) return;
+      const url = String(dataUrl || '').trim();
+      if (url) {
+        el.style.backgroundImage = `url(${url})`;
+        el.textContent = '';
+      } else {
+        el.style.backgroundImage = '';
+        el.textContent = avatarInitials(fallbackLabel) || ' '; // keep circle height
+      }
+    }
+
+    function uniqueList(arr){
+      const items = (Array.isArray(arr) ? arr : []).map((x) => String(x || '').trim()).filter(Boolean);
+      const out = [];
+      const seen = new Set();
+      for (const it of items) {
+        const k = it.toLowerCase();
+        if (seen.has(k)) continue;
+        seen.add(k);
+        out.push(it);
+      }
+      return out;
+    }
+
+    function reliabilityLabel(score){
+      const n = Number(score);
+      if (!Number.isFinite(n)) return { text: 'Unrated', kind: '' };
+      if (n >= 80) return { text: 'Reliable', kind: 'ok' };
+      if (n >= 55) return { text: 'Somewhat reliable', kind: '' };
+      return { text: 'Not reliable', kind: 'warn' };
+    }
+
+    function availabilitySummaryFrom(availability){
+      const a = (availability && typeof availability === 'object') ? availability : {};
+      const byDate = (a?.slots?.byDate && typeof a.slots.byDate === 'object') ? a.slots.byDate : null;
+      if (!byDate) return '';
+      const days = Object.keys(byDate);
+      if (!days.length) return '';
+      let total = 0;
+      for (const d of days) {
+        const arr = Array.isArray(byDate[d]) ? byDate[d] : [];
+        total += arr.length;
+      }
+      if (!total) return '';
+      return `${days.length} day(s) • ${total} slot(s)`;
+    }
+
+    async function ensureAvailabilityCacheForUserIds(userIds, { force = false } = {}){
+      const ids = uniqueList(userIds).slice(0, 60);
+      if (!ids.length) return 0;
+      const ttlMs = 5 * 60 * 1000;
+      const now = Date.now();
+      const missing = ids.filter((id) => {
+        const hit = state._availabilityCache && state._availabilityCache[id];
+        if (!hit) return true;
+        if (force) return true;
+        const loadedAt = Number(hit.loadedAt || 0);
+        return (now - loadedAt) > ttlMs;
+      });
+      if (!missing.length) return 0;
+
+      const tasks = missing.map(async (id) => {
+        try {
+          const j = await api('/api/portal/availability?userId=' + encodeURIComponent(String(id)));
+          state._availabilityCache[id] = { loadedAt: now, availability: j.availability || null };
+        } catch {
+          state._availabilityCache[id] = { loadedAt: now, availability: null };
+        }
+      });
+
+      // Keep it simple: modest parallelism.
+      const chunkSize = 8;
+      for (let i = 0; i < tasks.length; i += chunkSize) {
+        // eslint-disable-next-line no-await-in-loop
+        await Promise.all(tasks.slice(i, i + chunkSize));
+      }
+
+      return missing.length;
+    }
+
+    function chipHtml(label, { removable = false, removeKey = '', removeValue = '' } = {}){
+      const rm = removable
+        ? `<button type="button" aria-label="Remove" data-chip-remove="${escapeHtml(removeKey)}" data-chip-value="${escapeHtml(removeValue)}">×</button>`
+        : '';
+      return `<span class="chip">${escapeHtml(label)}${rm}</span>`;
+    }
+
+    function renderChipList(containerId, items, { removable = false, removeKey = '', labelFor = null } = {}){
+      const el = $(containerId);
+      if (!el) return;
+      const arr = uniqueList(items);
+      el.innerHTML = arr.length
+        ? arr.map((v) => chipHtml(typeof labelFor === 'function' ? String(labelFor(v) || v) : v, { removable, removeKey, removeValue: v })).join('')
+        : '<span class="muted small">—</span>';
+    }
+
+    function talentProfileEditContext(){
+      const targetUserId = (talentIsCoordinator() && String(state.talent.editUserId || '').trim())
+        ? String(state.talent.editUserId || '').trim()
+        : effectiveUserIdForView();
+      const effectiveUserId = effectiveUserIdForView();
+      const isSelf = !!targetUserId && targetUserId === effectiveUserId;
+      const canEditInternal = talentIsCoordinator() && coordinatorOpsEditable();
+      const canEditPublic = isSelf && !isManagerViewAsPreviewOnly() && !!state.talent.selfEditing;
+      const showAvailability = ['event_host', 'media_team'].includes(effectiveRole());
+      const canEditAvailability = isSelf && showAvailability && !isManagerViewAsPreviewOnly();
+      return { targetUserId, effectiveUserId, isSelf, canEditInternal, canEditPublic, showAvailability, canEditAvailability };
+    }
+
     function setTalentStep(next){
       const step = Number(next || 1);
-      const max = talentIsCoordinator() ? 4 : 3;
+      const ctx = talentProfileEditContext();
+      const showStep4 = talentIsCoordinator() || ctx.showAvailability;
+      const max = showStep4 ? 4 : 3;
       const safe = Math.max(1, Math.min(step, max));
       state.talent.step = safe;
 
@@ -5938,6 +6317,17 @@
         btn.classList.toggle('active', b.n === safe);
       }
 
+      const step4Btn = $('talStep4');
+      if (step4Btn) {
+        step4Btn.classList.toggle('hide', !showStep4);
+        step4Btn.textContent = talentIsCoordinator() ? 'Reliability' : 'Availability';
+      }
+
+      const relBox = $('talReliabilityBox');
+      if (relBox) relBox.classList.toggle('hide', !talentIsCoordinator());
+      const availBox = $('talAvailabilityBox');
+      if (availBox) availBox.classList.toggle('hide', !(ctx.showAvailability));
+
       const prev = $('talPrevBtn');
       const nextBtn = $('talNextBtn');
       if (prev) prev.disabled = safe <= 1;
@@ -5958,57 +6348,158 @@
     }
 
     function readTalentForm(){
-      const specialties = splitCsvList($('talSpecialties')?.value || '', { max: 20, maxLen: 60 });
-      const preferredPairings = splitCsvList($('talPairings')?.value || '', { max: 20, maxLen: 80 });
-      const reliabilityFlags = splitCsvList($('talReliabilityFlags')?.value || '', { max: 20, maxLen: 60 });
+      const base = (state.talent.form && typeof state.talent.form === 'object') ? state.talent.form : normalizeTalentRecord(null, { fallbackUserId: talentProfileEditContext().targetUserId, defaultRole: myPortalRole() });
+      const pub = Object.assign({}, base.public);
+      const internal = Object.assign({}, base.internal);
 
-      const out = {
-        displayName: String($('talDisplayName')?.value || '').trim(),
-        role: String($('talRole')?.value || '').trim(),
-        homeBaseCity: String($('talCity')?.value || '').trim(),
-        homeBaseState: String($('talState')?.value || '').trim(),
-        specialties,
-        tone: String($('talTone')?.value || '').trim(),
-        gear: String($('talGear')?.value || '').trim(),
-        bio: String($('talBio')?.value || '').trim(),
-        preferredPairings,
-        notes: String($('talNotes')?.value || '').trim(),
-      };
+      pub.displayName = String($('talDisplayName')?.value || '').trim();
+      pub.role = String($('talRole')?.value || pub.role || '').trim();
+      pub.homeBaseCity = String($('talCity')?.value || '').trim();
+      pub.homeBaseState = String($('talState')?.value || '').trim();
+      pub.bio = String($('talBio')?.value || '').trim();
+      pub.notes = String($('talPublicNotes')?.value || '').trim();
 
-      if (talentIsCoordinator() && !$('talReliabilityBox')?.classList.contains('hide')) {
-        const score = $('talReliabilityScore')?.value ? Number($('talReliabilityScore').value) : null;
-        out.reliability = {
-          score: Number.isFinite(score) ? Math.max(0, Math.min(100, Math.trunc(score))) : null,
-          flags: reliabilityFlags,
-        };
+      internal.notes = String($('talInternalNotes')?.value || '').trim();
+
+      // Lists are maintained in state.talent.form via chips.
+      pub.specialties = uniqueList(base.public?.specialties);
+      pub.tone = uniqueList(base.public?.tone);
+      pub.gear = uniqueList(base.public?.gear);
+      pub.preferredPairings = uniqueList(base.public?.preferredPairings);
+      pub.avatarDataUrl = String(base.public?.avatarDataUrl || '').trim();
+
+      internal.specialties = uniqueList(base.internal?.specialties);
+      internal.tone = uniqueList(base.internal?.tone);
+      internal.gear = uniqueList(base.internal?.gear);
+      internal.preferredPairings = uniqueList(base.internal?.preferredPairings);
+
+      // Reliability (internal)
+      const scoreRaw = $('talReliabilityScore')?.value;
+      const score = (scoreRaw == null || scoreRaw === '') ? null : Number(scoreRaw);
+      const clamped = Number.isFinite(score) ? Math.max(0, Math.min(100, Math.trunc(score))) : null;
+      internal.reliability = internal.reliability && typeof internal.reliability === 'object' ? internal.reliability : { score: null, flags: [] };
+      internal.reliability.score = clamped;
+      internal.reliability.flags = uniqueList(base.internal?.reliability?.flags);
+
+      return { public: pub, internal };
+    }
+
+    function applyTalentEditMode(){
+      const ctx = talentProfileEditContext();
+      const publicEditable = ctx.canEditPublic;
+      const internalEditable = ctx.canEditInternal;
+
+      // Self view/edit controls
+      const selfEditBtn = $('talSelfEditBtn');
+      const selfCancelBtn = $('talSelfCancelBtn');
+      if (selfEditBtn) selfEditBtn.classList.toggle('hide', talentIsCoordinator() || ctx.targetUserId !== ctx.effectiveUserId || ctx.canEditPublic);
+      if (selfCancelBtn) selfCancelBtn.classList.toggle('hide', !(ctx.targetUserId === ctx.effectiveUserId && state.talent.selfEditing));
+
+      // Avatar controls (public)
+      const up = $('talAvatarUploadBtn');
+      const rm = $('talAvatarRemoveBtn');
+      if (up) up.disabled = !publicEditable;
+      if (rm) rm.disabled = !publicEditable;
+
+      // Public fields
+      for (const id of ['talDisplayName', 'talCity', 'talState', 'talBio', 'talPublicNotes']) {
+        const el = $(id);
+        if (el) el.disabled = !publicEditable;
+      }
+      const roleEl = $('talRole');
+      if (roleEl) roleEl.disabled = true; // role locked always
+
+      // Public chip adders
+      for (const id of ['talPublicSpecialtyInput','talPublicSpecialtyAdd','talPublicToneInput','talPublicToneAdd','talPublicGearInput','talPublicGearAdd','talPublicPairingsAdd']) {
+        const el = $(id);
+        if (el) el.disabled = !publicEditable;
       }
 
-      return out;
+      // Internal fields + chip adders
+      const internalBox = $('talInternalProfileBox');
+      if (internalBox) internalBox.classList.toggle('hide', !talentIsCoordinator());
+      const internalNotesBox = $('talInternalNotesBox');
+      if (internalNotesBox) internalNotesBox.classList.toggle('hide', !talentIsCoordinator());
+
+      for (const id of ['talInternalNotes','talInternalSpecialtyInput','talInternalSpecialtyAdd','talInternalToneInput','talInternalToneAdd','talInternalGearInput','talInternalGearAdd']) {
+        const el = $(id);
+        if (el) el.disabled = !internalEditable;
+      }
+
+      // Reliability controls
+      for (const id of ['talReliabilityScore','talReliabilityFlagInput','talReliabilityFlagAdd']) {
+        const el = $(id);
+        if (el) el.disabled = !internalEditable;
+      }
+
+      // Save button
+      const saveBtn = $('talentSaveBtn');
+      if (saveBtn) {
+        const canSave = internalEditable || publicEditable;
+        saveBtn.classList.toggle('hide', !canSave);
+        saveBtn.disabled = !canSave;
+      }
+    }
+
+    function syncReliabilityLabel(){
+      const el = $('talReliabilityScoreLabel');
+      const slider = $('talReliabilityScore');
+      if (!el || !slider) return;
+      const raw = slider.value;
+      const n = (raw == null || raw === '') ? null : Number(raw);
+      const lab = reliabilityLabel(n);
+      el.textContent = lab.text;
+      el.classList.remove('ok', 'warn');
+      if (lab.kind) el.classList.add(lab.kind);
+    }
+
+    function renderTalentFormChips(){
+      const base = (state.talent.form && typeof state.talent.form === 'object') ? state.talent.form : null;
+      if (!base) return;
+      const ctx = talentProfileEditContext();
+      const pubRemovable = ctx.canEditPublic;
+      const intRemovable = ctx.canEditInternal;
+
+      renderChipList('talPublicSpecialties', base.public.specialties, { removable: pubRemovable, removeKey: 'pub.specialties' });
+      renderChipList('talPublicTone', base.public.tone, { removable: pubRemovable, removeKey: 'pub.tone' });
+      renderChipList('talPublicGear', base.public.gear, { removable: pubRemovable, removeKey: 'pub.gear' });
+
+      // Pairings: public when self-editing, internal when coordinator editing.
+      const pairKey = talentIsCoordinator() ? 'int.preferredPairings' : 'pub.preferredPairings';
+      const pairItems = talentIsCoordinator() ? base.internal.preferredPairings : base.public.preferredPairings;
+      renderChipList('talPublicPairings', pairItems, {
+        removable: talentIsCoordinator() ? intRemovable : pubRemovable,
+        removeKey: pairKey,
+        labelFor: (uid) => userLabelById(uid) || uid,
+      });
+
+      renderChipList('talInternalSpecialties', base.internal.specialties, { removable: intRemovable, removeKey: 'int.specialties' });
+      renderChipList('talInternalTone', base.internal.tone, { removable: intRemovable, removeKey: 'int.tone' });
+      renderChipList('talInternalGear', base.internal.gear, { removable: intRemovable, removeKey: 'int.gear' });
+
+      renderChipList('talReliabilityFlags', base.internal?.reliability?.flags || [], { removable: intRemovable, removeKey: 'int.reliability.flags' });
     }
 
     function writeTalentForm(profile){
-      const p = (profile && typeof profile === 'object') ? profile : {};
-      if ($('talDisplayName')) $('talDisplayName').value = String(p.displayName || '');
-      if ($('talRole')) $('talRole').value = String(p.role || '') || String(myPortalRole() || '');
-      if ($('talCity')) $('talCity').value = String(p.homeBaseCity || '');
-      if ($('talState')) $('talState').value = String(p.homeBaseState || '');
-      if ($('talSpecialties')) $('talSpecialties').value = joinCsvList(p.specialties);
-      if ($('talTone')) $('talTone').value = String(p.tone || '');
-      if ($('talGear')) $('talGear').value = String(p.gear || '');
-      if ($('talBio')) $('talBio').value = String(p.bio || '');
-      if ($('talPairings')) $('talPairings').value = joinCsvList(p.preferredPairings);
-      if ($('talNotes')) $('talNotes').value = String(p.notes || '');
+      const ctx = talentProfileEditContext();
+      const p0 = normalizeTalentRecord(profile, { fallbackUserId: ctx.targetUserId, defaultRole: myPortalRole() });
+      state.talent.form = p0;
 
-      const relBox = $('talReliabilityBox');
-      if (relBox) relBox.classList.toggle('hide', !talentIsCoordinator());
-      const relStepBtn = $('talStep4');
-      if (relStepBtn) relStepBtn.classList.toggle('hide', !talentIsCoordinator());
-      if (talentIsCoordinator()) {
-        const rel = p.reliability && typeof p.reliability === 'object' ? p.reliability : {};
-        if ($('talReliabilityScore')) $('talReliabilityScore').value = (rel.score == null ? '' : String(rel.score));
-        if ($('talReliabilityFlags')) $('talReliabilityFlags').value = joinCsvList(rel.flags);
-      }
+      if ($('talDisplayName')) $('talDisplayName').value = String(p0.public.displayName || '');
+      if ($('talRole')) $('talRole').value = String(p0.public.role || myPortalRole() || '');
+      if ($('talCity')) $('talCity').value = String(p0.public.homeBaseCity || '');
+      if ($('talState')) $('talState').value = String(p0.public.homeBaseState || '');
+      if ($('talBio')) $('talBio').value = String(p0.public.bio || '');
+      if ($('talPublicNotes')) $('talPublicNotes').value = String(p0.public.notes || '');
+      if ($('talInternalNotes')) $('talInternalNotes').value = String(p0.internal.notes || '');
 
+      setAvatarCircle($('talAvatarCircle'), p0.public.avatarDataUrl, p0.public.displayName || userLabelById(p0.userId));
+
+      if ($('talReliabilityScore')) $('talReliabilityScore').value = (p0.internal?.reliability?.score == null ? '' : String(p0.internal.reliability.score));
+      syncReliabilityLabel();
+
+      renderTalentFormChips();
+      applyTalentEditMode();
       setTalentStep(Number(state.talent?.step || 1));
     }
 
@@ -6076,6 +6567,7 @@
       if (talentIsCoordinator()) {
         const editing = String(state.talent.editUserId || '').trim();
         if (editorCard) editorCard.classList.toggle('hide', !editing);
+        state.talent.selfEditing = false;
       } else {
         if (editorCard) editorCard.classList.remove('hide');
       }
@@ -6083,7 +6575,7 @@
       // Load the active form target.
       const targetUserId = (talentIsCoordinator() && String(state.talent.editUserId || '').trim())
         ? String(state.talent.editUserId || '').trim()
-        : String(state.me?.user?.id || '').trim();
+        : effectiveUserIdForView();
 
       let profile = profilesById.get(targetUserId) || null;
       if (!profile) {
@@ -6099,23 +6591,17 @@
       // so they don't feel like they need to "create" anything just to get started.
       if (talentIsCoordinator() && String(state.talent.editUserId || '').trim() && !profile) {
         const u = (Array.isArray(state.usersCache) ? state.usersCache : []).find((x) => String(x.userId) === String(targetUserId));
-        profile = {
-          userId: String(targetUserId),
-          displayName: String(u?.fullName || u?.email || ''),
-          role: String(u?.role || ''),
-          homeBaseCity: '',
-          homeBaseState: '',
-          specialties: [],
-          tone: '',
-          gear: '',
-          bio: '',
-          preferredPairings: [],
-          notes: '',
-          reliability: { score: null, flags: [] },
-        };
+        const stub = normalizeTalentRecord(null, { fallbackUserId: String(targetUserId), defaultRole: String(u?.role || '') });
+        stub.public.displayName = String(u?.fullName || u?.email || '').trim();
+        profile = stub;
       }
-      state.talent.my = profile;
-      writeTalentForm(profile || { role: myPortalRole() });
+      state.talent.my = profile ? normalizeTalentRecord(profile, { fallbackUserId: targetUserId, defaultRole: myPortalRole() }) : null;
+      writeTalentForm(state.talent.my || normalizeTalentRecord(null, { fallbackUserId: targetUserId, defaultRole: myPortalRole() }));
+
+      // Embedded availability for host/media
+      if (!talentIsCoordinator()) {
+        await loadTalentAvailability().catch(() => {});
+      }
 
       if (talentIsCoordinator()) {
         renderTalentDirectory(profilesById);
@@ -6134,12 +6620,11 @@
 
       const rows = pool.map((u) => {
         const uid = String(u.userId);
-        const p = profilesById.get(uid) || null;
-        const display = (p && p.displayName) ? String(p.displayName) : String(u.fullName || u.email || uid);
-        const loc = p ? [p.homeBaseCity, p.homeBaseState].filter(Boolean).join(', ') : '';
-        const specs = p && Array.isArray(p.specialties) ? p.specialties.join(', ') : '';
-        const rel = p && p.reliability && typeof p.reliability === 'object' ? p.reliability : {};
-        const relScore = (rel.score == null) ? '' : String(rel.score);
+        const p = profilesById.get(uid) ? normalizeTalentRecord(profilesById.get(uid), { fallbackUserId: uid, defaultRole: String(u.role || '') }) : null;
+        const display = (p && p.public?.displayName) ? String(p.public.displayName) : String(u.fullName || u.email || uid);
+        const loc = p ? [p.public.homeBaseCity, p.public.homeBaseState].filter(Boolean).join(', ') : '';
+        const specs = p ? uniqueList([...(p.public.specialties || []), ...(p.internal.specialties || [])]).join(', ') : '';
+        const relScore = (p?.internal?.reliability?.score == null) ? null : Number(p.internal.reliability.score);
         const hay = [display, String(u.email || ''), String(u.role || ''), loc, specs].join(' ').toLowerCase();
         if (q && !hay.includes(q)) return null;
 
@@ -6151,6 +6636,7 @@
           loc,
           specs,
           relScore,
+          avatarDataUrl: String(p?.public?.avatarDataUrl || '').trim(),
           hasProfile: !!p,
         };
       }).filter(Boolean);
@@ -6160,43 +6646,53 @@
     }
 
     function renderTalentDirectory(profilesById){
-      const list = $('talentDirList');
-      if (!list) return;
+      const tbody = $('talentUsersTbody');
+      if (!tbody) return;
       const rows = talentDirectoryRows(profilesById);
       if (!rows.length) {
-        list.innerHTML = '<div class="muted small">No matching talent.</div>';
+        tbody.innerHTML = '<tr><td colspan="5" class="muted">No matching talent.</td></tr>';
         return;
       }
 
-      list.innerHTML = rows.slice(0, 120).map((r) => {
+      // Availability summaries (cached)
+      const avail = state._availabilityCache && typeof state._availabilityCache === 'object' ? state._availabilityCache : {};
+
+      tbody.innerHTML = rows.slice(0, 160).map((r) => {
         const badge = r.hasProfile ? '<span class="badge ok">profile</span>' : '<span class="badge">ready</span>';
-        const rel = r.relScore ? `<span class="badge">rel ${escapeHtml(r.relScore)}</span>` : '';
-        return `
-          <div class="card" style="background:#fff; margin-bottom:10px;">
-            <div class="bd">
-              <div class="row" style="justify-content:space-between; gap:12px;">
-                <div>
-                  <div style="font-weight:900;">${escapeHtml(r.display)} <span class="muted">(${escapeHtml(r.role)})</span></div>
-                  <div class="muted small" style="margin-top:2px;">${escapeHtml([r.loc, r.specs].filter(Boolean).join(' • '))}</div>
-                  <div class="muted small" style="margin-top:2px; font-family:var(--mono);">${escapeHtml(r.userId)}</div>
-                </div>
-                <div class="row" style="gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-                  ${badge} ${rel}
-                  <button class="btn secondary small" type="button" data-edit-talent="${escapeHtml(r.userId)}">Edit</button>
-                </div>
-              </div>
-            </div>
+        const rel = reliabilityLabel(r.relScore);
+        const relHtml = (r.relScore == null)
+          ? '<span class="relBadge">Unrated</span>'
+          : `<span class="relBadge ${escapeHtml(rel.kind)}">${escapeHtml(rel.text)}</span>`;
+        const a = avail[String(r.userId)] ? avail[String(r.userId)].availability : null;
+        const aText = availabilitySummaryFrom(a) || '—';
+
+        const avatar = String(r.avatarDataUrl || '').trim();
+        const avatarHtml = `<div class="row" style="gap:10px; align-items:center;">
+          <div class="avatarCircle" style="width:34px; height:34px; ${avatar ? `background-image:url(${escapeHtml(avatar)});` : ''}">${avatar ? '' : escapeHtml(avatarInitials(r.display || r.email))}</div>
+          <div>
+            <div style="font-weight:900;">${escapeHtml(r.display)}</div>
+            <div class="muted small">${escapeHtml(r.email || '')}</div>
           </div>
+        </div>`;
+
+        return `
+          <tr>
+            <td>${avatarHtml}<div class="muted small" style="margin-top:4px;">${escapeHtml([r.loc, r.specs].filter(Boolean).join(' • '))}</div></td>
+            <td><span class="badge">${escapeHtml(viewingLabel(r.role))}</span></td>
+            <td>${relHtml} ${badge}</td>
+            <td class="muted">${escapeHtml(aText)}</td>
+            <td><button class="btn secondary small" type="button" data-talent-edit-user="${escapeHtml(r.userId)}">Edit</button></td>
+          </tr>
         `;
       }).join('');
 
-      for (const btn of list.querySelectorAll('button[data-edit-talent]')){
-        btn.addEventListener('click', () => {
-          state.talent.editUserId = String(btn.dataset.editTalent || '').trim();
-          $('talentStopEditingBtn')?.classList.remove('hide');
-          loadTalentTab().catch(()=>{});
-        });
-      }
+      // Kick off availability fetch in background and re-render once.
+      const ids = rows.map((r) => String(r.userId)).filter(Boolean);
+      ensureAvailabilityCacheForUserIds(ids).then((didFetch) => {
+        if (!didFetch) return;
+        // Only re-render if still on Talent tab.
+        if (state.activeTab === 'talent') renderTalentDirectory(profilesById);
+      }).catch(() => {});
     }
 
     async function saveTalentProfile(){
@@ -6208,7 +6704,8 @@
           body.userId = String(state.talent.editUserId || '').trim();
         }
         const j = await api('/api/portal/talent_profiles', { method: 'POST', body });
-        state.talent.my = j.profile || null;
+        state.talent.my = j.profile ? normalizeTalentRecord(j.profile, { fallbackUserId: String(body.userId || effectiveUserIdForView()), defaultRole: myPortalRole() }) : null;
+        if (!talentIsCoordinator()) state.talent.selfEditing = false;
         $('talentMsg').textContent = 'Saved.';
 
         // Refresh caches + directory and staffing dropdown labels.
@@ -6217,6 +6714,9 @@
           await initEventOps().catch(()=>{});
           await rerenderTalentDirectoryFromCache().catch(()=>{});
         }
+
+        // Refresh form view from server response.
+        writeTalentForm(state.talent.my || normalizeTalentRecord(null, { fallbackUserId: String(body.userId || effectiveUserIdForView()), defaultRole: myPortalRole() }));
       } catch(e){
         $('talentMsg').textContent = String(e.message || e);
       }
@@ -6224,9 +6724,340 @@
 
     function stopTalentEditing(){
       state.talent.editUserId = '';
+      state.talent.selfEditing = false;
       $('talentStopEditingBtn')?.classList.add('hide');
       setTalentEditingLine();
       loadTalentTab().catch(()=>{});
+    }
+
+    function openPeoplePick({ title = 'Pick person', onPick } = {}){
+      const modal = $('peoplePickModal');
+      if (!modal) return;
+      state.peoplePick.open = true;
+      state.peoplePick.q = '';
+      state.peoplePick.onPick = (typeof onPick === 'function') ? onPick : null;
+      if ($('peoplePickTitle')) $('peoplePickTitle').textContent = String(title || 'Pick person');
+      if ($('peoplePickQ')) $('peoplePickQ').value = '';
+      renderPeoplePickList();
+      modal.classList.add('show');
+      try { $('peoplePickQ')?.focus(); } catch(_e) {}
+    }
+
+    function closePeoplePick(){
+      const modal = $('peoplePickModal');
+      if (!modal) return;
+      modal.classList.remove('show');
+      state.peoplePick.open = false;
+      state.peoplePick.onPick = null;
+      state.peoplePick.q = '';
+      if ($('peoplePickList')) $('peoplePickList').innerHTML = '';
+    }
+
+    function renderPeoplePickList(){
+      const box = $('peoplePickList');
+      if (!box) return;
+      const users = Array.isArray(state.usersCache) ? state.usersCache : [];
+      const pool = users.filter((u) => ['event_host','media_team'].includes(String(u?.role || '').trim()));
+      const q = String($('peoplePickQ')?.value || state.peoplePick.q || '').trim().toLowerCase();
+      state.peoplePick.q = q;
+      const rows = pool
+        .map((u) => {
+          const label = String(u.fullName || u.email || u.userId || '').trim();
+          const hay = [label, String(u.email || ''), String(u.role || '')].join(' ').toLowerCase();
+          if (q && !hay.includes(q)) return null;
+          return { userId: String(u.userId), label, email: String(u.email || ''), role: String(u.role || '') };
+        })
+        .filter(Boolean)
+        .slice(0, 120);
+
+      if ($('peoplePickCount')) $('peoplePickCount').textContent = `${rows.length} result(s)`;
+      if (!rows.length) {
+        box.innerHTML = '<div class="muted small">No matches.</div>';
+        return;
+      }
+      box.innerHTML = rows.map((r) => `
+        <button class="modalRow" type="button" data-people-pick-user="${escapeHtml(r.userId)}">
+          <div>
+            <div style="font-weight:900;">${escapeHtml(r.label)}</div>
+            <div class="muted small">${escapeHtml([r.email, viewingLabel(r.role)].filter(Boolean).join(' • '))}</div>
+          </div>
+        </button>
+      `).join('');
+    }
+
+    function openAvatarCrop(dataUrl){
+      const modal = $('avatarCropModal');
+      const img = $('avatarCropImg');
+      const box = $('avatarCropBox');
+      if (!modal || !img || !box) return;
+      state.avatarCrop.open = true;
+      state.avatarCrop.dataUrl = String(dataUrl || '');
+      state.avatarCrop.dx = 0;
+      state.avatarCrop.dy = 0;
+      state.avatarCrop.zoom = 1;
+      state.avatarCrop._drag = null;
+      if ($('avatarCropMsg')) $('avatarCropMsg').textContent = '';
+      if ($('avatarCropZoom')) $('avatarCropZoom').value = '1';
+      img.src = state.avatarCrop.dataUrl;
+      modal.classList.add('show');
+
+      const sync = () => {
+        const z = Number(state.avatarCrop.zoom || 1);
+        img.style.transform = `translate(calc(-50% + ${state.avatarCrop.dx}px), calc(-50% + ${state.avatarCrop.dy}px)) scale(${z})`;
+      };
+      sync();
+
+      box.onpointerdown = (ev) => {
+        ev.preventDefault();
+        state.avatarCrop._drag = { x: ev.clientX, y: ev.clientY, dx: state.avatarCrop.dx, dy: state.avatarCrop.dy, id: ev.pointerId };
+        try { box.setPointerCapture(ev.pointerId); } catch(_e) {}
+      };
+      box.onpointermove = (ev) => {
+        if (!state.avatarCrop._drag) return;
+        const d = state.avatarCrop._drag;
+        state.avatarCrop.dx = d.dx + (ev.clientX - d.x);
+        state.avatarCrop.dy = d.dy + (ev.clientY - d.y);
+        sync();
+      };
+      const end = () => { state.avatarCrop._drag = null; };
+      box.onpointerup = end;
+      box.onpointercancel = end;
+    }
+
+    function closeAvatarCrop(){
+      const modal = $('avatarCropModal');
+      if (!modal) return;
+      modal.classList.remove('show');
+      state.avatarCrop.open = false;
+      state.avatarCrop.dataUrl = '';
+      state.avatarCrop._drag = null;
+      if ($('avatarCropMsg')) $('avatarCropMsg').textContent = '';
+    }
+
+    function saveAvatarCropToForm(){
+      const imgEl = $('avatarCropImg');
+      const boxEl = $('avatarCropBox');
+      if (!imgEl || !boxEl) return;
+      const nW = Number(imgEl.naturalWidth || 0);
+      const nH = Number(imgEl.naturalHeight || 0);
+      if (!nW || !nH) {
+        if ($('avatarCropMsg')) $('avatarCropMsg').textContent = 'Image not ready.';
+        return;
+      }
+      const rect = boxEl.getBoundingClientRect();
+      const boxW = Math.max(1, rect.width);
+      const boxH = Math.max(1, rect.height);
+      const baseScale = Math.max(boxW / nW, boxH / nH);
+      const zoom = Math.max(1, Math.min(3, Number(state.avatarCrop.zoom || 1)));
+      const scale = baseScale * zoom;
+      const drawW = nW * scale;
+      const drawH = nH * scale;
+
+      const size = 256;
+      const cx = document.createElement('canvas');
+      cx.width = size;
+      cx.height = size;
+      const ctx = cx.getContext('2d');
+      if (!ctx) return;
+
+      const sx = size / boxW;
+      const sy = size / boxH;
+      const centerX = (boxW / 2) + Number(state.avatarCrop.dx || 0);
+      const centerY = (boxH / 2) + Number(state.avatarCrop.dy || 0);
+
+      const dx = (size / 2) + (centerX - boxW / 2) * sx - (drawW * sx) / 2;
+      const dy = (size / 2) + (centerY - boxH / 2) * sy - (drawH * sy) / 2;
+
+      ctx.clearRect(0, 0, size, size);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.clip();
+      ctx.imageSmoothingEnabled = true;
+      try { ctx.imageSmoothingQuality = 'high'; } catch(_e) {}
+      ctx.drawImage(imgEl, dx, dy, drawW * sx, drawH * sy);
+      ctx.restore();
+      const out = cx.toDataURL('image/png');
+
+      if (!state.talent.form) state.talent.form = normalizeTalentRecord(null, { fallbackUserId: talentProfileEditContext().targetUserId, defaultRole: myPortalRole() });
+      state.talent.form.public.avatarDataUrl = out;
+      setAvatarCircle($('talAvatarCircle'), out, $('talDisplayName')?.value || '');
+      closeAvatarCrop();
+    }
+
+    function ensureTalAvailInit(){
+      const a = state.talent.avail;
+      a.tz = localTz() || '';
+      if (typeof a.weekOffset !== 'number') a.weekOffset = Number(a.weekOffset || 0);
+      if (!a.byDate || typeof a.byDate !== 'object') a.byDate = {};
+      if (!a.drag || typeof a.drag !== 'object') a.drag = { active: false, mode: '' };
+    }
+
+    function talWeekDates(){
+      ensureTalAvailInit();
+      const off = Number(state.talent.avail.weekOffset || 0);
+      const base = addDays(new Date(), off * 7);
+      const start = startOfWeekMonday(base);
+      return Array.from({ length: 7 }, (_, i) => addDays(start, i));
+    }
+
+    function talSetAvailSlot(dateYmd, hhmm, on){
+      ensureTalAvailInit();
+      const d = String(dateYmd || '');
+      const t = String(hhmm || '');
+      if (!d || !t) return;
+      const arr = Array.isArray(state.talent.avail.byDate[d]) ? state.talent.avail.byDate[d].slice() : [];
+      const set = new Set(arr.map(String));
+      if (on) set.add(t);
+      else set.delete(t);
+      const next = Array.from(set).sort();
+      if (next.length) state.talent.avail.byDate[d] = next;
+      else delete state.talent.avail.byDate[d];
+    }
+
+    function talHasAvailSlot(dateYmd, hhmm){
+      const d = String(dateYmd || '');
+      const t = String(hhmm || '');
+      const arr = Array.isArray(state.talent.avail.byDate?.[d]) ? state.talent.avail.byDate[d] : [];
+      return arr.includes(t);
+    }
+
+    function renderTalAvailWeekGrid(){
+      ensureTalAvailInit();
+      const grid = $('talAvailWeekGrid');
+      if (!grid) return;
+
+      const ctx = talentProfileEditContext();
+      const editable = !!ctx.canEditAvailability;
+      const todayKey = isoToday();
+
+      const tzLabel = $('talAvailTzLabel');
+      if (tzLabel) tzLabel.textContent = localTz() || 'local';
+
+      const week = talWeekDates();
+      const weekLabel = $('talAvailWeekLabel');
+      if (weekLabel) weekLabel.textContent = `${ymd(week[0])} – ${ymd(week[6])}`;
+
+      const saveBtn = $('talAvailSaveBtn');
+      if (saveBtn) saveBtn.disabled = !editable;
+      const clearBtn = $('talAvailClearWeek');
+      if (clearBtn) clearBtn.disabled = !editable;
+
+      const head = [];
+      head.push(`<div class="availHeadCell"></div>`);
+      for (const d of week) {
+        const dateKey = ymd(d);
+        const pastDay = (dateKey < todayKey);
+        head.push(`<div class="availHeadCell ${pastDay ? 'pastDay' : ''}">${escapeHtml(dayHeadLabel(d))}<div class="muted" style="margin-top:2px; font-weight:700;">${escapeHtml(dateKey)}</div></div>`);
+      }
+
+      const rows = [];
+      const times = timeSlots();
+      for (const t of times) {
+        rows.push(`<div class="availTimeCell">${escapeHtml(timeLabel(t))}</div>`);
+        for (const d of week) {
+          const dateKey = ymd(d);
+          const active = talHasAvailSlot(dateKey, t);
+          const pastDay = (dateKey < todayKey);
+          if (editable) {
+            rows.push(`<div class="availSlotCell ${pastDay ? 'pastDay' : ''}"><button type="button" class="availSlotBtn ${active ? 'active' : ''}" data-tal-avail-date="${escapeHtml(dateKey)}" data-tal-avail-time="${escapeHtml(t)}" aria-pressed="${active ? 'true' : 'false'}" ${pastDay ? 'disabled' : ''}></button></div>`);
+          } else {
+            rows.push(`<div class="availSlotCell ${pastDay ? 'pastDay' : ''}"><div class="availSlotBtn ${active ? 'active' : ''}" aria-hidden="true"></div></div>`);
+          }
+        }
+      }
+
+      grid.innerHTML = head.join('') + rows.join('');
+
+      const drag = state.talent.avail.drag;
+      drag.active = false;
+      drag.mode = '';
+      if (!editable) {
+        grid.onpointerdown = null;
+        grid.onpointerover = null;
+        grid.onpointerup = null;
+        grid.onpointercancel = null;
+        return;
+      }
+
+      const applyCell = (btn) => {
+        if (btn.disabled) return;
+        const dateKey = String(btn.dataset.talAvailDate || '');
+        const t = String(btn.dataset.talAvailTime || '');
+        if (!dateKey || !t) return;
+        const wantOn = drag.mode === 'add';
+        talSetAvailSlot(dateKey, t, wantOn);
+        const on = talHasAvailSlot(dateKey, t);
+        btn.classList.toggle('active', on);
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      };
+
+      grid.onpointerdown = (ev) => {
+        const btn = ev.target && ev.target.closest ? ev.target.closest('button.availSlotBtn') : null;
+        if (!btn) return;
+        ev.preventDefault();
+        const dateKey = String(btn.dataset.talAvailDate || '');
+        const t = String(btn.dataset.talAvailTime || '');
+        const currentlyOn = talHasAvailSlot(dateKey, t);
+        drag.active = true;
+        drag.mode = currentlyOn ? 'remove' : 'add';
+        applyCell(btn);
+        try { btn.setPointerCapture(ev.pointerId); } catch(_e) {}
+      };
+      grid.onpointerover = (ev) => {
+        if (!drag.active) return;
+        const btn = ev.target && ev.target.closest ? ev.target.closest('button.availSlotBtn') : null;
+        if (!btn) return;
+        applyCell(btn);
+      };
+      const endDrag = () => { drag.active = false; drag.mode = ''; };
+      grid.onpointerup = endDrag;
+      grid.onpointercancel = endDrag;
+      document.addEventListener('pointerup', endDrag, { once: true });
+    }
+
+    async function loadTalentAvailability(){
+      const box = $('talAvailabilityBox');
+      if (!box || box.classList.contains('hide')) return;
+      if ($('talAvailMsg')) $('talAvailMsg').textContent = '';
+      ensureTalAvailInit();
+      try {
+        const ctx = talentProfileEditContext();
+        state.talent.avail.viewUserId = ctx.targetUserId;
+        const qs = ctx.targetUserId ? ('?userId=' + encodeURIComponent(String(ctx.targetUserId))) : '';
+        const j = await api('/api/portal/availability' + qs);
+        const slots = j.availability?.slots && typeof j.availability.slots === 'object' ? j.availability.slots : {};
+        const byDate = slots.byDate && typeof slots.byDate === 'object' ? slots.byDate : {};
+        state.talent.avail.byDate = byDate;
+        renderTalAvailWeekGrid();
+      } catch (e) {
+        if ($('talAvailMsg')) $('talAvailMsg').textContent = String(e.message || e);
+      }
+    }
+
+    async function saveTalentAvailability(){
+      if ($('talAvailMsg')) $('talAvailMsg').textContent = '';
+      ensureTalAvailInit();
+      const btn = $('talAvailSaveBtn');
+      const wasDisabled = btn ? btn.disabled : false;
+      if (btn) btn.disabled = true;
+      try {
+        const ctx = talentProfileEditContext();
+        const body = {
+          slots: {
+            tz: localTz() || '',
+            byDate: state.talent.avail.byDate || {},
+          }
+        };
+        if (ctx.targetUserId) body.userId = String(ctx.targetUserId);
+        await api('/api/portal/availability', { method: 'PUT', body });
+        if ($('talAvailMsg')) $('talAvailMsg').textContent = `Saved ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+      } catch (e) {
+        if ($('talAvailMsg')) $('talAvailMsg').textContent = String(e.message || e);
+      } finally {
+        if (btn) btn.disabled = wasDisabled;
+      }
     }
 
     async function loadRecaps(eventId){
@@ -8672,7 +9503,19 @@
         const canManageUsers = (myRole() === 'manager') && !isManagerViewAsActive();
         const canEditProfiles = ['event_coordinator','manager'].includes(er);
 
+        // Availability summaries for hosts/media.
+        const hostMediaIds = users
+          .filter((u) => ['event_host','media_team'].includes(String(u?.role || '').trim()))
+          .map((u) => String(u.userId || '').trim())
+          .filter(Boolean);
+        await ensureAvailabilityCacheForUserIds(hostMediaIds).catch(() => {});
+
         $('usersTbody').innerHTML = users.map((u) => {
+          const uid = String(u.userId || '').trim();
+          const isHostMedia = ['event_host','media_team'].includes(String(u?.role || '').trim());
+          const a = (state._availabilityCache && state._availabilityCache[uid]) ? state._availabilityCache[uid].availability : null;
+          const aText = isHostMedia ? (availabilitySummaryFrom(a) || '—') : '—';
+
           const actionBtn = canManageUsers
             ? `<button class="btn secondary small" type="button" data-edit-user="${escapeHtml(u.userId)}">Edit user</button>`
             : (canEditProfiles
@@ -8684,6 +9527,7 @@
             <td>${escapeHtml(u.fullName || '')}</td>
             <td class="muted">${escapeHtml(u.email || '')}</td>
             <td><span class="badge">${escapeHtml(viewingLabel(u.role))}</span></td>
+            <td class="muted">${escapeHtml(aText)}</td>
             <td>${actionBtn}</td>
           </tr>
           `;
@@ -8960,12 +9804,59 @@
 
     document.addEventListener('click', (ev) => {
       if (!(ev.target instanceof Element)) return;
-      const btn = ev.target.closest('button[data-collapse-target]');
-      if (!btn) return;
-      const targetId = String(btn.getAttribute('data-collapse-target') || '').trim();
-      if (!targetId) return;
-      ev.preventDefault();
-      toggleCollapsed(targetId);
+
+      const collapseBtn = ev.target.closest('button[data-collapse-target]');
+      if (collapseBtn) {
+        const targetId = String(collapseBtn.getAttribute('data-collapse-target') || '').trim();
+        if (!targetId) return;
+        ev.preventDefault();
+        toggleCollapsed(targetId);
+        return;
+      }
+
+      const chipBtn = ev.target.closest('button[data-chip-remove]');
+      if (chipBtn) {
+        const key = String(chipBtn.getAttribute('data-chip-remove') || '').trim();
+        const value = String(chipBtn.getAttribute('data-chip-value') || '').trim();
+        if (!key || !value) return;
+        const form = (state.talent.form && typeof state.talent.form === 'object') ? state.talent.form : null;
+        if (!form) return;
+        const rm = (arr) => uniqueList((Array.isArray(arr) ? arr : []).filter((x) => String(x) !== value));
+        if (key === 'pub.specialties') form.public.specialties = rm(form.public.specialties);
+        else if (key === 'pub.tone') form.public.tone = rm(form.public.tone);
+        else if (key === 'pub.gear') form.public.gear = rm(form.public.gear);
+        else if (key === 'pub.preferredPairings') form.public.preferredPairings = rm(form.public.preferredPairings);
+        else if (key === 'int.specialties') form.internal.specialties = rm(form.internal.specialties);
+        else if (key === 'int.tone') form.internal.tone = rm(form.internal.tone);
+        else if (key === 'int.gear') form.internal.gear = rm(form.internal.gear);
+        else if (key === 'int.preferredPairings') form.internal.preferredPairings = rm(form.internal.preferredPairings);
+        else if (key === 'int.reliability.flags') {
+          if (!form.internal.reliability || typeof form.internal.reliability !== 'object') form.internal.reliability = { score: null, flags: [] };
+          form.internal.reliability.flags = rm(form.internal.reliability.flags);
+        }
+        renderTalentFormChips();
+        return;
+      }
+
+      const editTalentBtn = ev.target.closest('button[data-talent-edit-user]');
+      if (editTalentBtn) {
+        const userId = String(editTalentBtn.getAttribute('data-talent-edit-user') || '').trim();
+        if (!userId) return;
+        state.talent.editUserId = userId;
+        state.talent.step = 1;
+        $('talentStopEditingBtn')?.classList.remove('hide');
+        loadTalentTab().catch(() => {});
+        return;
+      }
+
+      const pickBtn = ev.target.closest('button[data-people-pick-user]');
+      if (pickBtn) {
+        const userId = String(pickBtn.getAttribute('data-people-pick-user') || '').trim();
+        if (!userId) return;
+        const fn = state.peoplePick && typeof state.peoplePick.onPick === 'function' ? state.peoplePick.onPick : null;
+        closePeoplePick();
+        if (fn) fn(userId);
+      }
     });
 
     on('talentSaveBtn', 'click', () => saveTalentProfile().catch(() => {}));
@@ -8974,6 +9865,181 @@
       await loadTalentTab().catch(() => {});
     });
     on('talentStopEditingBtn', 'click', () => stopTalentEditing());
+
+    // Talent: self edit mode
+    on('talSelfEditBtn', 'click', () => {
+      state.talent.selfEditing = true;
+      applyTalentEditMode();
+    });
+    on('talSelfCancelBtn', 'click', () => {
+      state.talent.selfEditing = false;
+      // Reload from last known profile
+      writeTalentForm(state.talent.my || state.talent.form);
+    });
+
+    // Talent: avatar upload/crop
+    on('talAvatarUploadBtn', 'click', () => {
+      const ctx = talentProfileEditContext();
+      if (!ctx.canEditPublic) return;
+      $('talAvatarFile')?.click();
+    });
+    on('talAvatarFile', 'change', async () => {
+      const ctx = talentProfileEditContext();
+      if (!ctx.canEditPublic) return;
+      const input = $('talAvatarFile');
+      const f = input && input.files && input.files[0] ? input.files[0] : null;
+      if (!f) return;
+      if (f.size > 6 * 1024 * 1024) {
+        $('talentMsg').textContent = 'That file is too large (max 6MB).';
+        return;
+      }
+      const dataUrl = await new Promise((resolve) => {
+        const fr = new FileReader();
+        fr.onload = () => resolve(String(fr.result || ''));
+        fr.onerror = () => resolve('');
+        fr.readAsDataURL(f);
+      });
+      if (!dataUrl) return;
+      openAvatarCrop(dataUrl);
+      try { input.value = ''; } catch(_e) {}
+    });
+    on('talAvatarRemoveBtn', 'click', () => {
+      const ctx = talentProfileEditContext();
+      if (!ctx.canEditPublic) return;
+      if (!state.talent.form) state.talent.form = normalizeTalentRecord(null, { fallbackUserId: ctx.targetUserId, defaultRole: myPortalRole() });
+      state.talent.form.public.avatarDataUrl = '';
+      setAvatarCircle($('talAvatarCircle'), '', $('talDisplayName')?.value || '');
+    });
+
+    // Avatar crop modal
+    on('avatarCropCancel', 'click', () => closeAvatarCrop());
+    on('avatarCropSave', 'click', () => saveAvatarCropToForm());
+    on('avatarCropZoom', 'input', () => {
+      const z = Number($('avatarCropZoom')?.value || 1);
+      state.avatarCrop.zoom = Math.max(1, Math.min(3, z));
+      const img = $('avatarCropImg');
+      if (img) img.style.transform = `translate(calc(-50% + ${state.avatarCrop.dx}px), calc(-50% + ${state.avatarCrop.dy}px)) scale(${state.avatarCrop.zoom})`;
+    });
+
+    // People picker modal
+    on('peoplePickClose', 'click', () => closePeoplePick());
+    on('peoplePickQ', 'input', () => renderPeoplePickList());
+
+    // Talent: chip adders (public)
+    on('talPublicSpecialtyAdd', 'click', () => {
+      const ctx = talentProfileEditContext();
+      if (!ctx.canEditPublic) return;
+      const v = String($('talPublicSpecialtyInput')?.value || '').trim();
+      if (!v) return;
+      if (!state.talent.form) state.talent.form = normalizeTalentRecord(null, { fallbackUserId: ctx.targetUserId, defaultRole: myPortalRole() });
+      state.talent.form.public.specialties = uniqueList([...(state.talent.form.public.specialties || []), v]);
+      if ($('talPublicSpecialtyInput')) $('talPublicSpecialtyInput').value = '';
+      renderTalentFormChips();
+    });
+    on('talPublicToneAdd', 'click', () => {
+      const ctx = talentProfileEditContext();
+      if (!ctx.canEditPublic) return;
+      const v = String($('talPublicToneInput')?.value || '').trim();
+      if (!v) return;
+      if (!state.talent.form) state.talent.form = normalizeTalentRecord(null, { fallbackUserId: ctx.targetUserId, defaultRole: myPortalRole() });
+      state.talent.form.public.tone = uniqueList([...(state.talent.form.public.tone || []), v]);
+      if ($('talPublicToneInput')) $('talPublicToneInput').value = '';
+      renderTalentFormChips();
+    });
+    on('talPublicGearAdd', 'click', () => {
+      const ctx = talentProfileEditContext();
+      if (!ctx.canEditPublic) return;
+      const v = String($('talPublicGearInput')?.value || '').trim();
+      if (!v) return;
+      if (!state.talent.form) state.talent.form = normalizeTalentRecord(null, { fallbackUserId: ctx.targetUserId, defaultRole: myPortalRole() });
+      state.talent.form.public.gear = uniqueList([...(state.talent.form.public.gear || []), v]);
+      if ($('talPublicGearInput')) $('talPublicGearInput').value = '';
+      renderTalentFormChips();
+    });
+
+    // Talent: pairings picker (public for self, internal for coordinator)
+    on('talPublicPairingsAdd', 'click', async () => {
+      const ctx = talentProfileEditContext();
+      const canAdd = talentIsCoordinator() ? ctx.canEditInternal : ctx.canEditPublic;
+      if (!canAdd) return;
+      await ensureUsersCache();
+      openPeoplePick({
+        title: 'Add pairing',
+        onPick: (uid) => {
+          if (!state.talent.form) state.talent.form = normalizeTalentRecord(null, { fallbackUserId: ctx.targetUserId, defaultRole: myPortalRole() });
+          if (talentIsCoordinator()) {
+            state.talent.form.internal.preferredPairings = uniqueList([...(state.talent.form.internal.preferredPairings || []), uid]);
+          } else {
+            state.talent.form.public.preferredPairings = uniqueList([...(state.talent.form.public.preferredPairings || []), uid]);
+          }
+          renderTalentFormChips();
+        }
+      });
+    });
+
+    // Talent: chip adders (internal)
+    on('talInternalSpecialtyAdd', 'click', () => {
+      const ctx = talentProfileEditContext();
+      if (!ctx.canEditInternal) return;
+      const v = String($('talInternalSpecialtyInput')?.value || '').trim();
+      if (!v) return;
+      if (!state.talent.form) state.talent.form = normalizeTalentRecord(null, { fallbackUserId: ctx.targetUserId, defaultRole: myPortalRole() });
+      state.talent.form.internal.specialties = uniqueList([...(state.talent.form.internal.specialties || []), v]);
+      if ($('talInternalSpecialtyInput')) $('talInternalSpecialtyInput').value = '';
+      renderTalentFormChips();
+    });
+    on('talInternalToneAdd', 'click', () => {
+      const ctx = talentProfileEditContext();
+      if (!ctx.canEditInternal) return;
+      const v = String($('talInternalToneInput')?.value || '').trim();
+      if (!v) return;
+      if (!state.talent.form) state.talent.form = normalizeTalentRecord(null, { fallbackUserId: ctx.targetUserId, defaultRole: myPortalRole() });
+      state.talent.form.internal.tone = uniqueList([...(state.talent.form.internal.tone || []), v]);
+      if ($('talInternalToneInput')) $('talInternalToneInput').value = '';
+      renderTalentFormChips();
+    });
+    on('talInternalGearAdd', 'click', () => {
+      const ctx = talentProfileEditContext();
+      if (!ctx.canEditInternal) return;
+      const v = String($('talInternalGearInput')?.value || '').trim();
+      if (!v) return;
+      if (!state.talent.form) state.talent.form = normalizeTalentRecord(null, { fallbackUserId: ctx.targetUserId, defaultRole: myPortalRole() });
+      state.talent.form.internal.gear = uniqueList([...(state.talent.form.internal.gear || []), v]);
+      if ($('talInternalGearInput')) $('talInternalGearInput').value = '';
+      renderTalentFormChips();
+    });
+
+    // Talent: reliability
+    on('talReliabilityScore', 'input', () => syncReliabilityLabel());
+    on('talReliabilityFlagAdd', 'click', () => {
+      const ctx = talentProfileEditContext();
+      if (!ctx.canEditInternal) return;
+      const v = String($('talReliabilityFlagInput')?.value || '').trim();
+      if (!v) return;
+      if (!state.talent.form) state.talent.form = normalizeTalentRecord(null, { fallbackUserId: ctx.targetUserId, defaultRole: myPortalRole() });
+      if (!state.talent.form.internal.reliability || typeof state.talent.form.internal.reliability !== 'object') state.talent.form.internal.reliability = { score: null, flags: [] };
+      state.talent.form.internal.reliability.flags = uniqueList([...(state.talent.form.internal.reliability.flags || []), v]);
+      if ($('talReliabilityFlagInput')) $('talReliabilityFlagInput').value = '';
+      renderTalentFormChips();
+    });
+
+    // Talent: embedded availability
+    on('talAvailSaveBtn', 'click', () => saveTalentAvailability().catch(() => {}));
+    on('talAvailPrevWeek', 'click', () => { ensureTalAvailInit(); state.talent.avail.weekOffset -= 1; renderTalAvailWeekGrid(); });
+    on('talAvailNextWeek', 'click', () => { ensureTalAvailInit(); state.talent.avail.weekOffset += 1; renderTalAvailWeekGrid(); });
+    on('talAvailToday', 'click', () => { ensureTalAvailInit(); state.talent.avail.weekOffset = 0; renderTalAvailWeekGrid(); });
+    on('talAvailClearWeek', 'click', () => {
+      const ctx = talentProfileEditContext();
+      if (!ctx.canEditAvailability) return;
+      ensureTalAvailInit();
+      const todayKey = isoToday();
+      const week = talWeekDates().map(ymd);
+      for (const d of week) {
+        if (String(d) < todayKey) continue;
+        if (state.talent.avail.byDate && typeof state.talent.avail.byDate === 'object') delete state.talent.avail.byDate[d];
+      }
+      renderTalAvailWeekGrid();
+    });
 
     on('talStep1', 'click', () => setTalentStep(1));
     on('talStep2', 'click', () => setTalentStep(2));
@@ -9098,6 +10164,10 @@
         if (m && m.classList.contains('show')) closePipelineModal();
         const s = $('scheduleModal');
         if (s && s.classList.contains('show')) closeScheduleModal();
+        const p = $('peoplePickModal');
+        if (p && p.classList.contains('show')) closePeoplePick();
+        const a = $('avatarCropModal');
+        if (a && a.classList.contains('show')) closeAvatarCrop();
       }
     });
 
@@ -9111,6 +10181,18 @@
       const m = $('scheduleModal');
       if (!m) return;
       if (ev.target === m) closeScheduleModal();
+    });
+
+    on('peoplePickModal', 'click', (ev) => {
+      const m = $('peoplePickModal');
+      if (!m) return;
+      if (ev.target === m) closePeoplePick();
+    });
+
+    on('avatarCropModal', 'click', (ev) => {
+      const m = $('avatarCropModal');
+      if (!m) return;
+      if (ev.target === m) closeAvatarCrop();
     });
 
     on('loadPayoutsBtn', 'click', () => loadPayouts().catch(() => {}));
