@@ -78,20 +78,52 @@ module.exports = async (req, res) => {
 
   const url = new URL(req.url || '/api/portal/appointments', 'http://localhost');
 
+  function buildAppointmentOrFilter({ uid = '', ids = [] } = {}) {
+    // Back-compat: older demo rows may rely on area_tag instead of meta.kind.
+    const k1 = 'area_tag.eq.appointment';
+    const k2 = 'meta->>kind.eq.appointment';
+
+    const idList = (Array.isArray(ids) ? ids : []).map((x) => String(x || '').trim()).filter(Boolean);
+    const inList = idList.length ? `(${idList.join(',')})` : '';
+
+    const userId = String(uid || '').trim();
+
+    // Kind-only (manager / unscoped).
+    if (!userId && !idList.length) return `${k1},${k2}`;
+
+    // Role-wide preview (ids list).
+    if (!userId && idList.length) {
+      return [
+        `and(${k1},assigned_user_id.in.${inList})`,
+        `and(${k1},created_by.in.${inList})`,
+        `and(${k2},assigned_user_id.in.${inList})`,
+        `and(${k2},created_by.in.${inList})`,
+      ].join(',');
+    }
+
+    // Single-user scope.
+    return [
+      `and(${k1},assigned_user_id.eq.${userId})`,
+      `and(${k1},created_by.eq.${userId})`,
+      `and(${k2},assigned_user_id.eq.${userId})`,
+      `and(${k2},created_by.eq.${userId})`,
+    ].join(',');
+  }
+
   if (req.method === 'GET') {
     const status = cleanStr(url.searchParams.get('status'), 40);
     const leadId = clampInt(url.searchParams.get('leadId'), 1, 1e12, null);
     const limit = clampInt(url.searchParams.get('limit'), 1, 200, 80);
 
-    let query = s.sbAdmin
+    const base = s.sbAdmin
       .from('portal_events')
       .select('*')
-      // Back-compat: older demo rows may rely on area_tag instead of meta.kind.
-      .or('area_tag.eq.appointment,meta->>kind.eq.appointment')
       .order('event_date', { ascending: true })
       .order('start_time', { ascending: true })
       .order('id', { ascending: false })
       .limit(limit);
+
+    let query = base;
 
     if (status) query = query.eq('status', status);
     if (leadId) query = query.contains('meta', { leadId });
@@ -103,27 +135,35 @@ module.exports = async (req, res) => {
       if (s.viewAsRole && role && !s.effectiveUserId) {
         // View-as role without a specific user selected: role-wide preview.
         const ids = await userIdsForRole(s.sbAdmin, role, { limit: 220 });
-        if (!ids.length) {
-          return sendJson(res, 200, { ok: true, appointments: [] });
-        }
+        if (!ids.length) return sendJson(res, 200, { ok: true, appointments: [] });
 
         if (['dialer', 'in_person_setter', 'remote_setter'].includes(role)) {
-          query = query.in('created_by', ids);
-        } else if (['closer', 'account_manager'].includes(role)) {
+          // (appointment kind) AND (created_by in role ids)
+          const idList = `(${ids.join(',')})`;
           query = query.or([
-            `assigned_user_id.in.(${ids.join(',')})`,
-            `created_by.in.(${ids.join(',')})`,
+            `and(area_tag.eq.appointment,created_by.in.${idList})`,
+            `and(meta->>kind.eq.appointment,created_by.in.${idList})`,
           ].join(','));
+        } else if (['closer', 'account_manager'].includes(role)) {
+          query = query.or(buildAppointmentOrFilter({ ids }));
         } else {
           return sendJson(res, 200, { ok: true, appointments: [] });
         }
       } else {
         if (['closer', 'account_manager'].includes(role)) {
-          query = query.or([`assigned_user_id.eq.${uid}`, `created_by.eq.${uid}`].join(','));
+          query = query.or(buildAppointmentOrFilter({ uid }));
+        } else if (['dialer', 'in_person_setter', 'remote_setter'].includes(role)) {
+          query = query.or([
+            `and(area_tag.eq.appointment,created_by.eq.${uid})`,
+            `and(meta->>kind.eq.appointment,created_by.eq.${uid})`,
+          ].join(','));
         } else {
-          query = query.eq('created_by', uid);
+          return sendJson(res, 200, { ok: true, appointments: [] });
         }
       }
+    } else {
+      // Managers: see all appointment-tagged rows.
+      query = query.or(buildAppointmentOrFilter());
     }
 
     const { data, error } = await query;
