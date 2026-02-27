@@ -1883,7 +1883,7 @@
                     <button id="talStep4" class="wizardStep hide" type="button">Reliability</button>
                   </div>
                   <button id="talentRefreshBtn" class="btn secondary" type="button">Refresh</button>
-                  <button id="talentStopEditingBtn" class="btn secondary hide" type="button">Stop editing</button>
+                  <button id="talentStopEditingBtn" class="btn secondary hide" type="button">Cancel</button>
                 </div>
               </div>
 
@@ -1977,15 +1977,14 @@
           <div id="talentDirectoryWrap" class="card hide" style="margin-top:14px; background:#fff;">
             <div class="bd">
               <div class="muted small">Coordinator tools</div>
-              <button class="collapHdr" type="button" data-collapse-target="talentDirBody" aria-expanded="false" style="margin-top:8px;">
+              <div class="collapHdr" style="margin-top:8px;">
                 <div class="collapLeft">
                   <span>Talent directory</span>
                   <span class="collapHint">Browse and search talent profiles</span>
                 </div>
-                <span class="collapChev" data-collapse-chev>▼</span>
-              </button>
+              </div>
 
-              <div id="talentDirBody" class="collapBody hide">
+              <div id="talentDirBody" class="collapBody">
                 <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap;">
                   <div class="muted small">Search</div>
                   <div style="max-width:360px; width:100%;">
@@ -3385,8 +3384,8 @@
         const label = (er === 'media_team') ? 'Media' : 'Events';
         navItems.push({ id:'events', label });
 
-        // Talent is coordinator tooling; keep it off host/media.
         if (er === 'event_coordinator') navItems.push({ id:'talent', label:'Talent' });
+        if (['event_host','media_team'].includes(er)) navItems.push({ id:'talent', label:'Profile' });
       }
       if (er === 'event_coordinator' || er === 'manager') {
         navItems.push({ id:'manager', label:'Operations' });
@@ -4928,7 +4927,7 @@
     async function loadAvailability(){
       if (!$('availWeekGrid')) return;
       const card = $('meetingsAvailabilityCard');
-      const show = ['dialer','remote_setter','in_person_setter','closer','account_manager','manager','event_coordinator'].includes(effectiveRole());
+      const show = ['dialer','remote_setter','in_person_setter','closer','account_manager','manager','event_coordinator','event_host','media_team'].includes(effectiveRole());
       if (card) card.classList.toggle('hide', !show);
       if (!show) return;
       $('availMsg').textContent = '';
@@ -5917,7 +5916,7 @@
 
     function setTalentStep(next){
       const step = Number(next || 1);
-      const max = $('talReliabilityBox')?.classList.contains('hide') ? 3 : 4;
+      const max = talentIsCoordinator() ? 4 : 3;
       const safe = Math.max(1, Math.min(step, max));
       state.talent.step = safe;
 
@@ -6061,7 +6060,7 @@
       if (talentIsCoordinator()) {
         await ensureUsersCache();
         $('talentDirectoryWrap')?.classList.remove('hide');
-        restoreCollapsedFromState('talentDirBody', false);
+        setCollapsed('talentDirBody', false, { persist: true });
         $('talentStopEditingBtn')?.classList.toggle('hide', !String(state.talent.editUserId || '').trim());
       } else {
         $('talentDirectoryWrap')?.classList.add('hide');
@@ -6094,6 +6093,26 @@
         } catch {
           profile = null;
         }
+      }
+
+      // If a coordinator is editing someone without a saved profile yet, prefill a sensible stub
+      // so they don't feel like they need to "create" anything just to get started.
+      if (talentIsCoordinator() && String(state.talent.editUserId || '').trim() && !profile) {
+        const u = (Array.isArray(state.usersCache) ? state.usersCache : []).find((x) => String(x.userId) === String(targetUserId));
+        profile = {
+          userId: String(targetUserId),
+          displayName: String(u?.fullName || u?.email || ''),
+          role: String(u?.role || ''),
+          homeBaseCity: '',
+          homeBaseState: '',
+          specialties: [],
+          tone: '',
+          gear: '',
+          bio: '',
+          preferredPairings: [],
+          notes: '',
+          reliability: { score: null, flags: [] },
+        };
       }
       state.talent.my = profile;
       writeTalentForm(profile || { role: myPortalRole() });
@@ -6150,7 +6169,7 @@
       }
 
       list.innerHTML = rows.slice(0, 120).map((r) => {
-        const badge = r.hasProfile ? '<span class="badge ok">profile</span>' : '<span class="badge">missing</span>';
+        const badge = r.hasProfile ? '<span class="badge ok">profile</span>' : '<span class="badge">ready</span>';
         const rel = r.relScore ? `<span class="badge">rel ${escapeHtml(r.relScore)}</span>` : '';
         return `
           <div class="card" style="background:#fff; margin-bottom:10px;">
