@@ -2886,7 +2886,8 @@
     }
 
     function setManagerSubtab(next){
-      const canSeeUsers = isManagerUser();
+      // Users subtab is manager-only (real manager, not while view-as is active).
+      const canSeeUsers = isManagerUser() && !isManagerViewAsActive();
       let n = String(next || 'tasks');
       if (n === 'users' && !canSeeUsers) n = 'tasks';
       state.managerSubtab = n;
@@ -2908,7 +2909,8 @@
     }
 
     function renderManagerSubtab(){
-      const canSeeUsers = isManagerUser();
+      // Users subtab is manager-only (real manager, not while view-as is active).
+      const canSeeUsers = isManagerUser() && !isManagerViewAsActive();
       const usersBtn = $('mgrSegUsers');
       const usersPane = $('mgrPaneUsers');
       if (usersBtn) usersBtn.classList.toggle('hide', !canSeeUsers);
