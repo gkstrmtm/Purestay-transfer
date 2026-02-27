@@ -821,12 +821,12 @@
                     <label>Assigned role</label>
                     <select id="leadEditAssignedRole">
                       <option value="">(unchanged)</option>
-                      <option value="dialer">Calls</option>
-                      <option value="in_person_setter">Booked</option>
-                      <option value="closer">Sales</option>
-                      <option value="event_host">Events</option>
-                      <option value="event_coordinator">Operations</option>
-                      <option value="media_team">Media</option>
+                      <option value="dialer">Remote Setter</option>
+                      <option value="in_person_setter">In Person Setter</option>
+                      <option value="closer">Closer</option>
+                      <option value="event_host">Event Host</option>
+                      <option value="event_coordinator">Event Coordinator</option>
+                      <option value="media_team">Media Team</option>
                     </select>
                   </div>
 
@@ -1900,8 +1900,8 @@
                     <label>Role</label>
                     <select id="talRole">
                       <option value="">Select…</option>
-                      <option value="event_host">event_host</option>
-                      <option value="media_team">media_team</option>
+                      <option value="event_host">Event Host</option>
+                      <option value="media_team">Media Team</option>
                     </select>
                   </div>
                 </div>
@@ -2110,12 +2110,12 @@
                   <label>Assigned role filter</label>
                   <select id="dispatchRole">
                     <option value="">All roles</option>
-                    <option value="dialer">Calls</option>
-                    <option value="in_person_setter">Booked</option>
-                    <option value="closer">Sales</option>
-                    <option value="event_host">Events</option>
-                    <option value="event_coordinator">Operations</option>
-                    <option value="media_team">Media</option>
+                    <option value="dialer">Remote Setter</option>
+                    <option value="in_person_setter">In Person Setter</option>
+                    <option value="closer">Closer</option>
+                    <option value="event_host">Event Host</option>
+                    <option value="event_coordinator">Event Coordinator</option>
+                    <option value="media_team">Media Team</option>
                   </select>
                 </div>
               </div>
@@ -2148,12 +2148,12 @@
                         <label>Assigned role</label>
                         <select id="dispatchAssignedRole">
                           <option value="">Select…</option>
-                          <option value="dialer">Calls</option>
-                          <option value="in_person_setter">Booked</option>
-                          <option value="closer">Sales</option>
-                          <option value="event_host">Events</option>
-                          <option value="event_coordinator">Operations</option>
-                          <option value="media_team">Media</option>
+                          <option value="dialer">Remote Setter</option>
+                          <option value="in_person_setter">In Person Setter</option>
+                          <option value="closer">Closer</option>
+                          <option value="event_host">Event Host</option>
+                          <option value="event_coordinator">Event Coordinator</option>
+                          <option value="media_team">Media Team</option>
                         </select>
                       </div>
                     </div>
@@ -2855,57 +2855,37 @@
 
     const MANAGER_VIEW_OPTIONS = [
       { role: 'manager', label: 'Manager' },
-      { role: 'remote_setter', label: 'Remote setter' },
-      { role: 'in_person_setter', label: 'In-person setter' },
+      { role: 'remote_setter', label: 'Remote Setter' },
+      { role: 'in_person_setter', label: 'In Person Setter' },
       { role: 'closer', label: 'Closer' },
-      { role: 'account_manager', label: 'Account manager' },
-      { role: 'event_host', label: 'Event host' },
-      { role: 'event_coordinator', label: 'Event coordinator' },
-      { role: 'media_team', label: 'Media team' },
+      { role: 'account_manager', label: 'Account Manager' },
+      { role: 'event_host', label: 'Event Host' },
+      { role: 'event_coordinator', label: 'Event Coordinator' },
+      { role: 'media_team', label: 'Media Team' },
     ];
 
     function roleViewLabel(role){
       const r = String(role || '').trim();
       const map = {
-        dialer: 'Dialer',
-        remote_setter: 'Remote setter',
-        in_person_setter: 'In-person setter',
+        dialer: 'Remote Setter',
+        remote_setter: 'Remote Setter',
+        in_person_setter: 'In Person Setter',
         closer: 'Closer',
-        account_manager: 'Account manager',
-        event_host: 'Event host',
-        event_coordinator: 'Event coordinator',
-        media_team: 'Media',
+        account_manager: 'Account Manager',
+        event_host: 'Event Host',
+        event_coordinator: 'Event Coordinator',
+        media_team: 'Media Team',
         manager: 'Manager',
       };
       return map[r] || (r ? r.replaceAll('_', ' ') : '—');
     }
 
     function viewingLabel(role){
-      const r = String(role || '').trim();
-      if (['dialer','remote_setter'].includes(r)) return 'Calls';
-      if (r === 'in_person_setter') return 'Booked';
-      if (['closer','account_manager'].includes(r)) return 'Sales';
-      if (r === 'event_host') return 'Events';
-      if (r === 'event_coordinator') return 'Operations';
-      if (r === 'media_team') return 'Media';
-      if (r === 'manager') return 'Operations';
-      return roleLabel(r);
+      return roleViewLabel(role);
     }
 
     function roleLabel(role){
-      const r = String(role || '').trim();
-      const map = {
-        dialer: 'Calls',
-        remote_setter: 'Calls',
-        in_person_setter: 'Booked',
-        closer: 'Sales',
-        account_manager: 'Sales',
-        event_host: 'Events',
-        event_coordinator: 'Operations',
-        media_team: 'Media',
-        manager: 'Operations',
-      };
-      return map[r] || (r ? r.replaceAll('_', ' ') : '—');
+      return roleViewLabel(role);
     }
 
     function myRole(){
