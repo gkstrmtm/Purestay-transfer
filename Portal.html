@@ -818,7 +818,7 @@
                   </div>
 
                   <div style="margin-top:10px;">
-                    <label>Assigned workspace</label>
+                    <label>Assigned role</label>
                     <select id="leadEditAssignedRole">
                       <option value="">(unchanged)</option>
                       <option value="dialer">Calls</option>
@@ -2107,9 +2107,9 @@
                   </select>
                 </div>
                 <div>
-                  <label>Assigned workspace filter</label>
+                  <label>Assigned role filter</label>
                   <select id="dispatchRole">
-                    <option value="">All workspaces</option>
+                    <option value="">All roles</option>
                     <option value="dialer">Calls</option>
                     <option value="in_person_setter">Booked</option>
                     <option value="closer">Sales</option>
@@ -2145,7 +2145,7 @@
                         </div>
                       </div>
                       <div>
-                        <label>Assigned workspace</label>
+                        <label>Assigned role</label>
                         <select id="dispatchAssignedRole">
                           <option value="">Select…</option>
                           <option value="dialer">Calls</option>
@@ -2211,7 +2211,7 @@
                     <tr>
                       <th>Due</th>
                       <th>Title</th>
-                      <th>Workspace</th>
+                      <th>Role</th>
                       <th>Assigned</th>
                       <th>Lead</th>
                       <th>Status</th>
@@ -2225,7 +2225,7 @@
           </div>
 
           <div style="height:14px"></div>
-          <div class="muted small">Tip: keep Tasks scoped by workspace + status.</div>
+          <div class="muted small">Tip: keep Tasks scoped by role + status.</div>
           </div>
 
           <div id="mgrPaneUsers" class="hide">
@@ -2245,8 +2245,7 @@
                     <tr>
                       <th>Name</th>
                       <th>Email</th>
-                      <th>Workspace</th>
-                      <th>User ID</th>
+                      <th>Role</th>
                       <th></th>
                     </tr>
                   </thead>
@@ -3554,7 +3553,7 @@
             <div style="font-weight:900; margin-top:4px;">${me.user.email}</div>
           </div>
           <div>
-            <div class="muted small">Workspace</div>
+            <div class="muted small">Role</div>
             <div style="margin-top:4px;"><span class="badge ok">${escapeHtml(inViewAs ? roleViewLabel(er) : roleViewLabel(realRole))}</span></div>
             ${inViewAs && state.viewAsUserId ? `<div class="muted small" style="margin-top:6px;">${escapeHtml(viewAsUserLabel(state.viewAsUserId) || '')}</div>` : ''}
           </div>
@@ -3786,7 +3785,7 @@
           cards.push({ title: 'Offers', sub: 'Open offers (host + media)', value: fmtNum(openOffers.length), hint: 'Open Offers' });
           cards.push({ title: 'Payouts', sub: 'Recent payouts', value: `$${sumMoney(payouts).toFixed(2)}`, hint: 'Open Payouts' });
         } else {
-          cards.push({ title: 'Workspace', sub: 'Use the menu to open your workspace', value: '—', hint: '' });
+          cards.push({ title: 'Menu', sub: 'Use the menu to open your area', value: '—', hint: '' });
         }
 
         box.innerHTML = cards.map((c) => `
@@ -4166,7 +4165,14 @@
           return;
         }
         if (box) {
-          box.innerHTML = rows.map((r) => `
+          const canEditProfiles = ['event_coordinator','manager'].includes(effectiveRole());
+          box.innerHTML = rows.map((r) => {
+            const uid = String(r?.u?.userId || '').trim();
+            const editBtn = (canEditProfiles && uid)
+              ? `<button class="btn secondary small" type="button" data-avail-edit-profile="${escapeHtml(uid)}">Edit profile</button>`
+              : '';
+
+            return `
             <div class="card" style="background:#fff; margin-bottom:10px;">
               <div class="bd">
                 <div class="row" style="justify-content:space-between; gap:10px;">
@@ -4174,12 +4180,26 @@
                     <div style="font-weight:900;">${escapeHtml(r.u.email || r.u.userId)}</div>
                     <div class="muted small" style="margin-top:4px;">${escapeHtml(viewingLabel(r.u.role || ''))}</div>
                   </div>
-                  <div class="muted small">${escapeHtml(String(r.updatedAt || '').slice(0,19).replace('T',' '))}</div>
+                  <div class="row" style="gap:8px; align-items:center; justify-content:flex-end; flex-wrap:wrap;">
+                    <div class="muted small">${escapeHtml(String(r.updatedAt || '').slice(0,19).replace('T',' '))}</div>
+                    ${editBtn}
+                  </div>
                 </div>
                 <div style="margin-top:8px; white-space:pre-wrap;">${escapeHtml(r.notes)}</div>
               </div>
             </div>
-          `).join('');
+            `;
+          }).join('');
+
+          for (const btn of box.querySelectorAll('button[data-avail-edit-profile]')){
+            btn.addEventListener('click', () => {
+              const userId = String(btn.getAttribute('data-avail-edit-profile') || '').trim();
+              if (!userId) return;
+              state.talent.editUserId = userId;
+              state.talent.step = 1;
+              setTab('talent');
+            });
+          }
         }
       } catch(e){
         $('teamAvailMsg').textContent = String(e.message || e);
@@ -4394,7 +4414,7 @@
       $('dispatchCreateMsg').textContent = '';
       try{
         const assignedRole = String($('dispatchAssignedRole').value || '').trim();
-        if (!assignedRole) throw new Error('Select an assigned workspace');
+        if (!assignedRole) throw new Error('Select an assigned role');
         const title = String($('dispatchTitle').value || '').trim();
         if (!title) throw new Error('Enter a title');
 
@@ -8649,29 +8669,57 @@
         const j = await api('/api/portal/users');
         const users = (j.users || []);
         state.usersCache = users;
-        $('usersTbody').innerHTML = users.map((u) => `
+        const er = effectiveRole();
+        const canManageUsers = (myRole() === 'manager') && !isManagerViewAsActive();
+        const canEditProfiles = ['event_coordinator','manager'].includes(er);
+
+        $('usersTbody').innerHTML = users.map((u) => {
+          const actionBtn = canManageUsers
+            ? `<button class="btn secondary small" type="button" data-edit-user="${escapeHtml(u.userId)}">Edit user</button>`
+            : (canEditProfiles
+              ? `<button class="btn secondary small" type="button" data-edit-profile="${escapeHtml(u.userId)}">Edit profile</button>`
+              : '<span class="muted">—</span>');
+
+          return `
           <tr>
-            <td>${u.fullName || ''}</td>
-            <td class="muted">${u.email || ''}</td>
+            <td>${escapeHtml(u.fullName || '')}</td>
+            <td class="muted">${escapeHtml(u.email || '')}</td>
             <td><span class="badge">${escapeHtml(viewingLabel(u.role))}</span></td>
-            <td class="muted" style="font-family:var(--mono); font-size:12px;">${u.userId}</td>
-            <td><button class="btn secondary small" data-edit-user="${u.userId}">Edit</button></td>
+            <td>${actionBtn}</td>
           </tr>
-        `).join('');
+          `;
+        }).join('');
 
         for (const btn of $('usersTbody').querySelectorAll('button[data-edit-user]')){
           btn.addEventListener('click', async () => {
             $('usersMsg').textContent = '';
             try{
+              if (!canManageUsers) throw new Error('forbidden');
               const userId = String(btn.dataset.editUser || '').trim();
               const current = users.find((x) => String(x.userId) === userId);
-              const nextRole = prompt('Workspace:', current?.role || '');
+              const nextRole = prompt('Role:', current?.role || '');
               if (nextRole == null) return;
               const nextName = prompt('Full name:', current?.fullName || '');
               if (nextName == null) return;
               await api('/api/portal/users', { method:'PATCH', body: { userId, role: nextRole, fullName: nextName } });
               await loadUsers();
               setBadge('ok', 'updated');
+            } catch(e){
+              $('usersMsg').textContent = String(e.message || e);
+            }
+          });
+        }
+
+        for (const btn of $('usersTbody').querySelectorAll('button[data-edit-profile]')){
+          btn.addEventListener('click', () => {
+            $('usersMsg').textContent = '';
+            try{
+              const userId = String(btn.dataset.editProfile || '').trim();
+              if (!userId) return;
+              // Open the Talent editor for this person.
+              state.talent.editUserId = userId;
+              state.talent.step = 1;
+              setTab('talent');
             } catch(e){
               $('usersMsg').textContent = String(e.message || e);
             }
