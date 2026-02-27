@@ -111,12 +111,14 @@ function readResourceText(relPath) {
 function builtinEventTypes() {
   // Used when resources/*.csv isn't bundled on Vercel.
   return [
-    { name: 'Influencer Meetup', kind: 'momentum', duration_hours: '3' },
-    { name: 'Brand Launch Party', kind: 'anchor', duration_hours: '4' },
-    { name: 'VIP Dinner', kind: 'anchor', duration_hours: '2.5' },
-    { name: 'Creator House Tour', kind: 'momentum', duration_hours: '1.5' },
-    { name: 'Press Day', kind: 'anchor', duration_hours: '6' },
-    { name: 'Community Pop-Up', kind: 'momentum', duration_hours: '4' }
+    { 'Event Type': 'Vendor Day', Type: 'anchor', Goal: 'Drive traffic + collect leads', Notes: 'Invite 3–5 vendors; keep it simple and repeatable.' },
+    { 'Event Type': 'Resident Appreciation', Type: 'anchor', Goal: 'Retention + community', Notes: 'Food + light programming; easy monthly cadence.' },
+    { 'Event Type': 'Open House / Prospect Day', Type: 'momentum', Goal: 'Prospect engagement', Notes: 'Partner with leasing; capture contact info on-site.' },
+    { 'Event Type': 'Happy Hour / Social', Type: 'momentum', Goal: 'Community bonding', Notes: 'Low-friction social; music + refreshments.' },
+    { 'Event Type': 'Food Truck Night', Type: 'anchor', Goal: 'High participation', Notes: 'One vendor + simple seating; advertise early.' },
+    { 'Event Type': 'Game Night / Trivia', Type: 'momentum', Goal: 'Repeatable engagement', Notes: 'Small prizes; consistent start time; easy to host.' },
+    { 'Event Type': 'Coffee & Pastries', Type: 'momentum', Goal: 'Quick touchpoint', Notes: 'Morning pop-up; great for weekday traffic.' },
+    { 'Event Type': 'Move-In Welcome', Type: 'anchor', Goal: 'Reduce churn + build belonging', Notes: 'Target first 30 days; welcome kits + introductions.' }
   ];
 }
 

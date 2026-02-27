@@ -80,13 +80,15 @@ module.exports = async (req, res) => {
   const scope = cleanStr(url.searchParams.get('scope'), 30) || 'me';
 
   const role = String(s.profile.role || '');
-  const manager = isManager(s.profile);
+  // A real manager viewing-as a role should still see manager-level stats.
+  const manager = Boolean(s.realIsManager || isManager(s.profile));
+  const actorId = String(s.actorUserId || s.effectiveUserId || s.user?.id || '').trim();
 
   let whereOr = null;
   if (!manager && scope === 'me') {
     const parts = [
-      `assigned_user_id.eq.${s.user.id}`,
-      `created_by.eq.${s.user.id}`,
+      `assigned_user_id.eq.${actorId}`,
+      `created_by.eq.${actorId}`,
     ];
     if (role) parts.push(...buildRoleOrParts('assigned_role', role));
     whereOr = parts.join(',');
@@ -116,14 +118,14 @@ module.exports = async (req, res) => {
       .from('portal_lead_activities')
       .select('*', { count: 'exact', head: true })
       .eq('activity_type', 'call')
-      .eq('created_by', s.user.id)
+      .eq('created_by', actorId)
       .gte('created_at', sinceIso);
     const { count } = await q;
     callsLast24h = Number(count || 0);
   }
 
   const upcomingAppointments = await countAppointments(s.sbAdmin, {
-    assignedUserId: manager && scope !== 'me' ? null : s.user.id,
+    assignedUserId: manager && scope !== 'me' ? null : actorId,
     sinceDate: todayIso,
   });
 

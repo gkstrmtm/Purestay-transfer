@@ -173,8 +173,12 @@ module.exports = async (req, res) => {
   const s = await requirePortalSession(req);
   if (!s.ok) return sendJson(res, s.status || 401, { ok: false, error: s.error });
 
-  if (!hasRole(s.profile, ['account_manager', 'manager'])) {
-    return sendJson(res, 403, { ok: false, error: 'forbidden' });
+  const readOk = hasRole(s.profile, ['account_manager', 'manager', 'event_coordinator']) || Boolean(s.realIsManager);
+  const writeOk = hasRole(s.profile, ['account_manager', 'manager']) || Boolean(s.realIsManager);
+  if (req.method === 'GET') {
+    if (!readOk) return sendJson(res, 403, { ok: false, error: 'forbidden' });
+  } else {
+    if (!writeOk) return sendJson(res, 403, { ok: false, error: 'forbidden' });
   }
 
   const key = 'portal:accounts:v1';

@@ -201,6 +201,10 @@
     th, td{padding:10px 8px; border-bottom:1px solid var(--border); vertical-align:top;}
     th{color:var(--muted); font-weight:600; text-align:left; font-size:12px;}
 
+    tr.clickRow{cursor:pointer;}
+    tr.clickRow:hover{background: rgba(199,154,59,.08);}
+    tr.clickRow.selected{background: rgba(122,46,38,.06);}
+
     .badge{font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; font-size:12px; font-weight:800; padding:4px 10px; border-radius:999px; border:1px solid var(--border); color:var(--muted); background:#fff}
     .badge.dot{padding:0; width:12px; height:12px; border-radius:999px; display:inline-block; border-width:2px; background:#fff;}
     .badge.ok{border-color: rgba(15,118,110,.25); color: rgba(15,118,110,1)}
@@ -1297,8 +1301,24 @@
 
           <div id="newEventBox" class="card" style="margin-top:14px; background: #fff;" hidden>
             <div class="bd">
+              <div class="row" style="justify-content:space-between; align-items:center; gap:12px;">
+                <div>
+                  <div style="font-weight:900;">New event</div>
+                  <div class="muted small" style="margin-top:4px;">Pick a property, then confirm details</div>
+                </div>
+                <button id="newEventCloseBtn" class="btn secondary small" type="button">Close</button>
+              </div>
+
+              <div style="height:12px"></div>
+
               <div class="two">
-                <div><label>Property name</label><input id="nePropertyName" placeholder="Property name" /></div>
+                <div>
+                  <label>Property</label>
+                  <select id="neAccountPick">
+                    <option value="">Select…</option>
+                  </select>
+                  <div id="neAccountMsg" class="err" style="margin-top:6px;"></div>
+                </div>
                 <div><label>Date</label><input id="neDate" type="text" data-picker="date" placeholder="YYYY-MM-DD" /></div>
               </div>
               <div style="margin-top:10px;">
@@ -1662,7 +1682,7 @@
                     <select id="planEventType">
                       <option value="">Select…</option>
                     </select>
-                    <div class="muted small" style="margin-top:6px;">Search your library (from <span style="font-family:var(--mono);">resources/event_types.csv</span>) and pick one.</div>
+                    <div class="muted small" style="margin-top:6px;">Search and pick an event type.</div>
                     <div class="row" style="margin-top:8px; gap:8px; flex-wrap:wrap;">
                       <input id="planEventTypeQ" placeholder="search event types (e.g. student, class B, DJ, trivia...)" style="max-width:420px;" />
                       <button id="planEventTypeSearchBtn" class="btn secondary" type="button">Search</button>
@@ -1678,7 +1698,7 @@
                   <div class="bd">
                     <div class="muted small">Vendors</div>
                     <div style="font-weight:900; margin-top:4px;">Pick vendors for this plan</div>
-                    <div class="muted small" style="margin-top:4px;">Search by vendor type/name (from <span style="font-family:var(--mono);">resources/vendors.csv</span>). Example: “mobile DJ”, “band”, “photo booth”.</div>
+                    <div class="muted small" style="margin-top:4px;">Search by vendor type/name. Example: “mobile DJ”, “band”, “photo booth”.</div>
 
                     <div class="row" style="margin-top:10px; gap:8px; flex-wrap:wrap; align-items:center;">
                       <input id="planVendorQ" placeholder="search vendors (mobile DJ, band, catering...)" style="max-width:420px;" />
@@ -1750,36 +1770,6 @@
               </button>
 
               <div id="opsVendorsBody" class="collapBody hide">
-                <div class="card" style="background:#fff; border-color: rgba(199,154,59,.25);">
-                  <div class="bd">
-                    <button class="collapHdr" type="button" data-collapse-target="opsCsvImportBody" aria-expanded="false">
-                      <div class="collapLeft">
-                        <span>Import CSV</span>
-                        <span class="collapHint">One-time setup</span>
-                      </div>
-                      <span class="collapChev" data-collapse-chev>▼</span>
-                    </button>
-
-                    <div id="opsCsvImportBody" class="collapBody hide">
-                      <div class="muted small">These lists are loaded from the repo under <span style="font-family: var(--mono);">resources/vendors.csv</span> and <span style="font-family: var(--mono);">resources/event_types.csv</span>. If KV is empty, they auto-seed. Use the buttons below to reload from resources.</div>
-                      <div style="height:10px"></div>
-
-                      <div class="row" style="gap:10px; flex-wrap:wrap; align-items:flex-start;">
-                        <div>
-                          <button id="importVendorsBtn" class="btn secondary" type="button">Reload vendors from resources</button>
-                          <div id="importVendorsMsg" class="err" style="margin-top:6px;"></div>
-                        </div>
-                        <div>
-                          <button id="importEventTypesBtn" class="btn secondary" type="button">Reload event types from resources</button>
-                          <div id="importEventTypesMsg" class="err" style="margin-top:6px;"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div style="height:10px"></div>
-
                 <div class="two">
                   <div>
                     <label>Browse vendors</label>
@@ -1808,6 +1798,50 @@
               </div>
             </div>
           </div>
+        </div>
+
+        <div id="viewOffers" class="hide">
+          <div class="row" style="justify-content:space-between; gap:12px; align-items:flex-end; flex-wrap:wrap; position:relative; z-index:40;">
+            <div class="row" style="gap:8px; flex-wrap:wrap;">
+              <select id="offersStatePick" style="max-width:240px">
+                <option value="">All offers</option>
+                <option value="open">open</option>
+                <option value="sent">sent</option>
+                <option value="pending">pending</option>
+                <option value="accepted">accepted</option>
+                <option value="declined">declined</option>
+              </select>
+              <button id="loadOffersBtn" class="btn secondary" type="button">Refresh</button>
+            </div>
+          </div>
+
+          <div style="height:14px"></div>
+          <div class="card" style="background:#fff;">
+            <div class="bd" style="padding:0;">
+              <div class="bd">
+                <div id="offersMsg" class="err"></div>
+              </div>
+              <div style="overflow:auto; max-height:70vh;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Date</th>
+                      <th>Title</th>
+                      <th>City</th>
+                      <th>Offer</th>
+                      <th>Role</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="offersTbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div style="height:12px"></div>
+          <div class="muted small">Tip: use “Open” to manage staffing on the event.</div>
         </div>
 
         <div id="viewTalent" class="hide">
@@ -2000,7 +2034,6 @@
           <div class="segTabs" style="gap:8px; margin-bottom:12px;">
             <button id="mgrSegStats" class="segBtn" type="button">Stats</button>
             <button id="mgrSegTasks" class="segBtn" type="button">Tasks</button>
-            <button id="mgrSegAssign" class="segBtn" type="button">Lead assignment</button>
             <button id="mgrSegUsers" class="segBtn" type="button">Users</button>
           </div>
 
@@ -2012,7 +2045,6 @@
                   <div class="muted small">Operations</div>
                   <div style="font-weight:900; margin-top:4px;">Stats</div>
                 </div>
-                <button id="loadStatsBtn" class="btn secondary" type="button">Load stats</button>
               </div>
               <div style="height:10px"></div>
               <div id="statsMsg" class="err"></div>
@@ -2020,8 +2052,6 @@
             </div>
           </div>
 
-          <div style="height:14px"></div>
-          <div class="muted small">Tip: Use Tasks/Users subtabs for ops work.</div>
           </div>
 
           <div id="mgrPaneTasks" class="hide">
@@ -2176,55 +2206,14 @@
           <div class="muted small">Tip: keep Tasks scoped by workspace + status.</div>
           </div>
 
-          <div id="mgrPaneAssign" class="hide">
-          <div class="card" style="background:#fff;">
-            <div class="bd">
-              <div style="font-weight:900;">Lead assignment</div>
-              <div class="muted small" style="margin-top:4px;">Assign a lead to a workspace</div>
-              <div style="height:10px"></div>
-              <div class="two">
-                <div>
-                  <label>Lead ID</label>
-                  <input id="mgrLeadId" placeholder="123" />
-                  <div class="row" style="margin-top:8px; gap:8px; flex-wrap:wrap;">
-                    <button id="mgrPickLead" class="btn secondary small" type="button">Pick from Leads</button>
-                    <button id="mgrUseSelectedLead" class="btn secondary small" type="button">Use selected</button>
-                    <div class="muted small" id="mgrLeadLine">None</div>
-                  </div>
-                </div>
-                <div>
-                  <label>Assigned workspace</label>
-                  <select id="mgrAssignedRole">
-                    <option value="">(no change)</option>
-                    <option value="dialer">Calls</option>
-                    <option value="in_person_setter">Booked</option>
-                    <option value="closer">Sales</option>
-                    <option value="event_host">Events</option>
-                    <option value="event_coordinator">Operations</option>
-                    <option value="media_team">Media</option>
-                  </select>
-                </div>
-              </div>
-              <div class="row" style="margin-top:10px;">
-                <button id="mgrAssignBtn" class="btn secondary" type="button">Apply</button>
-                <div id="mgrAssignMsg" class="err"></div>
-              </div>
-            </div>
-          </div>
-
-          <div style="height:14px"></div>
-          <div class="muted small">Tip: workspace routing keeps the demo automatic.</div>
-          </div>
-
           <div id="mgrPaneUsers" class="hide">
           <div class="card" style="background:#fff;">
             <div class="bd">
               <div class="row" style="justify-content:space-between; align-items:flex-end; gap:12px;">
                 <div>
                   <div style="font-weight:900;">Users</div>
-                  <div class="muted small">Edit team assignments and view availability</div>
+                  <div class="muted small">Team roster and availability</div>
                 </div>
-                <button id="loadUsersBtn" class="btn secondary" type="button">Load users</button>
               </div>
               <div style="height:14px"></div>
               <div id="usersMsg" class="err"></div>
@@ -2247,9 +2236,6 @@
               <div class="card" style="background:#fff;">
                 <div class="bd">
                   <div style="font-weight:900;">Team availability</div>
-                  <div class="muted small" style="margin-top:4px;">Loads from saved availability notes</div>
-                  <div style="height:10px"></div>
-                  <button id="loadTeamAvailBtn" class="btn secondary" type="button">Load availability</button>
                   <div style="height:10px"></div>
                   <div id="teamAvailMsg" class="err"></div>
                   <div id="teamAvailList" class="scrollCardList"></div>
@@ -2567,7 +2553,7 @@
       meetingsSubtab: 'list',
       eventsSubtab: 'all',
       payoutsPeriodDays: 30,
-      managerSubtab: 'tasks',
+      managerSubtab: '',
       viewAsRole: '',
       viewAsUserId: '',
       dialerSubtab: 'call',
@@ -2576,6 +2562,7 @@
       selectedLead: null,
       events: [],
       selectedEvent: null,
+      pendingSelectEventId: null,
       appointments: [],
       dispatch: [],
       pickLeadReturnTab: 'calls',
@@ -2678,17 +2665,21 @@
           if ($('dispatchCreateBody')) restoreCollapsedFromState('dispatchCreateBody', true);
           loadDispatchManager().catch(()=>{});
         }
+        if (state.managerSubtab === 'users') {
+          loadUsers().then(() => loadTeamAvailability()).catch(() => {});
+        }
       }
     }
 
     function renderManagerSubtab(){
-      const t = String(state.managerSubtab || 'tasks');
+      const t0 = String(state.managerSubtab || 'tasks');
       const map = {
         stats: { btn: 'mgrSegStats', pane: 'mgrPaneStats' },
         tasks: { btn: 'mgrSegTasks', pane: 'mgrPaneTasks' },
-        assign: { btn: 'mgrSegAssign', pane: 'mgrPaneAssign' },
         users: { btn: 'mgrSegUsers', pane: 'mgrPaneUsers' },
       };
+      const t = map[t0] ? t0 : 'tasks';
+      if (t !== t0) state.managerSubtab = t;
       for (const k of Object.keys(map)){
         const btn = $(map[k].btn);
         const pane = $(map[k].pane);
@@ -3093,7 +3084,7 @@
         accounts: 'Accounts',
         closer: 'Closer',
         events: 'Events',
-        offers: 'Events',
+        offers: 'Offers',
         talent: 'Talent',
         payments: 'Payments',
         manager: 'Manager'
@@ -3101,7 +3092,7 @@
 
       $('viewTitle').textContent = title;
 
-      const views = ['Overview','Leads','Calls','Meetings','Accounts','Closer','Events','Talent','Payments','Manager'];
+      const views = ['Overview','Leads','Calls','Meetings','Accounts','Closer','Events','Offers','Talent','Payments','Manager'];
       for (const v of views) $('view'+v).classList.add('hide');
       const viewEl = $('view' + viewKey);
       if (viewEl) viewEl.classList.remove('hide');
@@ -3115,22 +3106,21 @@
 
       if (safeTab === 'overview') loadOverview().catch(()=>{});
       if (safeTab === 'leads') loadLeads().catch(()=>{});
-      if (safeTab === 'events' || safeTab === 'offers') {
+      if (safeTab === 'events') {
         const seg = $('eventsSegTabs');
         const canSeg = ['event_host','media_team'].includes(er);
         const canAll = canSeeAllEventsForRole();
-        const showSeg = (safeTab === 'events') && canSeg;
+        const showSeg = canSeg;
         if (seg) seg.classList.toggle('hide', !showSeg);
 
-        if (safeTab === 'offers') {
-          state.eventsSubtab = 'offers';
-        } else {
-          if (canSeg && !['my','all'].includes(String(state.eventsSubtab || ''))) state.eventsSubtab = 'my';
-          if (canSeg && !canAll) state.eventsSubtab = 'my';
-          if (!canSeg) state.eventsSubtab = 'all';
-        }
+        if (canSeg && !['my','all'].includes(String(state.eventsSubtab || ''))) state.eventsSubtab = 'my';
+        if (canSeg && !canAll) state.eventsSubtab = 'my';
+        if (!canSeg) state.eventsSubtab = 'all';
         renderEventsSubtabSeg();
         loadEvents().catch(()=>{});
+      }
+      if (safeTab === 'offers') {
+        loadOffers().catch(()=>{});
       }
       if (safeTab === 'talent') loadTalentTab().catch(()=>{});
       if (safeTab === 'meetings') {
@@ -3164,12 +3154,16 @@
         }
       }
       if (tab === 'manager') {
+        if (!state.managerSubtab) {
+          state.managerSubtab = (effectiveRole() === 'event_coordinator') ? 'stats' : 'tasks';
+        }
         renderManagerSubtab();
-        if (!state.managerSubtab) state.managerSubtab = 'tasks';
         if (state.managerSubtab === 'stats') {
           if (['manager','event_coordinator'].includes(effectiveRole())) loadStats().catch(()=>{});
         } else if (state.managerSubtab === 'tasks') {
           loadDispatchManager().catch(()=>{});
+        } else if (state.managerSubtab === 'users') {
+          loadUsers().then(() => loadTeamAvailability()).catch(() => {});
         }
       }
 
@@ -4059,32 +4053,15 @@
       }
     }
 
-    async function managerAssignLead(){
-      $('mgrAssignMsg').textContent = '';
-      try{
-        const raw = String($('mgrLeadId')?.value || '').trim();
-        const id = raw ? Number(raw) : (state.selectedLead ? Number(state.selectedLead.id) : 0);
-        if (!id) throw new Error('Select a lead first');
-        const body = { id };
-
-        const role = $('mgrAssignedRole').value;
-        if (role) body.assignedRole = role;
-
-        await api('/api/portal/leads', { method:'PATCH', body });
-        setBadge('ok', 'assigned');
-      } catch(e){
-        $('mgrAssignMsg').textContent = String(e.message || e);
-      }
-    }
-
     async function loadTeamAvailability(){
       $('teamAvailMsg').textContent = '';
       const box = $('teamAvailList');
       if (box) box.innerHTML = '';
       try{
         if (!state.usersCache || !Array.isArray(state.usersCache) || !state.usersCache.length) {
-          throw new Error('Load users first');
+          await loadUsers();
         }
+        if (!state.usersCache || !Array.isArray(state.usersCache) || !state.usersCache.length) throw new Error('No users found');
         const users = state.usersCache.slice(0, 60);
         const rows = [];
         for (const u of users) {
@@ -5719,7 +5696,6 @@
       restoreCollapsedFromState('opsFeedbackBody', true);
       restoreCollapsedFromState('opsAiStaffingBody', true);
       restoreCollapsedFromState('opsReportBody', true);
-      restoreCollapsedFromState('opsCsvImportBody', true);
       state.ui._opsCollapseInit = true;
     }
 
@@ -7088,29 +7064,6 @@
       }
     }
 
-    async function importVendors(){
-      $('importVendorsMsg').textContent = '';
-      try{
-        const j = await api('/api/portal/vendors', { method: 'POST', body: { action: 'reload_from_resources' } });
-        $('importVendorsMsg').textContent = `Reloaded ${Number(j.count || 0)} vendors from resources.`;
-        await loadVendors().catch(() => {});
-      } catch (err) {
-        $('importVendorsMsg').textContent = String(err.message || err);
-      }
-    }
-
-    async function importEventTypes(){
-      $('importEventTypesMsg').textContent = '';
-      try{
-        const j = await api('/api/portal/event_types', { method: 'POST', body: { action: 'reload_from_resources' } });
-        $('importEventTypesMsg').textContent = `Reloaded ${Number(j.count || 0)} event types from resources.`;
-        await loadEventTypes().catch(() => {});
-        await initEventOps();
-      } catch (err) {
-        $('importEventTypesMsg').textContent = String(err.message || err);
-      }
-    }
-
     function vendorLabel(v){
       const name = String(v?.name || v?.['Vendor Name'] || v?.vendorName || v?.Vendor || v?.vendor || v?.Name || '').trim();
       const type = String(v?.type || v?.Type || v?.Category || v?.category || '').trim();
@@ -7882,6 +7835,145 @@
       }
     }
 
+    async function loadOffers(){
+      setBadge('warn', 'loading');
+      if ($('offersMsg')) $('offersMsg').textContent = '';
+      const tb = $('offersTbody');
+      if (tb) tb.innerHTML = '';
+
+      const qs = new URLSearchParams();
+      qs.set('limit', '160');
+
+      try{
+        const j = await api('/api/portal/events?' + qs.toString());
+        const allEvents = Array.isArray(j.events) ? j.events : [];
+
+        const er = effectiveRole();
+        const effectiveUserId = (isManagerUser() && String(state.viewAsUserId || '').trim())
+          ? String(state.viewAsUserId || '').trim()
+          : String(state.me?.user?.id || '');
+
+        const isHostOrMedia = ['event_host','media_team'].includes(er);
+        const isMgrOrCoord = (er === 'manager' || er === 'event_coordinator');
+
+        let offers = [];
+        if (isHostOrMedia) {
+          offers = allEvents.filter((ev) => {
+            const a = myAssignmentForEvent(ev, er, effectiveUserId);
+            const s = String(a?.status || '').trim();
+            return s === 'pending' || s === 'declined' || s === 'accepted';
+          });
+        } else if (isMgrOrCoord) {
+          offers = allEvents.filter((ev) => {
+            const asg = String(ev.assigned_role || '').trim();
+            if (!['event_host','media_team'].includes(asg)) return false;
+            const hasAssignments = !!(ev.meta && typeof ev.meta === 'object' && Array.isArray(ev.meta.assignments) && ev.meta.assignments.length);
+            const isOpenUnassigned = String(ev.status || 'open') === 'open' && !ev.assigned_user_id;
+            return hasAssignments || isOpenUnassigned;
+          });
+        }
+
+        const wantState = String($('offersStatePick')?.value || '').trim();
+        if (wantState) {
+          offers = offers.filter((ev) => {
+            if (isHostOrMedia) {
+              const a = myAssignmentForEvent(ev, er, effectiveUserId);
+              const s = String(a?.status || '').trim();
+              return s === wantState;
+            }
+            const sum = offerSummaryForEvent(ev);
+            return String(sum.offerState || '').trim() === wantState;
+          });
+        }
+
+        if (!tb) {
+          setBadge('ok', 'loaded');
+          return;
+        }
+
+        if (!offers.length) {
+          tb.innerHTML = '<tr><td colspan="7" class="muted">No offers to show.</td></tr>';
+          setBadge('ok', 'loaded');
+          return;
+        }
+
+        tb.innerHTML = offers.map((ev) => {
+          const date = ev.event_date || '';
+          const city = [ev.city, ev.state].filter(Boolean).join(', ');
+          const asg = ev.assigned_role || '';
+
+          const sum = offerSummaryForEvent(ev);
+          const badgeKind = sum.offerKind || '';
+
+          let offerText = sum.offerText || '';
+          let offerBadge = offerText ? `<span class="badge ${escapeHtml(badgeKind)}">${escapeHtml(offerText)}</span>` : `<span class="badge">${escapeHtml(String(ev.status || ''))}</span>`;
+
+          let actions = `<button class="btn secondary small" data-offer-open="${ev.id}">Open</button>`;
+
+          if (isHostOrMedia) {
+            const myAsg = myAssignmentForEvent(ev, er, effectiveUserId);
+            const myStatus = String(myAsg?.status || '').trim();
+            offerBadge = myStatus
+              ? `<span class="badge ${myStatus === 'accepted' ? 'ok' : (myStatus === 'declined' ? 'warn' : '')}">${escapeHtml(myStatus)}</span>`
+              : offerBadge;
+            if (myStatus === 'pending' && !isManagerViewAsPreviewOnly()) {
+              actions = `<button class="btn small" data-offer-respond="accept" data-offer-event="${ev.id}" data-offer-role="${escapeHtml(er)}">Accept</button> <button class="btn secondary small" data-offer-respond="decline" data-offer-event="${ev.id}" data-offer-role="${escapeHtml(er)}">Decline</button> <button class="btn secondary small" data-offer-open="${ev.id}">Open</button>`;
+            }
+          }
+
+          if (!isHostOrMedia && !isMgrOrCoord) {
+            actions = '<span class="muted">—</span>';
+          }
+
+          return `
+            <tr>
+              <td><span class="badge">${ev.id}</span></td>
+              <td class="muted">${escapeHtml(date)}</td>
+              <td>${escapeHtml(ev.title || '')}</td>
+              <td class="muted">${escapeHtml(city)}</td>
+              <td>${offerBadge}</td>
+              <td class="muted">${escapeHtml(asg)}</td>
+              <td>${actions}</td>
+            </tr>
+          `;
+        }).join('');
+
+        tb.onclick = async (ev) => {
+          const target = ev.target instanceof Element ? ev.target : null;
+          if (!target) return;
+          const openBtn = target.closest('button[data-offer-open]');
+          if (openBtn) {
+            const id = Number(openBtn.getAttribute('data-offer-open') || 0);
+            if (!id) return;
+            state.pendingSelectEventId = id;
+            setTab('events');
+            return;
+          }
+
+          const respondBtn = target.closest('button[data-offer-respond]');
+          if (respondBtn) {
+            if ($('offersMsg')) $('offersMsg').textContent = '';
+            try{
+              const action = String(respondBtn.getAttribute('data-offer-respond') || '');
+              const decision = action === 'accept' ? 'accepted' : (action === 'decline' ? 'declined' : '');
+              const eventId = Number(respondBtn.getAttribute('data-offer-event') || 0);
+              const role = String(respondBtn.getAttribute('data-offer-role') || '').trim();
+              if (!decision || !eventId || !role) throw new Error('invalid_action');
+              await respondAssignmentForEvent(eventId, role, decision);
+              await loadOffers();
+            } catch(e){
+              if ($('offersMsg')) $('offersMsg').textContent = String(e.message || e);
+            }
+          }
+        };
+
+        setBadge('ok', 'loaded');
+      } catch(e){
+        if ($('offersMsg')) $('offersMsg').textContent = String(e.message || e);
+        setBadge('warn', 'error');
+      }
+    }
+
     async function loadEvents(){
       setBadge('warn', 'loading');
       $('eventsMsg').textContent = '';
@@ -7950,7 +8042,7 @@
           const date = ev.event_date || '';
           const city = [ev.city, ev.state].filter(Boolean).join(', ');
           const asg = ev.assigned_role || '';
-          const selectBtn = `<button class="btn secondary small" data-pick-event="${ev.id}">Select</button>`;
+          const isSelected = prevSelectedId != null && Number(ev.id) === Number(prevSelectedId);
 
           const myAsg = myAssignmentForEvent(ev, er, effectiveUserId);
           const myStatus = String(myAsg?.status || '').trim();
@@ -7979,25 +8071,30 @@
           const acceptBtn = '';
 
           return `
-            <tr>
+            <tr class="clickRow ${isSelected ? 'selected' : ''}" data-event-row="${ev.id}">
               <td><span class="badge">${ev.id}</span></td>
               <td class="muted">${date}</td>
               <td>${escapeHtml(ev.title || '')}</td>
               <td class="muted">${escapeHtml(city)}</td>
               <td>${statusCell}</td>
               <td class="muted">${asg}</td>
-              <td>${selectBtn} ${offerActions} ${acceptBtn}</td>
+              <td>${offerActions} ${acceptBtn}</td>
             </tr>
           `;
         }).join('');
 
-        for (const btn of tb.querySelectorAll('button[data-pick-event]')){
-          btn.addEventListener('click', () => {
-            const id = Number(btn.dataset.pickEvent);
-            const ev = state.events.find((x) => Number(x.id) === id) || null;
-            setSelectedEvent(ev);
-          });
-        }
+        tb.onclick = (ev) => {
+          const target = ev.target instanceof Element ? ev.target : null;
+          if (!target) return;
+          if (target.closest('button')) return;
+          const tr = target.closest('tr[data-event-row]');
+          if (!tr) return;
+          const id = Number(tr.getAttribute('data-event-row') || 0);
+          const found = state.events.find((x) => Number(x.id) === id) || null;
+          setSelectedEvent(found);
+          for (const row of tb.querySelectorAll('tr[data-event-row]')) row.classList.remove('selected');
+          tr.classList.add('selected');
+        };
 
         for (const btn of tb.querySelectorAll('button[data-asg-respond]')){
           btn.addEventListener('click', async () => {
@@ -8016,8 +8113,13 @@
           });
         }
 
-        // Restore selection if possible.
-        if (prevSelectedId != null) {
+        // Restore / apply selection.
+        const pendingId = Number(state.pendingSelectEventId || 0);
+        if (pendingId) {
+          state.pendingSelectEventId = null;
+          const found = state.events.find((x) => Number(x.id) === pendingId) || null;
+          setSelectedEvent(found);
+        } else if (prevSelectedId != null) {
           const found = state.events.find((x) => Number(x.id) === prevSelectedId) || null;
           setSelectedEvent(found);
         }
@@ -8032,9 +8134,18 @@
     async function createEvent(){
       $('createEventMsg').textContent = '';
       try{
-        const propertyName = String($('nePropertyName')?.value || '').trim();
-        if (!propertyName) throw new Error('property_name_required');
-        const address = String($('neAddress')?.value || '').trim();
+        if ($('neAccountMsg')) $('neAccountMsg').textContent = '';
+        const accountId = String($('neAccountPick')?.value || '').trim();
+        if (!accountId) throw new Error('property_required');
+
+        const accounts = Array.isArray(state._newEventAccounts) ? state._newEventAccounts : [];
+        const account = accounts.find((a) => String(a?.id || '') === accountId) || null;
+        const propertyName = String(account?.propertyName || account?.name || '').trim();
+        if (!propertyName) throw new Error('invalid_property');
+
+        const address = String($('neAddress')?.value || '').trim() || String(account?.address || '').trim();
+        const city = String($('neCity')?.value || '').trim() || String(account?.city || '').trim();
+        const st = String($('neState')?.value || '').trim() || String(account?.state || '').trim();
         const title = String($('neTitle')?.value || '').trim() || propertyName;
         await api('/api/portal/events', {
           method: 'POST',
@@ -8042,12 +8153,13 @@
             title,
             eventDate: $('neDate').value,
             address,
-            city: $('neCity').value,
-            state: $('neState').value,
+            city,
+            state: st,
             notes: $('neNotes').value,
             status: 'open',
             assignedRole: 'event_host',
             meta: {
+              accountId,
               propertyName,
               propertyAddress: address,
               createdFrom: 'portal_new_event',
@@ -8055,7 +8167,7 @@
           }
         });
         $('newEventBox').hidden = true;
-        if ($('nePropertyName')) $('nePropertyName').value = '';
+        if ($('neAccountPick')) $('neAccountPick').value = '';
         if ($('neAddress')) $('neAddress').value = '';
         if ($('neTitle')) $('neTitle').value = '';
         if ($('neDate')) $('neDate').value = '';
@@ -8066,6 +8178,43 @@
       } catch(e){
         $('createEventMsg').textContent = String(e.message || e);
       }
+    }
+
+    async function ensureNewEventAccountsLoaded({ force = false } = {}){
+      if (!$('neAccountPick')) return [];
+      if (!force && Array.isArray(state._newEventAccounts) && state._newEventAccounts.length && $('neAccountPick').options.length > 1) {
+        return state._newEventAccounts;
+      }
+      if ($('neAccountMsg')) $('neAccountMsg').textContent = '';
+      try{
+        const j = await api('/api/portal/accounts');
+        const accounts = Array.isArray(j.accounts) ? j.accounts : [];
+        state._newEventAccounts = accounts;
+        $('neAccountPick').innerHTML = ['<option value="">Select…</option>']
+          .concat(accounts.map((a) => {
+            const id = escapeHtml(String(a?.id || ''));
+            const label = escapeHtml(String(a?.propertyName || a?.name || '').trim());
+            return `<option value="${id}">${label}</option>`;
+          }))
+          .join('');
+        return accounts;
+      } catch (e) {
+        if ($('neAccountMsg')) $('neAccountMsg').textContent = String(e.message || e);
+        state._newEventAccounts = [];
+        return [];
+      }
+    }
+
+    function applyNewEventAccountFill(){
+      if (!$('neAccountPick')) return;
+      const accountId = String($('neAccountPick').value || '').trim();
+      const accounts = Array.isArray(state._newEventAccounts) ? state._newEventAccounts : [];
+      const account = accounts.find((a) => String(a?.id || '') === accountId) || null;
+      if (!account) return;
+      if ($('neAddress') && !$('neAddress').value) $('neAddress').value = String(account.address || '');
+      if ($('neCity') && !$('neCity').value) $('neCity').value = String(account.city || '');
+      if ($('neState') && !$('neState').value) $('neState').value = String(account.state || '');
+      if ($('neTitle') && !$('neTitle').value) $('neTitle').value = String(account.propertyName || account.name || '');
     }
 
     async function loadPayouts(){
@@ -8416,10 +8565,20 @@
     on('dialerBookedRefreshBtn', 'click', () => loadDialerBooked().catch(() => {}));
     on('dialerBookedOpenSchedule', 'click', () => scheduleDialerBooked().catch(() => {}));
 
+    on('loadOffersBtn', 'click', () => loadOffers().catch(() => {}));
+    on('offersStatePick', 'change', () => loadOffers().catch(() => {}));
+
     on('loadEventsBtn', 'click', () => loadEvents().catch(() => {}));
     on('eventsSegMy', 'click', () => setEventsSubtab('my'));
     on('eventsSegAll', 'click', () => setEventsSubtab('all'));
-    on('newEventToggle', 'click', () => { $('newEventBox').hidden = !$('newEventBox').hidden; });
+    on('newEventToggle', 'click', async () => {
+      const box = $('newEventBox');
+      if (!box) return;
+      box.hidden = !box.hidden;
+      if (!box.hidden) await ensureNewEventAccountsLoaded().catch(() => {});
+    });
+    on('newEventCloseBtn', 'click', () => { const b = $('newEventBox'); if (b) b.hidden = true; });
+    on('neAccountPick', 'change', () => applyNewEventAccountFill());
     on('createEventBtn', 'click', () => createEvent().catch(() => {}));
     on('createFollowupsBtn', 'click', () => createFollowups().catch(() => {}));
     on('addHostBtn', 'click', () => addAssignment('event_host').catch(() => {}));
@@ -8439,8 +8598,6 @@
       const pt = $('planEventTypeQ');
       if (pt) pt.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); filterPlanEventTypes(); } });
     } catch(_e) {}
-    on('importVendorsBtn', 'click', () => importVendors().catch(() => {}));
-    on('importEventTypesBtn', 'click', () => importEventTypes().catch(() => {}));
     on('loadVendorsBtn', 'click', () => loadVendors().catch(() => {}));
     on('suggestVendorsBtn', 'click', () => suggestVendorsForSelected());
     on('aiSuggestVendorsBtn', 'click', () => aiSuggestVendorsForSelected().catch(() => {}));
@@ -8510,7 +8667,6 @@
 
     on('mgrSegStats', 'click', () => setManagerSubtab('stats'));
     on('mgrSegTasks', 'click', () => setManagerSubtab('tasks'));
-    on('mgrSegAssign', 'click', () => setManagerSubtab('assign'));
     on('mgrSegUsers', 'click', () => setManagerSubtab('users'));
 
     on('scheduleClose', 'click', () => closeScheduleModal());
@@ -8637,24 +8793,9 @@
       }
     });
 
-    on('loadUsersBtn', 'click', () => loadUsers().catch(() => {}));
-
     on('leadDetailRefreshBtn', 'click', () => loadTimelineInto('timelineList', 'timelineMsg').catch(() => {}));
     on('leadSaveBtn', 'click', () => saveLeadEdits().catch(() => {}));
     on('timelineAddBtn', 'click', () => addTimelineNote('timelineNote', 'timelineAddMsg', 'timelineList').catch(() => {}));
-
-    on('loadStatsBtn', 'click', () => loadStats().catch(() => {}));
-    on('mgrAssignBtn', 'click', () => managerAssignLead().catch(() => {}));
-    on('loadTeamAvailBtn', 'click', () => loadTeamAvailability().catch(() => {}));
-    on('mgrPickLead', 'click', () => {
-      state.pickLeadReturnTab = 'manager';
-      state.managerSubtab = 'assign';
-      setTab('leads');
-    });
-    on('mgrUseSelectedLead', 'click', () => {
-      const id = state.selectedLead ? String(state.selectedLead.id || '').trim() : '';
-      if ($('mgrLeadId')) $('mgrLeadId').value = id;
-    });
 
     on('loadDispatchBtn', 'click', () => loadDispatchManager().catch(() => {}));
     on('scanDispatchBtn', 'click', () => scanDispatchOverdue().catch(() => {}));
