@@ -1944,7 +1944,7 @@
                   </div>
                   <div>
                     <label>Role</label>
-                    <select id="talRole">
+                    <select id="talRole" data-no-enhance="1">
                       <option value="">Select…</option>
                       <option value="event_host">Event Host</option>
                       <option value="media_team">Media Team</option>
@@ -7215,8 +7215,9 @@
     }
 
     function coordinatorOpsEditable(){
-      // Role-only preview is read-only; user-scoped view-as is editable.
-      return isCoordinatorRole() && !isManagerViewAsPreviewOnly();
+      // Coordinator operations should be editable whenever the effective role is coordinator.
+      // View-as is meant to simulate the role experience (not a forced read-only preview).
+      return isCoordinatorRole();
     }
 
     function dollarsToCents(v){
