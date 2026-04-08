@@ -1,0 +1,837 @@
+body.portal-shell-reset {
+  background:
+    radial-gradient(circle at top left, rgba(255,255,255,.86) 0%, rgba(255,255,255,0) 30%),
+    linear-gradient(180deg, #e8edf2 0%, #dde4eb 100%);
+}
+
+body.portal-shell-reset .appbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  max-height: none;
+  background: rgba(232, 237, 242, .88);
+  border-bottom: 1px solid rgba(23, 33, 51, .08);
+  backdrop-filter: blur(18px);
+}
+
+body.portal-shell-reset .portalCommandBarInner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: start;
+  padding: 16px 22px 14px;
+}
+
+body.portal-shell-reset .portalBrandZone {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+body.portal-shell-reset .portalBrandZone .appbrand {
+  align-items: flex-start;
+  gap: 12px;
+}
+
+body.portal-shell-reset .portalBrandZone .t {
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: -.03em;
+}
+
+body.portal-shell-reset .portalBrandMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+body.portal-shell-reset .portalBrandKicker {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(23, 33, 51, .06);
+  color: #526276;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+body.portal-shell-reset .roleLinePill {
+  margin-top: 0;
+  padding: 0;
+  color: #5f7085;
+  font-size: 10px;
+  letter-spacing: .12em;
+}
+
+body.portal-shell-reset .portalUtilityZone {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+body.portal-shell-reset #contextSwitchers {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+body.portal-shell-reset .topUserRail {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+body.portal-shell-reset .layout {
+  display: grid;
+  grid-template-columns: 312px minmax(0, 1fr);
+  gap: 18px;
+  padding: 18px 22px 24px;
+  align-items: start;
+}
+
+body.portal-shell-reset .sidebar {
+  position: sticky;
+  top: calc(var(--appbar-height) + 12px);
+  min-height: calc(100vh - var(--appbar-height) - 30px);
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid rgba(23, 33, 51, .1);
+  border-radius: 22px;
+  background: rgba(247, 249, 251, .97);
+  box-shadow: 0 24px 56px rgba(15, 23, 42, .08);
+}
+
+body.portal-shell-reset .portalSidebarRail {
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: 12px;
+  padding: 16px 8px;
+  background:
+    linear-gradient(180deg, #0d131b 0%, #121b26 100%);
+  border-right: 1px solid rgba(255,255,255,.06);
+}
+
+body.portal-shell-reset .portalRailLabel {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgba(219, 231, 251, .62);
+}
+
+body.portal-shell-reset .topNavRail {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+}
+
+body.portal-shell-reset .topNavBtn,
+body.portal-shell-reset .topNavRail .topNavBtn {
+  width: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(219, 231, 251, .72);
+}
+
+body.portal-shell-reset .topNavBtn:hover,
+body.portal-shell-reset .topNavBtn:focus-visible,
+body.portal-shell-reset .topNavBtn.active,
+body.portal-shell-reset .topNavBtn[data-current] {
+  background: rgba(255,255,255,.1);
+  border-color: rgba(255,255,255,.08);
+  color: #fff;
+  transform: none;
+}
+
+body.portal-shell-reset .topNavText {
+  display: none !important;
+}
+
+body.portal-shell-reset .topNavIcon,
+body.portal-shell-reset .topNavIcon svg {
+  width: 14px;
+  height: 14px;
+}
+
+body.portal-shell-reset .sidebarShell {
+  display: grid;
+  gap: 16px;
+  padding: 18px 16px;
+  align-content: start;
+  background:
+    linear-gradient(180deg, rgba(247,249,251,.98), rgba(242,246,249,.98));
+}
+
+body.portal-shell-reset .portalSidebarIdentity {
+  display: grid;
+  gap: 8px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(148, 163, 184, .14);
+}
+
+body.portal-shell-reset .sidebarEyebrow,
+body.portal-shell-reset .navTitle,
+body.portal-shell-reset .workspaceHeaderEyebrow,
+body.portal-shell-reset .workspaceFocusLabel,
+body.portal-shell-reset .viewShellEyebrow {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #7b8aa0;
+}
+
+body.portal-shell-reset .sidebarTitle {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.08;
+  letter-spacing: -.03em;
+}
+
+body.portal-shell-reset .sidebarSub {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: #5e6e82;
+}
+
+body.portal-shell-reset .sidebarPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+body.portal-shell-reset .sidebarSection {
+  display: grid;
+  gap: 10px;
+  padding-top: 0;
+  border-top: none;
+}
+
+body.portal-shell-reset .portalSurface {
+  border: 1px solid rgba(148, 163, 184, .14);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: none;
+}
+
+body.portal-shell-reset .portalSurfaceHeader {
+  padding: 12px 14px 0;
+}
+
+body.portal-shell-reset .portalSurfaceHeader .navTitle {
+  color: #5f7085;
+}
+
+body.portal-shell-reset #sidebarNav {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+}
+
+body.portal-shell-reset .sidebarNavGroup {
+  display: grid;
+  gap: 6px;
+}
+
+body.portal-shell-reset .sidebarNavGroup + .sidebarNavGroup {
+  padding-top: 12px;
+  border-top: 1px solid rgba(148, 163, 184, .12);
+}
+
+body.portal-shell-reset .sidebarNavGroupTitle {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #7b8aa0;
+}
+
+body.portal-shell-reset .sidebarNavGroupMeta {
+  display: block;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #7b8aa0;
+}
+
+body.portal-shell-reset .sidebar .navBtn {
+  min-height: 42px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  align-items: center;
+  gap: 10px;
+}
+
+body.portal-shell-reset .sidebar .navBtn:hover,
+body.portal-shell-reset .sidebar .navBtn:focus-visible {
+  background: #eef3f7;
+  border-color: rgba(148,163,184,.16);
+  color: #0f172a;
+}
+
+body.portal-shell-reset .sidebar .navBtn.active,
+body.portal-shell-reset .sidebar .navBtn[data-current] {
+  background: #172133;
+  border-color: #172133;
+  color: #fff;
+}
+
+body.portal-shell-reset .sidebar .navCopy {
+  gap: 3px;
+}
+
+body.portal-shell-reset .sidebar .navLbl {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+body.portal-shell-reset .sidebar .navMeta {
+  display: block;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #6b7a8f;
+}
+
+body.portal-shell-reset .sidebar .navBtn.active .navMeta {
+  color: rgba(255,255,255,.72);
+}
+
+body.portal-shell-reset .sidebar .navCount {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0;
+}
+
+body.portal-shell-reset #sidebarContextCard,
+body.portal-shell-reset #sidebarMetricCard,
+body.portal-shell-reset #sidebarAttentionCard,
+body.portal-shell-reset #chatSidebarShell {
+  border: 1px solid rgba(148,163,184,.14);
+  border-radius: 16px;
+  background: #fff;
+}
+
+body.portal-shell-reset #sidebarContextCard,
+body.portal-shell-reset #sidebarMetricCard,
+body.portal-shell-reset #sidebarAttentionCard {
+  padding: 14px;
+}
+
+body.portal-shell-reset #chatSidebarShell {
+  padding: 14px;
+}
+
+body.portal-shell-reset .chatSidebarHead {
+  padding: 0 0 12px;
+  border-bottom: 1px solid rgba(148,163,184,.12);
+}
+
+body.portal-shell-reset .chatSidebarTitle {
+  font-size: 18px;
+  line-height: 1.08;
+}
+
+body.portal-shell-reset .chatSidebarMeta {
+  font-size: 12px;
+  line-height: 1.5;
+  max-width: none;
+}
+
+body.portal-shell-reset .chatSidebarActions {
+  padding-top: 12px;
+}
+
+body.portal-shell-reset .main {
+  min-width: 0;
+  display: grid;
+  gap: 18px;
+  align-content: start;
+}
+
+body.portal-shell-reset .portalWorkspaceHeader {
+  border: 1px solid rgba(23,33,51,.08);
+  border-radius: 20px;
+  background: rgba(253,254,254,.94);
+  box-shadow: 0 18px 40px rgba(15,23,42,.04);
+  padding: 18px 20px;
+}
+
+body.portal-shell-reset .viewShellBar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: start;
+  padding: 0;
+  border: none;
+  margin: 0;
+}
+
+body.portal-shell-reset .viewShellTitle {
+  margin: 0;
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: -.05em;
+}
+
+body.portal-shell-reset .viewShellSub {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  max-width: 68ch;
+}
+
+body.portal-shell-reset .viewMetaDock {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+body.portal-shell-reset .viewMetaDock .badge {
+  background: #fff;
+  border-color: rgba(23,33,51,.08);
+  color: #4b5b70;
+}
+
+body.portal-shell-reset .portalWorkspaceContent {
+  display: grid;
+  gap: 18px;
+}
+
+body.portal-shell-reset #viewOverview {
+  display: grid;
+  gap: 18px;
+}
+
+body.portal-shell-reset .overviewIntro {
+  display: grid;
+  gap: 14px;
+  padding: 20px 22px;
+  border: 1px solid rgba(23,33,51,.08);
+  border-radius: 20px;
+  background: #fff;
+}
+
+body.portal-shell-reset .overviewIntroTitle {
+  margin: 0;
+  font-size: 32px;
+  line-height: 1.02;
+  letter-spacing: -.05em;
+  max-width: 16ch;
+}
+
+body.portal-shell-reset .overviewIntroSub {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  max-width: 64ch;
+  color: #5e6e82;
+}
+
+body.portal-shell-reset .overviewIntroMeta {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+body.portal-shell-reset .overviewIntroMetaItem {
+  padding: 12px 0 0;
+  border: 0;
+  border-top: 1px solid rgba(148,163,184,.14);
+  border-radius: 0;
+  background: transparent;
+}
+
+body.portal-shell-reset .overviewStatusRail {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+body.portal-shell-reset .overviewStatusTile,
+body.portal-shell-reset .overviewChartPanel,
+body.portal-shell-reset .overviewListPanel,
+body.portal-shell-reset .overviewActionPanel,
+body.portal-shell-reset .overviewMonitorPanel {
+  border-radius: 16px;
+  border: 1px solid rgba(23,33,51,.08);
+  background: #fff;
+  box-shadow: none;
+}
+
+body.portal-shell-reset .overviewStatusTile {
+  padding: 14px;
+}
+
+body.portal-shell-reset .overviewDashboardGrid {
+  gap: 12px;
+}
+
+body.portal-shell-reset .overviewChartPanel,
+body.portal-shell-reset .overviewListPanel,
+body.portal-shell-reset .overviewActionPanel,
+body.portal-shell-reset .overviewMonitorPanel {
+  padding: 16px 18px;
+}
+
+body.portal-shell-reset .overviewChartTitle,
+body.portal-shell-reset .overviewListTitle {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.08;
+  letter-spacing: -.03em;
+}
+
+body.portal-shell-reset .overviewChartCanvas {
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  background: #f5f8fb;
+  border-color: rgba(148,163,184,.12);
+}
+
+body.portal-shell-reset .overviewMetricChip {
+  border-radius: 12px;
+  background: #f5f8fb;
+}
+
+body.portal-shell-reset #viewLeads {
+  display: grid;
+  gap: 16px;
+}
+
+body.portal-shell-reset .leadsHeader,
+body.portal-shell-reset .leadFocusStrip,
+body.portal-shell-reset .leadAddTray > .card {
+  border: 1px solid rgba(23,33,51,.08);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: none;
+}
+
+body.portal-shell-reset .leadsHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: start;
+  padding: 18px 20px;
+}
+
+body.portal-shell-reset .leadsPageTitle {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -.04em;
+  color: #172133;
+}
+
+body.portal-shell-reset .leadsHeaderSub,
+body.portal-shell-reset .leadFocusMeta {
+  font-size: 13px;
+  line-height: 1.55;
+  color: #5e6e82;
+  max-width: 62ch;
+}
+
+body.portal-shell-reset .leadFocusStrip {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: 16px 18px;
+}
+
+body.portal-shell-reset #leadsList {
+  gap: 0;
+  padding-right: 0;
+  border: 1px solid rgba(23,33,51,.08);
+  border-radius: 18px;
+  background: #fff;
+}
+
+body.portal-shell-reset .leadRow {
+  grid-template-columns: 4px minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 0;
+  border-bottom: 1px solid rgba(148,163,184,.12);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+body.portal-shell-reset .leadRow:last-child {
+  border-bottom: none;
+}
+
+body.portal-shell-reset .leadRow:hover {
+  background: #f6f9fc;
+  box-shadow: none;
+}
+
+body.portal-shell-reset .leadRow.selected {
+  background: #eef5fc;
+  box-shadow: inset 2px 0 0 rgba(29,78,216,.45);
+}
+
+body.portal-shell-reset .leadRowName {
+  font-size: 15px;
+}
+
+body.portal-shell-reset .leadDetailPanel {
+  gap: 12px;
+}
+
+body.portal-shell-reset .leadIdentityBar,
+body.portal-shell-reset .leadFormSection,
+body.portal-shell-reset .detailStat,
+body.portal-shell-reset .statTile {
+  border: 1px solid rgba(23,33,51,.08);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: none;
+  padding: 16px 18px;
+}
+
+body.portal-shell-reset .leadAddTray > .card {
+  margin-top: 0 !important;
+}
+
+body.portal-shell-reset .quickPills,
+body.portal-shell-reset .leadSignalRow,
+body.portal-shell-reset .metaGrid,
+body.portal-shell-reset .leadIdentityActions {
+  gap: 6px;
+}
+
+body.portal-shell-reset .quickPill {
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+body.portal-shell-reset .tableSurface,
+body.portal-shell-reset .dataTable {
+  border-radius: 16px;
+}
+
+body.portal-shell-reset .dataTable th,
+body.portal-shell-reset .dataTable td {
+  padding: 12px 14px;
+}
+
+body.portal-shell-reset #viewChat .aiPanelIntro,
+body.portal-shell-reset #viewChat .aiPanel.isFresh .aiPanelIntro {
+  padding: 10px 0 8px;
+  max-width: 760px;
+}
+
+body.portal-shell-reset #viewChat .aiIntroTitle {
+  font-size: 28px;
+  line-height: 1.04;
+  max-width: 14ch;
+  margin-top: 8px;
+}
+
+body.portal-shell-reset #viewChat .aiIntroSub {
+  font-size: 13px;
+  line-height: 1.6;
+  max-width: 58ch;
+}
+
+body.portal-shell-reset #viewChat .aiComposer,
+body.portal-shell-reset .aiComposer {
+  min-height: 58px;
+  padding: 6px 6px 6px 12px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: none;
+}
+
+body.portal-shell-reset .aiMsgBubble {
+  max-width: min(82%, 760px);
+  padding: 13px 15px;
+  border-radius: 16px;
+  font-size: 13px;
+  line-height: 1.65;
+  backdrop-filter: none;
+}
+
+body.portal-shell-reset .btn.secondary {
+  background: #fff;
+}
+
+body.portal-shell-reset .btn,
+body.portal-shell-reset .overviewCommandBtn,
+body.portal-shell-reset .overviewChartAction,
+body.portal-shell-reset .overviewPriorityAction,
+body.portal-shell-reset .overviewFocusActionBtn,
+body.portal-shell-reset .overviewMonitorAction {
+  border-radius: 10px;
+}
+
+@media (max-width: 1100px) {
+  body.portal-shell-reset .portalCommandBarInner {
+    grid-template-columns: 1fr;
+  }
+
+  body.portal-shell-reset .portalUtilityZone {
+    justify-content: flex-start;
+  }
+
+  body.portal-shell-reset .layout {
+    grid-template-columns: 1fr;
+    padding: 14px 14px 20px;
+    gap: 14px;
+  }
+
+  body.portal-shell-reset .sidebar {
+    position: relative;
+    top: auto;
+    min-height: 0;
+  }
+
+  body.portal-shell-reset .overviewDashboardGrid,
+  body.portal-shell-reset .overviewStatusRail,
+  body.portal-shell-reset .overviewIntroMeta {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  body.portal-shell-reset .leadsHeader,
+  body.portal-shell-reset .leadFocusStrip {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  body.portal-shell-reset .portalCommandBarInner {
+    padding: 14px 14px 12px;
+  }
+
+  body.portal-shell-reset .sidebar {
+    grid-template-columns: 48px minmax(0, 1fr);
+    border-radius: 18px;
+  }
+
+  body.portal-shell-reset .sidebarShell {
+    padding: 14px;
+  }
+
+  body.portal-shell-reset .viewShellTitle,
+  body.portal-shell-reset .leadsPageTitle,
+  body.portal-shell-reset .overviewIntroTitle,
+  body.portal-shell-reset #viewChat .aiIntroTitle {
+    font-size: 24px;
+  }
+
+  body.portal-shell-reset .overviewDashboardGrid,
+  body.portal-shell-reset .overviewStatusRail,
+  body.portal-shell-reset .overviewIntroMeta {
+    grid-template-columns: 1fr;
+  }
+
+  body.portal-shell-reset .leadRow {
+    grid-template-columns: 4px minmax(0, 1fr);
+  }
+
+  body.portal-shell-reset .leadRowRight {
+    grid-column: 2;
+    justify-items: start;
+    text-align: left;
+  }
+
+  body.portal-shell-reset .aiMsgBubble {
+    max-width: 100%;
+  }
+}
+
+html.dark body.portal-shell-reset,
+html.dark.portal-shell-reset body {
+  background:
+    linear-gradient(180deg, #08111d 0%, #0d1726 100%);
+}
+
+html.dark body.portal-shell-reset .appbar {
+  background: rgba(8, 17, 29, .88);
+  border-bottom-color: rgba(255,255,255,.08);
+}
+
+html.dark body.portal-shell-reset .sidebar {
+  background: rgba(13, 22, 37, .96);
+  border-color: rgba(255,255,255,.08);
+}
+
+html.dark body.portal-shell-reset .sidebarShell {
+  background: linear-gradient(180deg, rgba(13,22,37,.98), rgba(10,18,30,.98));
+}
+
+html.dark body.portal-shell-reset .portalSurface,
+html.dark body.portal-shell-reset #sidebarContextCard,
+html.dark body.portal-shell-reset #sidebarMetricCard,
+html.dark body.portal-shell-reset #sidebarAttentionCard,
+html.dark body.portal-shell-reset #chatSidebarShell,
+html.dark body.portal-shell-reset .portalWorkspaceHeader,
+html.dark body.portal-shell-reset .overviewIntro,
+html.dark body.portal-shell-reset .overviewStatusTile,
+html.dark body.portal-shell-reset .overviewChartPanel,
+html.dark body.portal-shell-reset .overviewListPanel,
+html.dark body.portal-shell-reset .overviewActionPanel,
+html.dark body.portal-shell-reset .overviewMonitorPanel,
+html.dark body.portal-shell-reset .leadsHeader,
+html.dark body.portal-shell-reset .leadFocusStrip,
+html.dark body.portal-shell-reset #leadsList,
+html.dark body.portal-shell-reset .leadIdentityBar,
+html.dark body.portal-shell-reset .leadFormSection,
+html.dark body.portal-shell-reset .detailStat,
+html.dark body.portal-shell-reset .statTile,
+html.dark body.portal-shell-reset .leadAddTray > .card,
+html.dark body.portal-shell-reset .aiComposer {
+  background: #0f172a;
+  border-color: rgba(255,255,255,.08);
+  color: #e5edf9;
+}
+
+html.dark body.portal-shell-reset .sidebarSub,
+html.dark body.portal-shell-reset .viewShellSub,
+html.dark body.portal-shell-reset .overviewIntroSub,
+html.dark body.portal-shell-reset .leadsHeaderSub,
+html.dark body.portal-shell-reset .leadFocusMeta,
+html.dark body.portal-shell-reset .navMeta,
+html.dark body.portal-shell-reset .chatSidebarMeta {
+  color: #94a3b8;
+}
+
+html.dark body.portal-shell-reset .leadRow {
+  border-bottom-color: rgba(255,255,255,.08);
+}
+
+html.dark body.portal-shell-reset .leadRow:hover {
+  background: #152238;
+}
+
+html.dark body.portal-shell-reset .leadRow.selected {
+  background: #16253a;
+  box-shadow: inset 2px 0 0 rgba(96,165,250,.55);
+}

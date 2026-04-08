@@ -1,0 +1,16 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run Portal Preview",
+			"type": "shell",
+			"command": "node",
+			"args": [
+				"scripts/portal_preview_server.js"
+			],
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}

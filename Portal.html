@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <meta charset='utf-8' />
+  <meta name='viewport' content='width=device-width, initial-scale=1' />
+  <title>PureStay</title>
+  <link rel='preconnect' href='https://fonts.googleapis.com' />
+  <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin />
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap' />
+  <link rel='stylesheet' href='ui/portal-os.css' />
+</head>
+<body>
+  <a class='skip-link' href='#workspaceStage'>Skip to workspace</a>
+  <div class='portal-root'>
+    <section id='authScreen' class='auth-screen' aria-label='Portal sign in'></section>
+
+    <section id='appScreen' class='app-screen' hidden>
+      <div class='workspace-shell'>
+        <aside class='workspace-sidebar'>
+          <div class='workspace-sidebar__top'>
+            <div class='brand-mark brand-mark--sidebar'>
+              <div class='brand-mark__glyph' aria-hidden='true'>P</div>
+              <div class='brand-mark__text'>
+                <div class='brand-mark__label'>PureStay</div>
+              </div>
+            </div>
+            <div class='workspace-sidebar__section'>
+              <nav id='workspaceNav' class='workspace-nav' aria-label='Primary workspaces'></nav>
+            </div>
+          </div>
+          <div class='workspace-sidebar__footer'>
+            <div id='userChip' class='user-chip'></div>
+            <div class='workspace-utility-row'>
+              <button type='button' class='utility-icon-button' data-action='switch-workspace' data-workspace='settings' aria-label='Open settings' title='Settings'>
+                <svg viewBox='0 0 16 16' fill='none' aria-hidden='true'>
+                  <path d='M6.9 1.4h2.2l.35 1.7c.38.12.74.27 1.08.45l1.48-.9 1.56 1.56-.9 1.48c.18.34.33.7.45 1.08l1.7.35v2.2l-1.7.35c-.12.38-.27.74-.45 1.08l.9 1.48-1.56 1.56-1.48-.9c-.34.18-.7.33-1.08.45l-.35 1.7H6.9l-.35-1.7a5.57 5.57 0 0 1-1.08-.45l-1.48.9-1.56-1.56.9-1.48a5.57 5.57 0 0 1-.45-1.08l-1.7-.35V6.9l1.7-.35c.12-.38.27-.74.45-1.08l-.9-1.48L4 2.43l1.48.9c.34-.18.7-.33 1.08-.45l.34-1.48Z' stroke='currentColor' stroke-width='1.1' stroke-linejoin='round'></path>
+                  <circle cx='8' cy='8' r='2.2' stroke='currentColor' stroke-width='1.1'></circle>
+                </svg>
+              </button>
+              <button id='signOutBtn' type='button' class='ghost-button ghost-button--quiet' data-action='sign-out' aria-label='Sign out' title='Sign out'>
+                <svg viewBox='0 0 16 16' fill='none' aria-hidden='true'>
+                  <path d='M6 2.2H3.9c-.94 0-1.7.76-1.7 1.7v8.2c0 .94.76 1.7 1.7 1.7H6' stroke='currentColor' stroke-width='1.1' stroke-linecap='round' stroke-linejoin='round'></path>
+                  <path d='M10.2 4.2 13 7l-2.8 2.8' stroke='currentColor' stroke-width='1.1' stroke-linecap='round' stroke-linejoin='round'></path>
+                  <path d='M5.1 7h7.6' stroke='currentColor' stroke-width='1.1' stroke-linecap='round'></path>
+                </svg>
+                <span class='button-label'>Sign out</span>
+              </button>
+            </div>
+          </div>
+        </aside>
+        <div class='workspace-main'>
+          <header class='global-bar'>
+            <div class='global-bar__context'>
+              <div class='global-bar__eyebrow'>PureStay</div>
+              <div id='shellTitle' class='global-bar__title'>Overview</div>
+            </div>
+            <div class='global-bar__meta'>
+              <div id='shellMeta' class='meta-pill'>Live summary</div>
+              <div class='meta-pill meta-pill--quiet'>Live workspace</div>
+            </div>
+          </header>
+          <main id='workspaceStage' class='workspace-stage' tabindex='-1'></main>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div id='sheetBackdrop' class='sheet-backdrop' hidden>
+    <div id='sheetHost'></div>
+  </div>
+  <div id='toastStack' class='toast-stack' aria-live='polite'></div>
+
+  <script src='ui/portal-os.js'></script>
+</body>
+</html>
